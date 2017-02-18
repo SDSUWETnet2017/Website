@@ -12,7 +12,7 @@ Generates Data for 7 days in month of Febuary before feb 21
 
 from node import Node
 import json
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 
 latitudes = [32.775660,32.776315,32.776075,32.775567,32.775881,32.776689,
                  32.776804,32.776898,32.775683,32.774507]
