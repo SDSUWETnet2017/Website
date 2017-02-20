@@ -11,12 +11,12 @@ data presented in following format
 'node 2': .................
 }
 for subnodes
-< time stamped data dictionary > = { <time1>: [temperature, humidity],
+< time stamped data dictionary > = { <time1>: [temperature, humidity,UV],
                                                           <time2>: [temperature, humidity],    
                                                           ............
                                                           }
 for supernodes 
-< time stamped data dictionary > = { <time1>: [temperature, humidity, pressure, windspeed, winddirection, pic],
-                                     <time2>: [temperature, humidity, pressure, windspeed, winddirection, pic],
+< time stamped data dictionary > = { <time1>: [temperature, humidity, UV, pressure, windspeed, winddirection, pic],
+                                     <time2>: [temperature, humidity, UV, pressure, windspeed, winddirection, pic],
                                      ......
                                      }
