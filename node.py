@@ -10,6 +10,7 @@ Data vectors hold a week of test data
 To change duration of data change duration of data
 edit temperature_sig.make_wave(duration=#days,framerate=144)
 
+Updated 2017/02/19 to include UV index for all nodes
 
 @author: Stephen West
 """
@@ -29,9 +30,28 @@ class Node():
 
         self.node_type = node_type
         
-        # Model Temperature
+        self.temp_vect = self.get_temp()
+      
+        self.humidity = self.get_humidity()
         
-        # model temp as sin wave with dc offset
+        self.UV = self.get_UV()
+
+        if self.node_type == 'sub':
+            pass
+        elif self.node_type == 'super':
+            self.winddirect = random.choice(["N","NE","E","SE","S","SW","W","NW"])
+            self.windspeed = self.get_windspeed()            
+            self.pressure = random.randint(96400000,96500000)/1000
+            
+            with open('test_api_decode.jpg',"rb") as imageFile:
+                im_str = base64.b64encode(imageFile.read())
+            self.pic = str(im_str)[1:]
+    
+    def get_temp(self):
+        '''
+        A function that returns an array with data points that model
+        Temperature
+        '''
         temperature_sig = td.SinSignal(freq=1,amp=6,offset=(math.pi))
         # add noise
         temperature_sig += td.UncorrelatedUniformNoise()
@@ -39,33 +59,49 @@ class Node():
         temp_wave = temperature_sig.make_wave(duration=7,framerate=144)
         # set ave temp of a node to be between 60 and 75 degrees
         temp_wave.ys += random.randint(60,75)
-        self.temp_vect = temp_wave.ys
-        
-        # Model humidity
-        
+        return temp_wave.ys
+
+    def get_humidity(self):
         # Model humidity as inverted hamming window with a dc offset 
         # between 50 and 60, for one day
-        humidity = np.hamming(len(temp_wave.ys)/7) + random.randint(50,60)
+        humidity = np.hamming(len(self.temp_vect)/7) + random.randint(50,60)
         # periodically repeat humidity function for entire week
-        self.humidity = np.tile(humidity,7)
+        humidity = np.tile(humidity,7)
+        return humidity
         
-        if self.node_type == 'sub':
-            pass
-        elif self.node_type == 'super':
-            self.winddirect = random.choice(["N","BE","E","SE","S","SW","W","NW"])
-            
-            # Model windspeed as Pink Noise with beta = 2
-            windspeed_sig = td.PinkNoise(amp=6,beta=2)
-            windspeed_wav = windspeed_sig.make_wave(duration=7,framerate=144)
-            windspeed_wav.ys += 6
-            self.windspeed = windspeed_wav.ys
-            
-            self.pressure = random.randint(96400000,96500000)/1000,
-            
-            with open('test_api_decode.jpg',"rb") as imageFile:
-                im_str = base64.b64encode(imageFile.read())
-            self.pic = str(im_str)[1:]
-               
+    def get_UV(self):
+        '''
+        A function that returns a week of UV index data as a vector
+        '''
+        n_points = len(self.temp_vect)//7
+        # mean occurs at noon or in the middle of vector
+        mean = 144/2
+        # model UV index as normal distrobution with mean at 12:00 and var of 3.5 hrs
+        sigma = math.sqrt(35*6)
+        PI = math.pi
+        UV = np.zeros(144)
+        #time_vect = []
+        for n in range(n_points):
+            UV[n]= (1/(sigma*math.sqrt(2*PI)))*math.exp(-((n-mean)**2)/(2*(sigma**2)))
+        #    time_vect.append(str(get_hr(n))+ ':' + str(get_min(n)))
+
+        # normalize UV function to have a peak of 1
+        UV /= max(UV)
+        # Guive vector a peak on UV index
+        UV *= random.uniform(4,7)
+        # Gen data for a week
+        return np.tile(UV,7)
+        
+    def get_windspeed(self):
+        '''
+        A function that returns a week of windspeed data as a vector
+        ''' 
+        # Model windspeed as Pink Noise with beta = 2
+        windspeed_sig = td.PinkNoise(amp=6,beta=2)
+        windspeed_wav = windspeed_sig.make_wave(duration=7,framerate=144)
+        windspeed_wav.ys += 6
+        return windspeed_wav.ys
+        
     def get_min(self,n):
         minute = (n*10)%60
         return minute
@@ -88,13 +124,15 @@ class Node():
         
         for n in range(len(self.temp_vect)):
             if self.node_type == 'sub':
-                data_vect=[self.temp_vect[n],self.humidity[n]]
+                data_vect=[self.temp_vect[n],self.humidity[n],self.UV[n]]
             else:
-                data_vect=[self.temp_vect[n],self.humidity[n],self.pressure,
-                           self.windspeed[n],self.winddirect,self.pic]
+                data_vect=[self.temp_vect[n],self.humidity[n],self.UV[n],
+                           self.pressure, self.windspeed[n],self.winddirect,
+                            self.pic]
                 
 
             sensor_data_dict[self.get_time_stamp(n,start_day)] = data_vect
         
         
         return sensor_data_dict
+
