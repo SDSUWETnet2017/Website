@@ -35,17 +35,17 @@ class Node():
         self.humidity = self.get_humidity()
         
         self.UV = self.get_UV()
-
+        
         if self.node_type == 'sub':
             pass
         elif self.node_type == 'super':
-            self.winddirect = random.choice(["N","NE","E","SE","S","SW","W","NW"])
+            self.winddirect = random.random()*360
             self.windspeed = self.get_windspeed()            
             self.pressure = random.randint(96400000,96500000)/1000
             
-            with open('test_api_decode.jpg',"rb") as imageFile:
-                im_str = base64.b64encode(imageFile.read())
-            self.pic = str(im_str)[1:]
+#            with open('test_api_decode.jpg',"rb") as imageFile:
+#                im_str = base64.b64encode(imageFile.read())
+#            self.pic = 'pic_str' #str(im_str)[1:] to display actual picture
     
     def get_temp(self):
         '''
@@ -102,6 +102,18 @@ class Node():
         windspeed_wav.ys += 6
         return windspeed_wav.ys
         
+    def get_wind_gust(self,n):
+        windgust = self.windspeed[n] + random.randint(0,10)
+        windgust += random.random()
+        return windgust
+        
+    def get_wind_direction(self,n):
+        # randomly change wind direction 
+        rand = random.randint(1,11)
+        if n % rand == 0:
+            self.winddirect = random.random()*360
+        return self.winddirect
+        
     def get_min(self,n):
         minute = (n*10)%60
         return minute
@@ -116,7 +128,11 @@ class Node():
     
     def get_time_stamp(self,n,start_day):
         timestamp = '2017-02-' + str(self.get_day(n,start_day))
-        timestamp += ' ' + str(self.get_hr(n)) + ':' + str(self.get_min(n))
+        if self.get_min(n) < 10:
+            minute = '0' + str(self.get_min(n))
+            timestamp += ' ' + str(self.get_hr(n)) + ':' + minute
+        else:
+            timestamp += ' ' + str(self.get_hr(n)) + ':' + str(self.get_min(n))
         return timestamp
         
     def return_dict(self,start_day):
@@ -127,12 +143,11 @@ class Node():
                 data_vect=[self.temp_vect[n],self.humidity[n],self.UV[n]]
             else:
                 data_vect=[self.temp_vect[n],self.humidity[n],self.UV[n],
-                           self.pressure, self.windspeed[n],self.winddirect,
-                            self.pic]
-                
+                           self.pressure, self.windspeed[n],
+                            self.get_wind_direction(n),
+                            self.get_wind_gust(n)]
 
             sensor_data_dict[self.get_time_stamp(n,start_day)] = data_vect
         
         
         return sensor_data_dict
-
