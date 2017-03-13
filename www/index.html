@@ -14,11 +14,13 @@
     <!-- Bootstrap Core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Custom CSS -->
+    <!-- Custom CSS for theme -->
     <link href="css/modern-business.css" rel="stylesheet">
 
+    <!-- Custom CSS for dropdown menu -->
+    <link href="css/drop-down-list.css" rel="stylesheet">
+
     <!-- Custom CSS for slider -->
-    <link href="css/bootstrap-slider.css" rel="stylesheet">
     <link href="css/bootstrap-slider.min.css" rel="stylesheet">
 
     <!-- Custom Fonts -->
@@ -89,36 +91,48 @@
         </div>
         <!-- /.row -->
 
-        <!-- Map Column -->
-        <div class="col-md-8">
-            <!-- Embedded Google Map -->
-            <iframe width="100%" height="400px" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="http://maps.google.com/maps?hl=en&amp;ie=UTF8&amp;ll=37.0625,-95.677068&amp;spn=56.506174,79.013672&amp;t=m&amp;z=4&amp;output=embed"></iframe>
+        <div class="row">
+            <!-- Map Column -->
+            <div class="col-md-8">
+                <!-- Embedded Google Map -->
+                <iframe width="100%" height="400px" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="http://maps.google.com/maps?hl=en&amp;ie=UTF8&amp;ll=37.0625,-95.677068&amp;spn=56.506174,79.013672&amp;t=m&amp;z=4&amp;output=embed"></iframe>
+            </div>
+
+            <div class="col-md-4 text-center">
+                <button id="get-json" class = "text-center">Get JSON</button>
+                <div id="show-json"></div>
+            </div>
+
         </div>
 
-        <!-- Content Row -->
         <div class="row">
 
-        </div>
-        <!-- /.row -->
-
-        <div class="col-md-8">
-            <span id="ex18-label-1" class="hidden">Example slider label</span>
-            <input id="ex18a" type="text"/>
-
-            <span id="ex18-label-2a" class="hidden">Example low value</span>
-            <span id="ex18-label-2b" class="hidden">Example high value</span>
-            <input id="ex18b" type="text"/>
+            <div class="col-md-4 text-center">
+                <span id="slider1ValLow" class="hidden">Example low value</span>
+                <span id="slider1ValHigh" class="hidden">Example high value</span>
+                <input id="timeSlider1" type="text"/>
+            </div>
 
             <div class="col-md-4">
-                <button id="get-data">Get JSON data from xampp</button>
-                <div id="show-data"></div>
-
-                <button id="get-data-web">Get JSON data from the web</button>
-                <div id="show-data-web"></div>
             </div>
         </div>
 
-
+        <div class="row">
+            <div class="col-md-4 text-center dropdown">
+                <button id="slider-select" onclick="dropDownFunction()" class = "dropbtn">Change Slider</button>
+                <div id="myDropdown" class="dropdown-content">
+                    <button id="btn-day" class="btn btn-secondary">Hour</button>
+                    <button id="btn-day" class="btn btn-secondary">Day</button>
+                    <button id="btn-day" class="btn btn-secondary">Week</button>
+                    <button id="btn-day" class="btn btn-secondary">Month</button>
+                    <!--
+                    <a href="#">Day</a>
+                    <a href="#">Hour</a>
+                    <a href="#">Week</a>
+                    -->
+                </div>
+            </div>
+        </div>
 
         <hr>
 
@@ -152,5 +166,11 @@
 
     <!-- Javascript example for how to get a JSON file using JQuery -->
     <script src="js/get-json-example.js"></script>
+
+    <!-- Receive JSON file from server using JQuery -->
+    <script src="js/get-json.js"></script>
+
+    <!-- Drop down menu for changing the slider -->
+    <script src="js/drop-down-list.js"></script>
 
 </html>
