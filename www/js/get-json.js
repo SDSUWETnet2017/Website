@@ -1,6 +1,10 @@
 // when the page has fully loaded
 $(document).ready(function () {
-   var jsonData = {};
+  var jsonData = {};
+   // if(nodeTimeRA[1]  == "7:40") {
+   //    nodeTimeStamp = nodeTimeStamp.replace("7:40", "");
+   // }
+
 
 // This is a JQuery shorthand for checking if the button with the id "get-json" was pressed
   $('#get-json').click(function () {
@@ -70,6 +74,163 @@ $(document).ready(function () {
 
   }); // End of $('#get-json').click
 
+}); // End of $(document).ready
+
+
+// Code for updating webpage without refreshing was based off of this website: http://jsfiddle.net/Low9o0qk/
+// Code came from this StackOverFlow answer: http://stackoverflow.com/questions/22577457/update-data-on-a-page-without-refreshing
+
+var i = true;
+var refreshSecond = true;
+var refreshSecondInterval = 2;
+var refreshMinute = false;
+var refreshMinuteInterval = 10;
+var nodeTimeStamp = "2017-02-21 7:40";
+var myDate = new Date(nodeTimeStamp);
+var timeDelay;
+
+// Set our timeDelay by the specified seconds
+if(refreshSecond == true) {
+  // Turn seconds into milliseconds. 1 minute = 1000 milliseconds
+  timeDelay = refreshSecondInterval*1000;
+}
+
+// Set our timeDelay by the specified minutes
+else if(refreshMinute == true) {
+  // Turn minutes into milliseconds. 1 minute = 60000 milliseconds
+  timeDelay = refreshMinuteInterval*60000;
+}
+
+// Use our default interval of 10 minutes
+else {
+  // Turn 10 minutes into 10 milliseconds. 1 minute = 60000 milliseconds
+  timeDelay = 10*60000;
+}
+
+
+// No need to specify document ready
+$(function updatePageInfo(){
+
+    // Don't cache ajax or content won't be fresh
+    $.ajaxSetup ({
+        cache: false,
+        complete: function() {
+          // Schedule the next request when the current one's complete
+          if(i == true) {
+            i = false;
+          }
+          else {
+            i = true;
+          }
+          setTimeout(updatePageInfo, timeDelay);
+        }
+    });
+
+    // **** IT IS IMPORTANT TO DISPLAY THE INFO BEFORE INCREMENTING IT ****
+    console.log(myDate.getFullYear() +"-"+ myDate.getDate() +"-"+ myDate.getMonth() +" "+ myDate.getHours() +":"+ myDate.getMinutes()+":"+ myDate.getSeconds());
+
+    // load() functions
+    var loadUrl = myDate.getFullYear() +"-"+ myDate.getDate() +"-"+ myDate.getMonth() +" "+ myDate.getHours() +":"+ myDate.getMinutes()+":"+ myDate.getSeconds();
+    var loadUrl2;
+    if(i == true) {
+      loadUrl2 = "/www/test-data/example.json";
+    }
+    else {
+      loadUrl2 = "/www/test-data/test_data_subnodes.json";
+    }
+
+    $("#refreshImage").html(loadUrl);
+    $("#refreshImage2").load(loadUrl2);
+
+    // |*-- If we chose to update at an interval of seconds --*|
+    if(refreshSecond == true) {
+
+      //** Only increment second if it is less than 60
+      if(myDate.getSeconds() < 60) {
+        myDate.setSeconds(myDate.getSeconds() + refreshSecondInterval);
+      }
+
+      //** Otherwise, Reset seconds and update the minutes  hours (if applicable)
+      else {
+        // if we have reached the 60th second, reset seconds and increment minutes and hour
+        myDate.setSeconds(0);
+
+        // Only increment minutes if the current minute is 59 or lower
+        if(myDate.getMinutes() < 60) {
+          myDate.setMinutes(myDate.getMinutes() + 1);
+        }
+
+        // Otherwise, reset minutes and update the hours
+        else {
+          // if we have reached the 60th minute, reset minutes and increment hour
+          myDate.setMinutes(0);
+
+          // If the current hour is already 24, start over at the 0th hour
+          if(myDate.getHours() > 23) {
+             myDate.setHour(0);
+          }
+          // If the current hour is not 24, go to the next hour
+          else {
+            myDate.setHour(myDate.getHours() + 1);
+          }
+        }
+
+      } // End of resetting minutes and hours
+    }
+
+
+    // |*-- If we chose to update at an interval of minutes --*|
+    else if(refreshMinute == true) {
+
+      //** Only increment if the current minute is 59 or lower
+      if(myDate.getMinutes() < 60) {
+        myDate.setMinutes(myDate.getMinutes() + refreshMinuteInterval);
+      }
+
+      //** Otherwise, reset minutes and update the hours
+      else {
+        // if we have reached the 60th minute, reset minutes and increment hour
+        myDate.setMinutes(0);
+
+        // If the current hour is already 24, start over at the 0th hour
+        if(myDate.getHours() > 23) {
+           myDate.setHour(0);
+        }
+        // If the current hour is not 24, go to the next hour
+        else {
+          myDate.setHour(myDate.getHours() + 1);
+        }
+      }
+    } // end of updating by specified minute interval
+
+
+    // |*-- Otherwise, increment by a default of 10 minutes --*|
+    else {
+      //** Only increment if the current minute is 59 or lower
+      if(myDate.getMinutes() < 60) {
+        myDate.setMinutes(myDate.getMinutes() + 10);
+      }
+
+      //** Otherwise, reset minutes and update the hours
+      else {
+        // if we have reached the 60th minute, reset minutes and increment hour
+        myDate.setMinutes(0);
+
+        // If the current hour is already 24, start over at the 0th hour
+        if(myDate.getHours() > 23) {
+           myDate.setHour(0);
+        }
+        // If the current hour is not 24, go to the next hour
+        else {
+          myDate.setHour(myDate.getHours() + 1);
+        }
+      }
+    }
+
+}); // End of $(function updatePageInfo()
+
+
+
 /*
 
   var jsonData2 = {};
@@ -91,4 +252,3 @@ $(document).ready(function () {
 */
 
 
-}); // End of $(document).ready
