@@ -5,6 +5,7 @@ $(document).ready(function () {
    //    nodeTimeStamp = nodeTimeStamp.replace("7:40", "");
    // }
 
+var nodeTimeStamp22 = "2017-02-19 7:40";
 
 // This is a JQuery shorthand for checking if the button with the id "get-json" was pressed
   $('#get-json').click(function () {
@@ -14,6 +15,10 @@ $(document).ready(function () {
 
     // Reading in JSON from the server
     $.getJSON('test-data/test_data_subnodes.json', function (data) {
+
+      console.log("TESTTTT " + data["node 10"][0][nodeTimeStamp22]);
+      console.log("TESTTTT " + data["node 10"][0][nodeTimeStamp22]);
+
       console.log("JSON received from xampp directory test_data_test_data_subnodes.json: " + data["node 10"]);
       console.log("Node 10[0] (Time Stamps): " + data["node 10"][0]);
       console.log("Node 10[0][0] (Readings for selected time): " + data["node 10"][0]["2017-02-19 7:40"]);
@@ -127,7 +132,7 @@ $(function updatePageInfo(){
     });
 
     // **** IT IS IMPORTANT TO DISPLAY THE INFO BEFORE INCREMENTING IT ****
-    console.log(myDate.getFullYear() +"-"+ myDate.getDate() +"-"+ myDate.getMonth() +" "+ myDate.getHours() +":"+ myDate.getMinutes()+":"+ myDate.getSeconds());
+    //console.log(myDate.getFullYear() +"-"+ myDate.getDate() +"-"+ myDate.getMonth() +" "+ myDate.getHours() +":"+ myDate.getMinutes()+":"+ myDate.getSeconds());
 
     // load() functions
     var loadUrl = myDate.getFullYear() +"-"+ myDate.getDate() +"-"+ myDate.getMonth() +" "+ myDate.getHours() +":"+ myDate.getMinutes()+":"+ myDate.getSeconds();
@@ -139,8 +144,9 @@ $(function updatePageInfo(){
       loadUrl2 = "/www/test-data/test_data_subnodes.json";
     }
 
-    $("#refreshImage").html(loadUrl);
-    $("#refreshImage2").load(loadUrl2);
+//DEBUG
+    //$("#refreshImage").html(loadUrl);
+    //$("#refreshImage2").load(loadUrl2);
 
     // |*-- If we chose to update at an interval of seconds --*|
     if(refreshSecond == true) {
