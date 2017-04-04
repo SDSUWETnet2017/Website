@@ -9,7 +9,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>WETnet</title>
+    <title>WETNet</title>
 
     <!-- Bootstrap Core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -17,9 +17,15 @@
     <!-- Custom CSS for theme -->
     <link href="css/modern-business.css" rel="stylesheet">
 
+    <!-- Custom CSS for dropdown menu -->
+    <link href="css/drop-down-list.css" rel="stylesheet">
+
+
     <!-- Custom Fonts -->
     <link href="font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
 
+    <!-- Slider texture -->
+    <link rel="stylesheet" href="css/iThing.css" type="text/css" />
 
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -38,9 +44,15 @@
         <div class="container">
             <!-- Brand and toggle get grouped for better mobile display -->
             <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
                 <a class="navbar-brand" href="index.html">Home</a>
             </div>
-            <!-- /.navbar-collapse -->
+
         </div>
         <!-- /.container -->
     </nav>
@@ -51,21 +63,64 @@
         <!-- Page Heading/Breadcrumbs -->
         <div class="row">
             <div class="col-lg-12">
-                <h1 class="page-header">WETnet</h1>
+                <h1 class="page-header">WETnet
+                    <small>Website under construction. Check back soon for more progress!</small>
+                </h1>
+                <!--
+                <ol class="breadcrumb">
+                    <li><a href="index.html">Home</a>
+                    </li>
+                    <li class="active">WETNet</li>
+                </ol>
+                -->
             </div>
         </div>
         <!-- /.row -->
 
         <div class="row">
-            <div class="col-lg-12">
-                <h3 class="style1">Website under construction. Please check back soon!</h3>
+            <!-- Map Column -->
+            <div class="col-md-8">
+                <!-- Embedded Google Map -->
+                <iframe width="100%" height="400px" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="http://maps.google.com/maps?hl=en&amp;ie=UTF8&amp;ll=37.0625,-95.677068&amp;spn=56.506174,79.013672&amp;t=m&amp;z=4&amp;output=embed"></iframe>
             </div>
+
             <div class="col-md-4 text-center">
                 <button id="get-json" class = "text-center">Get JSON</button>
                 <div id="show-json"></div>
             </div>
+
         </div>
 
+        <div class="row">
+
+            <div class="col-md-11 text-center">
+                <div id="dateSlider" class =""></div>
+
+            </div>
+
+            <div class="col-md-4">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-11 text-center dropdown">
+                <button id="slider-select" onclick="dropDownFunction()" class = "dropbtn">Change Slider</button>
+                <div id="myDropdown" class="dropdown-content">
+                    <button id="btn-current" class="btn btn-secondary">Current</button>
+                    <button id="btn-day" class="btn btn-secondary">Day</button>
+                    <button id="btn-week" class="btn btn-secondary">Week</button>
+                    <button id="btn-month" class="btn btn-secondary">Month</button>
+                    <!--
+                    <a href="#">Day</a>
+                    <a href="#">Hour</a>
+                    <a href="#">Week</a>
+                    -->
+                </div>
+            </div>
+
+            <div id="refreshImage"></div>
+            <div id="refreshImage2"></div>
+        </div>
 
         <hr>
 
@@ -73,12 +128,13 @@
         <footer>
             <div class="row">
                 <div class="col-lg-12">
-                    <p>Copyright &copy; WETnet 2017</p>
+                    <p>Copyright &copy; WETNet 2017</p>
                 </div>
             </div>
         </footer>
+
     </div>
-    <!-- Page Contentr -->
+    <!-- /.container -->
 
 </body>
 
@@ -89,10 +145,29 @@
     <!-- jQuery -->
     <script src="js/jquery-3.1.1.min.js"></script>
 
+    <!-- Slider -->
+    <script src="lib/jquery-ui/js/jquery-ui-1.12.1.custom.min.js"></script>
+
+    <script src="lib/js/jquery.mousewheel.min.js"></script>
+
+    <script src="lib/js/jQAllRangeSliders-withRuler-min.js"></script>
+
+    <script src="lib/js/jQAllRangeSliders-min.js"></script>
+
     <!-- Bootstrap Core JavaScript -->
     <script src="js/bootstrap.min.js"></script>
 
+    <script src="js/slider.js"></script>
+
+
+    <!-- Javascript example for how to get a JSON file using JQuery -->
+    <script src="js/get-json-example.js"></script>
+
     <!-- Receive JSON file from server using JQuery -->
     <script src="js/get-json.js"></script>
+
+    <!-- Drop down menu for changing the slider -->
+    <script src="js/drop-down-list.js"></script>
+
 
 </html>
