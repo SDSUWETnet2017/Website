@@ -43,7 +43,8 @@ $("#dateSlider").dateRangeSlider( {
         return new Date(next.setMonth(value.getMonth() + 1));
       },
       label: function(value){
-        return months[value.getMonth()];
+        var day = value.getDate(), month = value.getMonth() + 1, year = value.getFullYear(), hour = value.getHours(), min = value.getMinutes();
+          return month + "/" + day + "/" + year;
       },
       format: function(tickContainer, tickStart, tickEnd){
         tickContainer.addClass("myCustomClass");
@@ -92,7 +93,8 @@ $("#btn-current").click(function() {
           return new Date(next.setMonth(value.getMonth() + 1));
         },
         label: function(value){
-          return months[value.getMonth()];
+          var day = value.getDate(), month = value.getMonth() + 1, year = value.getFullYear(), hour = value.getHours(), min = value.getMinutes();
+          return month + "/" + day + "/" + year;
         },
         format: function(tickContainer, tickStart, tickEnd){
           tickContainer.addClass("myCustomClass");
