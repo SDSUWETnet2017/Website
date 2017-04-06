@@ -120,7 +120,7 @@
             <div class="col-md-11 text-center dropdown">
                 <button id="slider-select" onclick="dropDownFunction()" class = "dropbtn">Change Slider</button>
                 <div id="myDropdown" class="dropdown-content">
-                    <button id="btn-current" class="btn btn-secondary">Current</button>
+                    <button id="btn-today" class="btn btn-secondary">Today</button>
                     <button id="btn-day" class="btn btn-secondary">Day</button>
                     <button id="btn-week" class="btn btn-secondary">Week</button>
                     <button id="btn-month" class="btn btn-secondary">Month</button>
@@ -159,19 +159,26 @@
     <!-- jQuery -->
     <script src="js/jquery-3.1.1.min.js"></script>
 
-    <!-- Slider -->
+    <!-- Moment.js with locales. Our use case for Moment.js:
+         http://stackoverflow.com/questions/1197928/how-to-add-30-minutes-to-a-javascript-date-object -->
+    <script src="lib/js/moment-with-locales.js"></script>
+
+    <!-- JQRangeSlider -->
     <script src="lib/jquery-ui/js/jquery-ui-1.12.1.custom.min.js"></script>
-
     <script src="lib/js/jquery.mousewheel.min.js"></script>
-
     <script src="lib/js/jQAllRangeSliders-withRuler-min.js"></script>
-
     <script src="lib/js/jQAllRangeSliders-min.js"></script>
+
 
     <!-- Bootstrap Core JavaScript -->
     <script src="js/bootstrap.min.js"></script>
 
-    <script src="js/slider.js"></script>
+    <!-- Slider, heatmap, and graph code -->
+    <script src="js/slider-heatmap-graph.js"></script>
+
+    <!-- Drop down menu for changing the slider -->
+    <script src="js/drop-down-list.js"></script>
+
 
 
     <!-- Javascript example for how to get a JSON file using JQuery -->
@@ -179,9 +186,5 @@
 
     <!-- Receive JSON file from server using JQuery -->
     <script src="js/get-json.js"></script>
-
-    <!-- Drop down menu for changing the slider -->
-    <script src="js/drop-down-list.js"></script>
-
 
 </html>
