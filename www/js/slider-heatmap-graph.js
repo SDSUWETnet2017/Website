@@ -1,11 +1,14 @@
 //================================================================================
 // Global Variables
 //================================================================================
+// String variables containing the min and max time stamps
 var timeStampMin;
 var timeStampMax;
 
 // Array containing the node names
 var chosenNodes = ["node 1", "node 2", "node 3", "node 4", "node 5", "node 6", "node 7", "node 8", "node 9", "node 10"];
+
+// Variable used to select the elements in chosenNodes
 var currentNodeIndex = 9;
 
  // This will contain every timestamp between the slider's chosen minimum
@@ -23,7 +26,7 @@ var dateMax;
 
 
 
-// region: Slider Value Changed Event Handler, Slider Default Load, and Change Slider Button Event Handlers
+// region: Slider Default Load, Change Slider Button Event Handlers, and Slider Value Changed Event Handler
 //---------------------------------------------------------------------------------------
 
 
@@ -224,36 +227,44 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
   dateMin = new Date(data.values.min);
   dateMax = new Date(data.values.max);
 
-  // NOTE: Instead of comparing dates using the operators directly,(dateMin == dateMax),
-  // a good practice is to compare the dates but using the milliseconds format.
-  // You can obtain milliseconds format using the getTime( ) function.
-  // Reference: https://wiki.base22.com/display/btg/How+to+compare+dates+in+JavaScript
+  // Create a string for the minimum and maximum timestamps
+  timeStampMin = dateMin.getFullYear() +"-"+ (dateMin.getMonth()+1) +"-"+ dateMin.getDate()  +" "+ dateMin.getHours() +":"+ dateMin.getMinutes();
+  timeStampMax = dateMax.getFullYear() +"-"+ (dateMax.getMonth()+1) +"-"+ dateMax.getDate() +" "+ dateMax.getHours() +":"+ dateMax.getMinutes();
 
-
-  // This will update timeStampMid
+  // This will update the timeStampMid array with all of the inbetween timestamps
   getTimeStamps(dateMin, dateMax);
-
-/* //DEBUG******
-  var counter;
-
-  for (counter = 0; counter < timeStampMid.length; counter++) {
-    console.log("Reading timeStampMid["+ counter +"]: "+ timeStampMid[counter] + "\n");
-  }
-*/
 
   // Reading the .JSON file from the server
   $.getJSON('Node_Json_Data/MasterData.json', function (data) {
 
-    // Make a string of the right format to match the JSON file
-    timeStampMin = dateMin.getFullYear() +"-"+ (dateMin.getMonth()+1) +"-"+ dateMin.getDate()  +" "+ dateMin.getHours() +":"+ dateMin.getMinutes();
-    timeStampMax = dateMax.getFullYear() +"-"+ (dateMax.getMonth()+1) +"-"+ dateMax.getDate() +" "+ dateMax.getHours() +":"+ dateMax.getMinutes();
+    // Print temp reading for lower bound timestamp
+    console.log("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMin +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMin][0]);
 
-    console.log("timeStampMin: " + timeStampMin + "\n");
-    console.log("timeStampMax: " + timeStampMax + "\n");
+    var counter;
+    for (counter = 0; counter < timeStampMid.length; counter++) {
+      var tempString = timeStampMid[counter];
+      console.log("Node " + (currentNodeIndex+1) + "[0]["+ tempString +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][tempString][0]);
+    }
 
-    console.log("Node " + (currentNodeIndex+1) + "[0][0][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMin][0]);
-    console.log("Node " + (currentNodeIndex+1) + "[0][0][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMax][0]);
+    // Print temp reading for upper bound timestamp
+    console.log("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMax +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMax][0]);
+
+
+    // DISPLAY READINGS ON HTML
+    //update div element to display new readings
+    var div = document.getElementById('temp-demo');
+
+    div.innerHTML = ("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMin +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMin][0]) + "\n";
+
+    for (counter = 0; counter < timeStampMid.length; counter++) {
+      var tempString = timeStampMid[counter];
+      div.innerHTML = div.innerHTML + ("Node " + (currentNodeIndex+1) + "[0]["+ tempString +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][tempString][0]) + "\n";
+    }
+
+    div.innerHTML = div.innerHTML + ("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMax +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMax][0]) + "\n";
   }); // End of $.getJSON
+
+
 }); // End of $("#dateSlider").bind("valuesChanged")
 
 
@@ -278,33 +289,26 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
 
 function getTimeStamps(timeMin, timeMax){
 
-  var minCopy = timeMin;
-  var maxCopy = timeMax;
+  // ** IMPORTANT **
+  // You NEED to create a new date object initialized with these values.
+  // If you simply did "minCopy = timeMin" you would be modifying the
+  // original Date object. We want to make a copy of the date object
+  // to prevent this!
+  var minCopy = new Date(timeMin);
+  var maxCopy = new Date(timeMax);
 
-  // NOTE: Instead of comparing dates using the operators directly,(dateMin == dateMax),
-  // a good practice is to compare the dates but using the milliseconds format.
-  // You can obtain milliseconds format using the getTime( ) function.
-  // Reference: https://wiki.base22.com/display/btg/How+to+compare+dates+in+JavaScript
-
-/* //DEBUG******
-  if(maxCopy.getTime() - minCopy.getTime() > 600000) {
-    console.log("Difference is greater than 10 minutes\n");
-  }
-  else if(maxCopy.getTime() - minCopy.getTime() == 600000) {
-    console.log("Difference is exactly 10 minutes");
-    minCopy = moment(minCopy).add(10, 'm');
-    minCopy.moment().toDate();
-    console.log("Added 10 minutes to minCopy: " + minCopy.getMinutes());
-  }
-*/
-
-  // If the current min and max are the same, simply return
+  // If the current min and max are the same, clear out timeStampMid and return
   if(minCopy.getTime() == maxCopy.getTime()) {
 
     // Clear out timeStampMid
     timeStampMid = [];
     return;
   }
+
+  // NOTE: Instead of comparing dates using the operators directly,(dateMin == dateMax),
+  // a good practice is to compare the dates but using the milliseconds format.
+  // You can obtain milliseconds format using the getTime( ) function.
+  // Reference: https://wiki.base22.com/display/btg/How+to+compare+dates+in+JavaScript
 
   // If the current difference between min and max is 600000 milliseconds,
   // (equivalent to 10 minutes), we do not need to calculate inbetween values.
@@ -318,32 +322,26 @@ function getTimeStamps(timeMin, timeMax){
 
     // Clear out timeStampMid
     timeStampMid = [];
-    console.log("Calculate inbetween time stamps");
 
-/* //DEBUG******
     // Only loop if the difference in min and max is greater than 10 minutes
+    // This will continue incrementing the minimum by 10 minutes
+    // until it becomes 10 minutes away from the maximum timestamp
     while((maxCopy.getTime() - minCopy.getTime()) > 600000) {
 
-      //timeStampMin = dateMin.getFullYear() +"-"+ (dateMin.getMonth()+1) +"-"+ dateMin.getDate()  +" "+ dateMin.getHours() +":"+ dateMin.getMinutes();
-      var tempDate = minCopy;
+      // Increment the minutes by 10
+      minCopy.setMinutes(minCopy.getMinutes()+10);
 
-      tempDate = moment().add(10, 'm');
+      // Create a new timestamp after incrementing minutes by 10
+      var tempString = minCopy.getFullYear() +"-"+ (minCopy.getMonth()+1) +"-"+ minCopy.getDate()  +" "+ minCopy.getHours() +":"+ minCopy.getMinutes();
 
-      minCopy = moment().toDate();
-
-      //minCopy.setMinutes(minCopy.getMinutes() + 10);
-
-      var tempString = minCopy.getFullYear() +"-"+ (minCopy.getMonth()) +"-"+ minCopy.getDate()  +" "+ minCopy.getHours() +":"+ minCopy.getMinutes();
-
+      // Append the current string into the timeStampMid array
       timeStampMid.push(tempString);
-      //minCopy = newDateObj;
-    }
-*/
+    } // End of While loop
 
     return;
-  }
+  } // End of else
 
-/*
+/* //*** Not necessary since Date object handles rollover
     // Don't cache ajax or content won't be fresh
     $.ajaxSetup ({
         cache: false,
