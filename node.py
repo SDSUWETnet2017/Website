@@ -127,9 +127,9 @@ class Node():
         return current_day
     
     def get_time_stamp(self,n,start_day):
-        timestamp = '2017-02-' + str(self.get_day(n,start_day))
+        timestamp = '2017/4/' + str(self.get_day(n,start_day))
         if self.get_min(n) < 10:
-            minute = '0' + str(self.get_min(n))
+            minute = str(self.get_min(n))
             timestamp += ' ' + str(self.get_hr(n)) + ':' + minute
         else:
             timestamp += ' ' + str(self.get_hr(n)) + ':' + str(self.get_min(n))
@@ -145,7 +145,7 @@ class Node():
                 data_vect=[self.temp_vect[n],self.humidity[n],self.UV[n],
                            self.pressure, self.windspeed[n],
                             self.get_wind_direction(n),
-                            self.get_wind_gust(n)]
+                            self.get_wind_gust(n),'low']
 
             sensor_data_dict[self.get_time_stamp(n,start_day)] = data_vect
         
