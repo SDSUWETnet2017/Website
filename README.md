@@ -16,7 +16,7 @@ for subnodes
                                                           ............
                                                           }
 for supernodes 
-< time stamped data dictionary > = { <time1>: [temperature, humidity, UV, pressure, windspeed, winddirection, windgust],
-                                     <time2>: [temperature, humidity, UV, pressure, windspeed, winddirection, windgust],
+< time stamped data dictionary > = { <time1>: [temperature, humidity, UV, pressure, windspeed, winddirection, windgust, air quality],
+                                     <time2>: [temperature, humidity, UV, pressure, windspeed, winddirection, windgust,air quality],
                                      ......
                                      }
