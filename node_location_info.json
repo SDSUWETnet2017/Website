@@ -1,0 +1,11 @@
+{ node1: {32.775660, -117.071543, "deployment description node 1"},
+node2: {32.776315,  -117.071475,"deployment description node 2"},
+node3: {32.776075, -117.071910,"deployment description node 3"},
+node4: {32.775567, -117.071914,"deployment description node 4"},
+node5: {32.775881, -117.071002,"deployment description node 5"},
+node6: {32.776689, -117.071394,"deployment description node 6"},
+node7: {32.776804, -117.071858,"deployment description node 7"},
+node8: {32.776898, -117.072355,"deployment description node 8"},
+node9: {32.775683, -117.072382,"deployment description node 9"},
+node10: {32.774507, -117.071407,"deployment description  node 10"}
+}
