@@ -5,7 +5,7 @@ Humidity in %
 wind direction is angle in degrees clockwise of N
 windspeed mph
 pic is jpg encoded in base64 string 
-time stamp format = YYYY-02-DD HR:MM     military time
+time stamp format = MM/DD/YYYY HR:MM     military time, non zero padded for month and day
 data presented in following format
 { 'node 1' : [ <time stamped data dictionaries> , latitude, longitude],
 'node 2': .................
