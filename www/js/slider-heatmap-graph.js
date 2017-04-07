@@ -1,9 +1,24 @@
 //================================================================================
+// LEGEND
+//================================================================================
+// Regions are used to seperate main sections of code ie. slider, graph, map, etc.
+
+// //========= used to specify section within your region to organize topics
+
+// This is used for function definition
+// |--------------------------------------------------------------------------
+// | Functions
+// |--------------------------------------------------------------------------
+
+//================================================================================
 // Global Variables
 //================================================================================
 // String variables containing the min and max time stamps
 var timeStampMin;
 var timeStampMax;
+
+// For Graph
+var plotData = new Array();
 
 // Array containing the node names
 var chosenNodes = ["node 1", "node 2", "node 3", "node 4", "node 5", "node 6", "node 7", "node 8", "node 9", "node 10"];
@@ -26,7 +41,7 @@ var dateMax;
 
 
 
-// region: Slider Default Load, Change Slider Button Event Handlers, and Slider Value Changed Event Handler
+// region: Brandon's Slider Default Load, Change Slider Button Event Handlers, and Slider Value Changed Event Handler
 //---------------------------------------------------------------------------------------
 
 
@@ -240,28 +255,118 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
     // Print temp reading for lower bound timestamp
     console.log("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMin +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMin][0]);
 
-    var counter;
-    for (counter = 0; counter < timeStampMid.length; counter++) {
+    // Fill Graph array with minimum timestamp
+    var timeStampFull = [];
+    plotData = [];
+    timeStampFull.push(timeStampMin);
+
+    for (var counter = 0; counter < timeStampMid.length; counter++) {
+
       var tempString = timeStampMid[counter];
       console.log("Node " + (currentNodeIndex+1) + "[0]["+ tempString +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][tempString][0]);
+
+      // Fill Graph array with middle timestamps
+      timeStampFull.push(tempString);
     }
 
     // Print temp reading for upper bound timestamp
     console.log("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMax +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMax][0]);
 
+    // Fill Graph array with maximum timestamp
+    timeStampFull.push(timeStampMax);
 
+    for(var counter2 = 0; counter2 < timeStampFull.length; counter2++) {
+
+      console.log("timeStampFull[counter2]: " + timeStampFull[counter2]);
+      // Take date in milliseconds
+      var datePoint = new Date(timeStampFull[counter2]).getTime();
+      var tempPoint = data[chosenNodes[currentNodeIndex]][0][timeStampFull[counter2]][0];
+      // plotData.push(date in milliseconds, Temperature reading)
+      plotData.push(new Array(datePoint, tempPoint));
+
+    }
+
+    /***********   HEATMAP   **************/
     // DISPLAY READINGS ON HTML
     //update div element to display new readings
     var div = document.getElementById('temp-demo');
 
-    div.innerHTML = ("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMin +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMin][0]) + "\n";
+    // For Kevin's Heatmap, this is a single reading. It is the
+    var heatMapMin = data[chosenNodes[currentNodeIndex]][0][timeStampMin][0];
+    var heatMapMax = data[chosenNodes[currentNodeIndex]][0][timeStampMax][0];
+    var averageHeat = ((heatMapMin + heatMapMax)/2);
+    console.log("Average heat between min and max: " + averageHeat);
 
+    /***********   PLACE HEATMAP UPDATE HERE USING averageHeat   **************/
+
+    /***********   HEATMAP END   **************/
+
+
+    /***********   PHILIPPE'S GRAPH   **************/
+        // var dataset = [
+        // {
+        //     label: "node 10",
+        //     data: plotdata,
+        //     color: "#FF0000"
+        // },
+        // {
+        //     label: "node 5",
+        //     data: plotdata2,
+        //     color: "#0000FF"
+        // },
+        // {
+        //     label: "node 1",
+        //     data: plotdata3,
+        //     color: "#00FF00"
+        // }
+        //     ];//End of var dataset declaration
+
+
+        var dataset = [
+          {
+             label: chosenNodes[currentNodeIndex],
+             data: plotData,
+             color: "#FF0000"
+          }
+        ]
+
+        $.plot($("#placeholder"), dataset, {
+            series: {
+                lines: { show: true },
+                points: {show: true },
+            },
+            grid: {
+                hoverable: true,
+                clickable: true
+            },
+            xaxis:
+            {
+                mode: "time",
+                timeformat: "%m/%d/%y\n %h:%M",
+                //min: ((new Date(dateMin).getTime() - 600000*6*8)),
+                //max: ((new Date(dateMax).getTime() - 600000*6*8))
+                min: new Date(dateMin).getTime(),
+                max: new Date(dateMax).getTime()
+            },
+
+            yaxis:
+            {
+                min: 65,
+                max: 90,
+                tickSize: 1
+            }
+        });
+
+    /***********   END OF GRAPH   **************/
+
+    // Display readings on page
+    div.innerHTML = ("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMin +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMin][0]) + "\n";
     for (counter = 0; counter < timeStampMid.length; counter++) {
       var tempString = timeStampMid[counter];
       div.innerHTML = div.innerHTML + ("Node " + (currentNodeIndex+1) + "[0]["+ tempString +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][tempString][0]) + "\n";
     }
-
     div.innerHTML = div.innerHTML + ("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMax +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMax][0]) + "\n";
+
   }); // End of $.getJSON
 
 
@@ -465,3 +570,103 @@ function getTimeStamps(timeMin, timeMax){
 //endregion: Slider Value Changed Event Handler, Slider Default Load, and Change Slider Button Event Handlers
 
 
+
+
+
+
+// region: Yusuf's checkboxes
+//---------------------------------------------------------------------------------------
+
+//================================================================================
+// Event Handlers
+//================================================================================
+
+
+//================================================================================
+// Functions
+//================================================================================
+
+/*
+|--------------------------------------------------------------------------
+| Function Name
+|--------------------------------------------------------------------------
+|
+| Description of function
+|
+| Inputs:
+| Return:
+|
+|
+*/
+
+//---------------------------------------------------------------------------------------
+//endregion: End of Yusuf's checkboxes
+
+
+
+
+
+
+
+// region: Kevin's Heatmap
+//---------------------------------------------------------------------------------------
+
+//================================================================================
+// Event Handlers
+//================================================================================
+
+
+//================================================================================
+// Functions
+//================================================================================
+
+/*
+|--------------------------------------------------------------------------
+| Function Name
+|--------------------------------------------------------------------------
+|
+| Description of function
+|
+| Inputs:
+| Return:
+|
+|
+*/
+
+//---------------------------------------------------------------------------------------
+//endregion: End of Kevin's Heatmap
+
+
+
+
+
+
+
+// region: Philippe's Graph
+//---------------------------------------------------------------------------------------
+
+//================================================================================
+// Event Handlers
+//================================================================================
+
+
+
+//================================================================================
+// Functions
+//================================================================================
+
+/*
+|--------------------------------------------------------------------------
+| Function Name
+|--------------------------------------------------------------------------
+|
+| Description of function
+|
+| Inputs:
+| Return:
+|
+|
+*/
+
+//---------------------------------------------------------------------------------------
+//endregion: End of Philippe's Graph

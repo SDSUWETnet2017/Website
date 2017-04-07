@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>WETNet Home</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS for theme -->
+    <link href="../css/modern-business.css" rel="stylesheet">
+
+    <!-- Custom CSS for dropdown menu -->
+    <link href="../css/drop-down-list.css" rel="stylesheet">
+
+    <!-- Custom CSS for slider -->
+    <link href="../css/bootstrap-slider.min.css" rel="stylesheet">
+
+    <!-- Custom Fonts -->
+    <link href="font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 75%;
+        width: 75%;
+      }
+      #floating-panel {
+        position: absolute;
+        top: 10px;
+        left: 25%;
+        z-index: 5;
+        background-color: #fff;
+        padding: 5px;
+        border: 1px solid #999;
+        text-align: center;
+        font-family: 'Roboto','sans-serif';
+        line-height: 30px;
+        padding-left: 10px;
+      }
+    </style>
+
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <div class="container">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="index.html">WETnet Home</a>
+            </div>
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="README.md" download="README.md">Download CSV</a>
+                    </li>
+                    <li>
+                        <a href="images.html">Images</a>
+                    </li>
+                    <li>
+                        <a href="contact.html">Contact</a>
+                    </li>
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container -->
+    </nav>
+
+     <div class="col-md-8">
+          <button onclick="toggleHeatmap()">Toggle Heatmap</button>
+    </div>
+
+    <div id="map"></div>
+
+    <!-- Page Content -->
+    <div class="container">
+
+        <div class="row">
+            <div class="col-md-4 text-center">
+                <button id="get-json" class = "text-center">Get JSON</button>
+                <div id="show-json"></div>
+            </div>
+
+        </div>
+
+        <div class="row">
+
+            <div class="col-md-4 text-center">
+                <span id="slider1ValLow" class="hidden">Example low value</span>
+                <span id="slider1ValHigh" class="hidden">Example high value</span>
+                <input id="timeSlider1" type="text"/>
+            </div>
+
+            <div class="col-md-4">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 text-center dropdown">
+                <button id="slider-select" onclick="dropDownFunction()" class = "dropbtn">Change Slider</button>
+                <div id="myDropdown" class="dropdown-content">
+                    <button id="btn-day" class="btn btn-secondary">Hour</button>
+                    <button id="btn-day" class="btn btn-secondary">Day</button>
+                    <button id="btn-day" class="btn btn-secondary">Week</button>
+                    <button id="btn-day" class="btn btn-secondary">Month</button>
+                    <!--
+                    <a href="#">Day</a>
+                    <a href="#">Hour</a>
+                    <a href="#">Week</a>
+                    -->
+                </div>
+            </div>
+
+            <div id="refreshImage"></div>
+            <div id="refreshImage2"></div>
+        </div>
+
+        <hr>
+
+        <!-- Footer -->
+        <footer>
+            <div class="row">
+                <div class="col-lg-12">
+                    <p>Copyright &copy; WETNet 2017</p>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+    <!-- /.container -->
+
+</body>
+
+    <!-- ***** ORDER OF THESE MATTER! *****
+        For example, bootstrap-slider relies on bootstrap being defined first.
+        Keep this in mind when reordering these statements -->
+
+    <!-- jQuery -->
+    <script src="../js/jquery-3.1.1.min.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="../js/bootstrap.min.js"></script>
+
+    <script src="../js/bootstrap-slider.js"></script>
+
+    <script src="../js/slider.js"></script>
+
+    <!-- Javascript example for how to get a JSON file using JQuery -->
+    <script src="../js/get-json-example.js"></script>
+
+    <!-- Receive JSON file from server using JQuery -->
+    <script src="../js/get-json.js"></script>
+
+    <!-- Drop down menu for changing the slider -->
+    <script src="../js/drop-down-list.js"></script>
+
+    <script src="show-map-new.js"></script>
+
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDa97LR9tnBDKucmUn_gj0C7nJwq7fR_is&libraries=visualization&callback=initMap">
+    </script>
+
+</html>
