@@ -12,7 +12,7 @@ Generates Data for 7 days in month of Febuary before feb 21
 
 from node import Node
 import json
-# from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 
 latitudes = [32.775660,32.776315,32.776075,32.775567,32.775881,32.776689,
                  32.776804,32.776898,32.775683,32.774507]
@@ -31,7 +31,7 @@ for i in range(N_nodes):
     else:
         node = Node(i+1,node_type='sub')
 
-    data_dict['node '+str(i+1)] = [node.return_dict(start_day=16),
+    data_dict['node '+str(i+1)] = [node.return_dict(start_day=7),
                                   latitudes[i],longitudes[i]]
     
 with open('test_data.json','w') as f_obj:

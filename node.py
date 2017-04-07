@@ -127,7 +127,7 @@ class Node():
         return current_day
     
     def get_time_stamp(self,n,start_day):
-        timestamp = '2017/4/' + str(self.get_day(n,start_day))
+        timestamp = '4/' + str(self.get_day(n,start_day))+'/2017' 
         if self.get_min(n) < 10:
             minute = str(self.get_min(n))
             timestamp += ' ' + str(self.get_hr(n)) + ':' + minute
