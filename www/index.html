@@ -1,43 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
+    <head>
 
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="">
 
-    <title>WETNet</title>
+        <title>WETNet</title>
 
-    <!-- Bootstrap Core CSS -->
-    <link href="css/bootstrap.min.css" rel="stylesheet">
+        <!-- Bootstrap Core CSS -->
+        <link href="css/bootstrap.min.css" rel="stylesheet" rel="stylesheet" type="text/css">
 
-    <!-- Custom CSS for theme -->
-    <link href="css/modern-business.css" rel="stylesheet">
+        <!-- Custom CSS for theme -->
+        <link href="css/modern-business.css" rel="stylesheet" rel="stylesheet" type="text/css">
 
-    <!-- Custom CSS for dropdown menu -->
-    <link href="css/drop-down-list.css" rel="stylesheet">
+        <!-- Custom CSS for dropdown menu -->
+        <link href="css/drop-down-list.css" rel="stylesheet" rel="stylesheet" type="text/css">
 
+        <!-- Custom Fonts -->
+        <link href="font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
 
-    <!-- Custom Fonts -->
-    <link href="font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+        <!-- Slider texture -->
+        <link href="css/iThing.css" rel="stylesheet" type="text/css" />
 
-    <!-- Slider texture -->
-    <link rel="stylesheet" href="css/iThing.css" type="text/css" />
+        <!-- Philippe's Graph-->
+        <link href="lib/jquery-ui/css/jquery-ui.min.css" rel="stylesheet" type="text/css">
+        <link href="css/flot-graph.css" rel="stylesheet" type="text/css">
 
+        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
 
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
+        <!-- Kevin's Hetmap -->
+        <style>
+          /* Always set the map height explicitly to define the size of the div
+           * element that contains the map. */
+          #map {
+            height: 70%;
+            width: 100%;
+          }
+          #floating-panel {
+            position: absolute;
+            top: 10px;
+            left: 25%;
+            z-index: 5;
+            background-color: #fff;
+            padding: 5px;
+            border: 1px solid #999;
+            text-align: center;
+            font-family: 'Roboto','sans-serif';
+            line-height: 30px;
+            padding-left: 10px;
+          }
+        </style>
+        <!-- End of Kevin's Heatmap -->
 
-</head>
+    </head>
 
-<body>
+    <body>
 
     <!-- Navigation -->
     <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
@@ -50,124 +76,193 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="index.html">Home</a>
+                <a class="navbar-brand" href="index.html">WETnet Home</a>
             </div>
 
         </div>
         <!-- /.container -->
     </nav>
 
-    <!-- Page Content -->
-    <div class="container">
+        <div id="map"></div>
 
-        <!-- Page Heading/Breadcrumbs -->
-        <div class="row">
-            <div class="col-lg-12">
-                <h1 class="page-header">WETnet
-                    <small>Website under construction. Check back soon for more progress!</small>
-                </h1>
-                <!--
-                <ol class="breadcrumb">
-                    <li><a href="index.html">Home</a>
-                    </li>
-                    <li class="active">WETNet</li>
-                </ol>
-                -->
-            </div>
-        </div>
-        <!-- /.row -->
+        <!-- Page Content -->
+        <div class="container" style = "padding-top:2.5%">
 
-        <div class="row">
-            <!-- Map Column -->
-            <div class="col-md-8">
-                <!-- Embedded Google Map -->
-                <iframe width="100%" height="400px" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="http://maps.google.com/maps?hl=en&amp;ie=UTF8&amp;ll=37.0625,-95.677068&amp;spn=56.506174,79.013672&amp;t=m&amp;z=4&amp;output=embed"></iframe>
-            </div>
-
-            <div class="col-md-4 text-center">
-                <button id="get-json" class = "text-center">Get JSON</button>
-                <div id="show-json"></div>
-            </div>
-
-        </div>
-
-        <div class="row">
-
-            <div class="col-md-11 text-center">
-                <div id="dateSlider" class =""></div>
-
-            </div>
-
-            <div class="col-md-4">
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-11 text-center dropdown">
-                <button id="slider-select" onclick="dropDownFunction()" class = "dropbtn">Change Slider</button>
-                <div id="myDropdown" class="dropdown-content">
-                    <button id="btn-current" class="btn btn-secondary">Today</button>
-                    <button id="btn-day" class="btn btn-secondary">Day</button>
-                    <button id="btn-week" class="btn btn-secondary">Week</button>
-                    <button id="btn-month" class="btn btn-secondary">Month</button>
-                    <!--
-                    <a href="#">Day</a>
-                    <a href="#">Hour</a>
-                    <a href="#">Week</a>
-                    -->
-                </div>
-            </div>
-
-            <div id="refreshImage"></div>
-            <div id="refreshImage2"></div>
-        </div>
-
-        <hr>
-
-        <!-- Footer -->
-        <footer>
+        <!-- Slider Code -->
             <div class="row">
-                <div class="col-lg-12">
-                    <p>Copyright &copy; WETNet 2017</p>
+
+                <div class="col-md-12 text-center">
+                    <div id="dateSlider" class =""></div>
+
+                </div>
+
+                <div class="col-md-4">
                 </div>
             </div>
-        </footer>
 
-    </div>
-    <!-- /.container -->
+            <div class="row">
+                <div class="col-md-12 text-center dropdown">
+                    <button id="slider-select" onclick="dropDownFunction()" class = "dropbtn">Change Slider</button>
+                    <div id="myDropdown" class="dropdown-content">
+                        <button id="btn-today" class="btn btn-secondary">Today</button>
+                        <button id="btn-day" class="btn btn-secondary">Day</button>
+                        <button id="btn-week" class="btn btn-secondary">Week</button>
+                        <button id="btn-month" class="btn btn-secondary">Month</button>
+                        <!--
+                        <a href="#">Day</a>
+                        <a href="#">Hour</a>
+                        <a href="#">Week</a>
+                        -->
+                    </div>
+                </div>
 
-</body>
+                <div id="refreshImage"></div>
+                <div id="refreshImage2"></div>
+            </div>
+        <!-- End of Slider Code-->
+
+
+        <!-- Graph and Check Box Code -->
+            <div class="row">
+
+                <!-- Graph Column -->
+                <div class="col-sm-9">
+
+                    <!-- Embedded Google Map -->
+<!--
+                    <iframe width="100%" height="400px" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="http://maps.google.com/maps?hl=en&amp;ie=UTF8&amp;ll=37.0625,-95.677068&amp;spn=56.506174,79.013672&amp;t=m&amp;z=4&amp;output=embed"></iframe>
+-->
+                    <div class="flot-graph-container">
+                        <div id="placeholder" class="flot-graph-inner"></div>
+                    </div>
+                </div>
+                <!-- Graph Column -->
+
+                <!-- Area to the right of Graph -->
+                <div class="col-sm-3 text-center">
+
+                    <div class="row">
+                        <button id="get-json" class = "text-center">Get JSON</button>
+                        <div id="show-json"></div>
+                    </div>
+
+                    <div class="row">
+                        <h1>
+                            Node 1
+                        </h1>
+                    </div>
+
+                    <div class="row">
+                        <input name="graph-name" type="radio" id ="Temperature" class="data"/>
+                        <font size=3>
+                            <label for="Temperature">
+                                Temperature
+                            </label>
+                        </font>
+
+                        <input name="graph-name" type="radio" id ="Humidity" class="data"/>
+                        <font size=3>
+                            <label for="Humidity">
+                                Humidity
+                            </label>
+                        </font>
+                    </div>
+
+                    <div class="row">
+                        <input type="checkbox" id ="UV Index" class="data"/>
+                        <font size=3>
+                            <label for="UV Index">
+                                UV Index
+                            </label>
+                        </font>
+                    </div>
+
+                    <div class="row">
+                        <input type="checkbox" id ="Wind Direction" class="data"/>
+                        <font size=3>
+                            <label for="Wind Direction">
+                                Wind Direction
+                            </label>
+                        </font>
+
+                        <input name="graph-name" type="radio" id ="Wind Speed" class="data"/>
+                        <font size=3>
+                            <label for="Wind Speed">
+                                Wind Speed
+                            </label>
+                        </font>
+                    </div>
+                </div>
+                <!-- End of area to the right of Graph -->
+
+            </div>
+        <!-- End of Graph and Check Box Code -->
+
+        <!-- Temporary code to print heat readings on the website-->
+            <div class="row">
+                <div id = "temp-demo" class="col-md-11 text-center" style="word-wrap:break-word;white-space:pre;white-space:-moz-pre-wrap;white-space:pre-wrap;">
+                </div>
+            </div>
+
+
+            <hr>
+
+            <!-- Footer -->
+            <footer>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <p>Copyright &copy; WETNet 2017</p>
+                    </div>
+                </div>
+            </footer>
+
+        </div>
+        <!-- End of Page Content /.container -->
+
+    </body>
 
     <!-- ***** ORDER OF THESE MATTER! *****
         For example, bootstrap-slider relies on bootstrap being defined first.
         Keep this in mind when reordering these statements -->
 
     <!-- jQuery -->
-    <script src="js/jquery-3.1.1.min.js"></script>
+    <script src="js/jquery-3.1.1.min.js" language="javascript" type="text/javascript"></script>
 
-    <!-- Slider -->
-    <script src="lib/jquery-ui/js/jquery-ui-1.12.1.custom.min.js"></script>
+    <!-- Moment.js with locales. Our use case for Moment.js:
+         http://stackoverflow.com/questions/1197928/how-to-add-30-minutes-to-a-javascript-date-object -->
+    <script src="lib/js/moment-with-locales.js" language="javascript" type="text/javascript"></script>
 
-    <script src="lib/js/jquery.mousewheel.min.js"></script>
+     <!-- Philippe's Flot Graph uses this -->
+    <script src="lib/jquery-ui/js/jquery-ui.min.js" language="javascript" type="text/javascript"></script>
+    <script src="lib/flot/jquery.flot.js" language="javascript" type="text/javascript"></script>
+    <script  src="lib/flot/jquery.flot.time.js" language="javascript" type="text/javascript"></script>
 
-    <script src="lib/js/jQAllRangeSliders-withRuler-min.js"></script>
+    <!-- Brandon's JQRangeSlider -->
+    <script src="lib/jquery-ui/js/jquery-ui-1.12.1.custom.min.js" language="javascript" type="text/javascript"></script>
+    <script src="lib/js/jquery.mousewheel.min.js" language="javascript" type="text/javascript"></script>
+    <script src="lib/js/jQAllRangeSliders-withRuler-min.js" language="javascript" type="text/javascript"></script>
+    <script src="lib/js/jQAllRangeSliders-min.js" language="javascript" type="text/javascript"></script>
 
-    <script src="lib/js/jQAllRangeSliders-min.js"></script>
 
     <!-- Bootstrap Core JavaScript -->
-    <script src="js/bootstrap.min.js"></script>
+    <script src="js/bootstrap.min.js" language="javascript" type="text/javascript"></script>
 
-    <script src="js/slider.js"></script>
+    <!-- Brandon's Slider, heatmap, and graph code -->
+    <script src="js/slider-heatmap-graph.js" language="javascript" type="text/javascript"></script>
 
+    <!-- Brandon's Drop down menu for changing the slider -->
+    <script src="js/drop-down-list.js" language="javascript" type="text/javascript"></script>
 
     <!-- Javascript example for how to get a JSON file using JQuery -->
-    <script src="js/get-json-example.js"></script>
+    <script src="js/get-json-example.js" language="javascript" type="text/javascript"></script>
 
     <!-- Receive JSON file from server using JQuery -->
-    <script src="js/get-json.js"></script>
+    <script src="js/get-json.js" language="javascript" type="text/javascript"></script>
 
-    <!-- Drop down menu for changing the slider -->
-    <script src="js/drop-down-list.js"></script>
+    <!-- Kevin's Heatmap -->
+    <script src="js/show-map-new.js" language="javascript" type="text/javascript"></script>
 
-
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDa97LR9tnBDKucmUn_gj0C7nJwq7fR_is&libraries=visualization&callback=initMap">
+    </script>
 </html>
