@@ -24,7 +24,7 @@ var plotData = new Array();
 var chosenNodes = ["node 1", "node 2", "node 3", "node 4", "node 5", "node 6", "node 7", "node 8", "node 9", "node 10"];
 
 // Variable used to select the elements in chosenNodes
-var currentNodeIndex = 9;
+var currentNodeIndex = 0;
 
  // This will contain every timestamp between the slider's chosen minimum
  // and maximum date in string format. This will be in 10 minute increments
@@ -52,8 +52,8 @@ var dateMax;
 $("#dateSlider").dateRangeSlider( {
 
     //Note, month 0 is January. Month 4, is May.
-    bounds: {min: new Date(2017, 1, 17, 0, 0), max: new Date(2017, 1, 17, 24, 0)},
-    defaultValues: {min: new Date(2017, 1, 17, 5, 10), max: new Date(2017, 1, 17, 5, 50)},
+    bounds: {min: new Date(2017, 3, 9, 0, 0), max: new Date(2017, 3, 9, 24, 0)},
+    defaultValues: {min: new Date(2017, 3, 9, 5, 10), max: new Date(2017, 3, 9, 5, 50)},
     scales: [{
       first: function(value){ return value; },
       end: function(value) {return value; },
@@ -95,8 +95,8 @@ $("#btn-today").click(function() {
   $("#dateSlider").dateRangeSlider( {
 
       //Note, month 0 is January. Month 4, is May.
-      bounds: {min: new Date(2017, 1, 17, 0, 0), max: new Date(2017, 1, 17, 24, 0)},
-      defaultValues: {min: new Date(2017, 1, 17, 5, 10), max: new Date(2017, 1, 17, 5, 50)},
+      bounds: {min: new Date(2017, 3, 9, 0, 0), max: new Date(2017, 1, 3, 9, 0)},
+      defaultValues: {min: new Date(2017, 3, 9, 5, 10), max: new Date(2017, 3, 9, 5, 50)},
       scales: [{
         first: function(value){ return value; },
         end: function(value) {return value; },
@@ -242,9 +242,11 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
   dateMin = new Date(data.values.min);
   dateMax = new Date(data.values.max);
 
+
+
   // Create a string for the minimum and maximum timestamps
-  timeStampMin = dateMin.getFullYear() +"-"+ (dateMin.getMonth()+1) +"-"+ dateMin.getDate()  +" "+ dateMin.getHours() +":"+ dateMin.getMinutes();
-  timeStampMax = dateMax.getFullYear() +"-"+ (dateMax.getMonth()+1) +"-"+ dateMax.getDate() +" "+ dateMax.getHours() +":"+ dateMax.getMinutes();
+  timeStampMin = (dateMin.getMonth()+1) +"/"+ dateMin.getDate() +"/"+  dateMin.getFullYear() +" "+ dateMin.getHours() +":"+ dateMin.getMinutes();
+  timeStampMax = (dateMax.getMonth()+1) +"/"+ dateMax.getDate() +"/"+ dateMax.getFullYear() +" "+ dateMax.getHours() +":"+ dateMax.getMinutes();
 
   // This will update the timeStampMid array with all of the inbetween timestamps
   getTimeStamps(dateMin, dateMax);
@@ -277,7 +279,6 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
 
     for(var counter2 = 0; counter2 < timeStampFull.length; counter2++) {
 
-      console.log("timeStampFull[counter2]: " + timeStampFull[counter2]);
       // Take date in milliseconds
       var datePoint = new Date(timeStampFull[counter2]).getTime();
       var tempPoint = data[chosenNodes[currentNodeIndex]][0][timeStampFull[counter2]][0];
@@ -351,8 +352,8 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
 
             yaxis:
             {
-                min: 65,
-                max: 90,
+                min: 45,
+                max: 95,
                 tickSize: 1
             }
         });
@@ -437,7 +438,7 @@ function getTimeStamps(timeMin, timeMax){
       minCopy.setMinutes(minCopy.getMinutes()+10);
 
       // Create a new timestamp after incrementing minutes by 10
-      var tempString = minCopy.getFullYear() +"-"+ (minCopy.getMonth()+1) +"-"+ minCopy.getDate()  +" "+ minCopy.getHours() +":"+ minCopy.getMinutes();
+      var tempString =  (minCopy.getMonth()+1) +"/"+ minCopy.getDate() +"/"+ minCopy.getFullYear() +" "+ minCopy.getHours() +":"+ minCopy.getMinutes();
 
       // Append the current string into the timeStampMid array
       timeStampMid.push(tempString);
@@ -463,10 +464,10 @@ function getTimeStamps(timeMin, timeMax){
     });
 
     // **** IT IS IMPORTANT TO DISPLAY THE INFO BEFORE INCREMENTING IT ****
-    //console.log(myDate.getFullYear() +"-"+ myDate.getDate() +"-"+ myDate.getMonth() +" "+ myDate.getHours() +":"+ myDate.getMinutes()+":"+ myDate.getSeconds());
+    //console.log(myDate.getDate() +"/"+ myDate.getMonth() +"/"+ myDate.getFullYear()+" "+ myDate.getHours() +":"+ myDate.getMinutes()+":"+ myDate.getSeconds());
 
     // load() functions
-    var loadUrl = myDate.getFullYear() +"-"+ myDate.getDate() +"-"+ myDate.getMonth() +" "+ myDate.getHours() +":"+ myDate.getMinutes()+":"+ myDate.getSeconds();
+    var loadUrl = myDate.getDate() +"/"+ myDate.getMonth() +"/"+ myDate.getFullYear() +" "+ myDate.getHours() +":"+ myDate.getMinutes()+":"+ myDate.getSeconds();
     var loadUrl2;
     if(i == true) {
       loadUrl2 = "/www/test-data/example.json";
