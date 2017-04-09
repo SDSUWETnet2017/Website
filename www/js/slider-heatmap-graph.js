@@ -344,8 +344,8 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
             {
                 mode: "time",
                 timeformat: "%m/%d/%y\n %h:%M",
-                //min: ((new Date(dateMin).getTime() - 600000*6*8)),
-                //max: ((new Date(dateMax).getTime() - 600000*6*8))
+                //min: ((new Date(dateMin).getTime() - 600000*6*7)),
+                //max: ((new Date(dateMax).getTime() - 600000*6*7))
                 min: new Date(dateMin).getTime(),
                 max: new Date(dateMax).getTime()
             },
@@ -354,7 +354,7 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
             {
                 min: 45,
                 max: 95,
-                tickSize: 1
+                tickSize: 5
             }
         });
 
