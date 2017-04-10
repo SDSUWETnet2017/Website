@@ -14,6 +14,21 @@
 // Global Variables
 //================================================================================
 // String variables containing the min and max time stamps
+var initTimeMin = new Date(2017, 3, 9, 0, 0);
+var initTimeMax = new Date(2017, 3, 9, 4, 20);
+
+var todayBoundsMin = new Date(2017, 3, 9);
+var todayBoundsMax = Date(2017, 3, 10);
+
+var dayBoundsMin = new Date(2017, 0, 1);
+var dayBoundsMax = new Date(2017, 11, 31);
+
+var weekBoundsMin = new Date(2017, 0, 1);
+var weekBoundsMax = new Date(2017, 11, 31);
+
+var monthBoundsMin = new Date(2017, 0, 1);
+var monthBoundsMax = new Date(2017, 12, 31);
+
 var timeStampMin;
 var timeStampMax;
 
@@ -30,6 +45,15 @@ var currentNodeIndex = 0;
  // and maximum date in string format. This will be in 10 minute increments
 var timeStampMid = [];
 
+//================================================================================
+// Heatmap Variables
+//================================================================================
+// Used for the slider ruler text within the slider
+var map;
+var averageHeat;
+  var lat = [32.777262, 32.777003, 32.777261, 32.776814, 32.777381, 32.777599, 32.776912, 32.777072, 32.776858, 32.777088];
+  var lng = [-117.070982, -117.070759, -117.070789, -117.070793, -117.070581, -117.070970, -117.071473, -117.070298, -117.071270, -117.071203];
+  var marker = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 //================================================================================
 // Slider Variables
@@ -39,54 +63,210 @@ var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "O
 var dateMin;
 var dateMax;
 
+//================================================================================
+// Website Initialization on load
+//================================================================================
+// A $(document).ready() block.
+$(document).ready(function() {
+  console.log( "ready!" );
+
+  //================================================================================
+  // Default Constructor for the Slider. Created when the website loads
+  //================================================================================
+  $("#dateSlider").dateRangeSlider( {
+
+      //Note, month 0 is January. Month 4, is May.
+      bounds: {min: new Date(2017, 3, 9, 0, 0), max: new Date(2017, 3, 9, 24, 0)},
+      defaultValues: {min: initTimeMin, max: initTimeMax},
+      scales: [{
+        first: function(value){ return value; },
+        end: function(value) {return value; },
+        next: function(value){
+          var next = new Date(value);
+
+          // If we don't have +1 for month, it will break EVERYTHING since date objects start at 0.
+          // WE NEED TO INCREMENET MONTH LIKE THIS!
+          return new Date(next.setMonth(value.getMonth() + 1));
+        },
+        label: function(value){
+          var day = value.getDate(), month = value.getMonth() + 1, year = value.getFullYear(), hour = value.getHours(), min = value.getMinutes();
+            return month + "/" + day + "/" + year;
+        },
+        format: function(tickContainer, tickStart, tickEnd){
+          tickContainer.addClass("myCustomClass");
+        }
+      }],
+      step: {
+        minutes:10
+      },
+      formatter: function(value){
+        var day = value.getDate(), month = value.getMonth() + 1, year = value.getFullYear(), hour = value.getHours(), min = value.getMinutes();
+        return month + "/" + day + "/" + year + " " + hour + ":" + min;
+      },
+      wheelMode: "scroll",
+      wheelSpeed: 1,
+
+      // Deactivate ranges in case if the user switches between the different views
+      range:false
+
+  });
+
+  dateMin = new Date(initTimeMin);
+  dateMax = new Date(initTimeMax);
+
+  // Create a string for the minimum and maximum timestamps
+  timeStampMin = (dateMin.getMonth()+1) +"/"+ dateMin.getDate() +"/"+  dateMin.getFullYear() +" "+ dateMin.getHours() +":"+ dateMin.getMinutes();
+  timeStampMax = (dateMax.getMonth()+1) +"/"+ dateMax.getDate() +"/"+ dateMax.getFullYear() +" "+ dateMax.getHours() +":"+ dateMax.getMinutes();
+
+  // This will update the timeStampMid array with all of the inbetween timestamps
+  getTimeStamps(dateMin, dateMax);
+
+  console.log(timeStampMin);
+  console.log(timeStampMax);
+
+  $.getJSON('Node_Json_Data/MasterData.json', function (data) {
+
+    // Print temp reading for lower bound timestamp
+    console.log("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMin +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMin][0]);
+
+    // Fill Graph array with minimum timestamp
+    var timeStampFull = [];
+    plotData = [];
+    timeStampFull.push(timeStampMin);
+
+    for (var counter = 0; counter < timeStampMid.length; counter++) {
+
+      var tempString = timeStampMid[counter];
+      console.log("Node " + (currentNodeIndex+1) + "[0]["+ tempString +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][tempString][0]);
+
+      // Fill Graph array with middle timestamps
+      timeStampFull.push(tempString);
+    }
+
+    // Print temp reading for upper bound timestamp
+    console.log("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMax +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMax][0]);
+
+    // Fill Graph array with maximum timestamp
+    timeStampFull.push(timeStampMax);
+
+    for(var counter2 = 0; counter2 < timeStampFull.length; counter2++) {
+
+      // Take date in milliseconds
+      var datePoint = new Date(timeStampFull[counter2]).getTime();
+      var tempPoint = data[chosenNodes[currentNodeIndex]][0][timeStampFull[counter2]][0];
+      // plotData.push(date in milliseconds, Temperature reading)
+      plotData.push(new Array(datePoint, tempPoint));
+    }
+
+    /***********   HEATMAP   **************/
+    // For Kevin's Heatmap, this is a single reading. It is the
+    var heatMapMin = data[chosenNodes[currentNodeIndex]][0][timeStampMin][0];
+    var heatMapMax = data[chosenNodes[currentNodeIndex]][0][timeStampMax][0];
+    averageHeat = ((heatMapMin + heatMapMax)/2);
+    averageHeat = Math.round(averageHeat);
+    console.log("Average heat between min and max: " + averageHeat);
+
+    initMap();
+    /***********   HEATMAP END   **************/
+
+    /***********   GRAPH   **************/
+
+
+    // Setting options variable for plotting graph
+    if(timeStampFull.length < ((16*6)+1)) {
+      var options = {
+          series: {
+              lines: { show: true },
+              points: {show: true },
+          },
+          grid: {
+              hoverable: true,
+              clickable: true
+          },
+          xaxis:
+          {
+              mode: "time",
+              timeformat: "%m/%d/%y\n %h:%M",
+              //min: ((new Date(dateMin).getTime() - 600000*6*7)),
+              //max: ((new Date(dateMax).getTime() - 600000*6*7))
+              min: new Date(dateMin).getTime(),
+              max: new Date(dateMax).getTime(),
+              timezone: "browser"
+          },
+
+          yaxis:
+          {
+              min: 45,
+              max: 95,
+              tickSize: 5
+          }
+      }
+    }
+    else {
+      var options = {
+        series: {
+            lines: { show: true },
+            points: {show: false },
+        },
+        grid: {
+            hoverable: true,
+            clickable: true
+        },
+        xaxis:
+        {
+            mode: "time",
+            timeformat: "%m/%d/%y\n %h:%M",
+            //min: ((new Date(dateMin).getTime() - 600000*6*7)),
+            //max: ((new Date(dateMax).getTime() - 600000*6*7))
+            min: new Date(dateMin).getTime(),
+            max: new Date(dateMax).getTime(),
+            timezone: "browser"
+        },
+
+        yaxis:
+        {
+            min: 45,
+            max: 95,
+            tickSize: 5
+        }
+      }
+    }
+
+    var dataset = [
+      {
+         label: chosenNodes[currentNodeIndex],
+         data: plotData,
+         color: "#FF0000"
+      }
+    ]
+
+    $.plot($("#placeholder"), dataset, options);
+    /***********   END OF GRAPH   **************/
+
+
+    // update div element to display new readings
+    var div = document.getElementById('temp-demo');
+
+    // Display readings on page
+    div.innerHTML = ("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMin +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMin][0]) + "\n";
+    for (counter = 0; counter < timeStampMid.length; counter++) {
+      var tempString = timeStampMid[counter];
+      div.innerHTML = div.innerHTML + ("Node " + (currentNodeIndex+1) + "[0]["+ tempString +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][tempString][0]) + "\n";
+    }
+    div.innerHTML = div.innerHTML + ("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMax +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMax][0]) + "\n";
+
+    // update div element to display new readings
+    var div2 = document.getElementById('avgheat-demo');
+
+    // Display average heat on page
+    div2.innerHTML = ("Average Heat: " + averageHeat);
+
+  }); // End of getJSON
+}); // End of Document.Ready
 
 
 // region: Brandon's Slider Default Load, Change Slider Button Event Handlers, and Slider Value Changed Event Handler
 //---------------------------------------------------------------------------------------
-
-
-
-//================================================================================
-// Default Constructor for the Slider. Created when the website loads
-//================================================================================
-$("#dateSlider").dateRangeSlider( {
-
-    //Note, month 0 is January. Month 4, is May.
-    bounds: {min: new Date(2017, 3, 9, 0, 0), max: new Date(2017, 3, 9, 24, 0)},
-    defaultValues: {min: new Date(2017, 3, 9, 5, 10), max: new Date(2017, 3, 9, 5, 50)},
-    scales: [{
-      first: function(value){ return value; },
-      end: function(value) {return value; },
-      next: function(value){
-        var next = new Date(value);
-
-        // If we don't have +1 for month, it will break EVERYTHING since date objects start at 0.
-        // WE NEED TO INCREMENET MONTH LIKE THIS!
-        return new Date(next.setMonth(value.getMonth() + 1));
-      },
-      label: function(value){
-        var day = value.getDate(), month = value.getMonth() + 1, year = value.getFullYear(), hour = value.getHours(), min = value.getMinutes();
-          return month + "/" + day + "/" + year;
-      },
-      format: function(tickContainer, tickStart, tickEnd){
-        tickContainer.addClass("myCustomClass");
-      }
-    }],
-    step: {
-      minutes:10
-    },
-    formatter: function(value){
-      var day = value.getDate(), month = value.getMonth() + 1, year = value.getFullYear(), hour = value.getHours(), min = value.getMinutes();
-      return month + "/" + day + "/" + year + " " + hour + ":" + min;
-    },
-    wheelMode: "scroll",
-    wheelSpeed: 1,
-
-    // Deactivate ranges in case if the user switches between the different views
-    range:false
-
-});
-
 
 //================================================================================
 // Today Change Slider Button Pressed Event Handler
@@ -95,7 +275,7 @@ $("#btn-today").click(function() {
   $("#dateSlider").dateRangeSlider( {
 
       //Note, month 0 is January. Month 4, is May.
-      bounds: {min: new Date(2017, 3, 9, 0, 0), max: new Date(2017, 1, 3, 9, 0)},
+      bounds: {min: todayBoundsMin, max: todayBoundsMax},
       defaultValues: {min: new Date(2017, 3, 9, 5, 10), max: new Date(2017, 3, 9, 5, 50)},
       scales: [{
         first: function(value){ return value; },
@@ -103,8 +283,8 @@ $("#btn-today").click(function() {
         next: function(value){
           var next = new Date(value);
 
-        // If we don't have +1 for month, it will break EVERYTHING since date objects start at 0.
-        // WE NEED TO INCREMENET MONTH LIKE THIS!
+          // If we don't have +1 for month, it will break EVERYTHING since date objects start at 0.
+          // WE NEED TO INCREMENET MONTH LIKE THIS!
           return new Date(next.setMonth(value.getMonth() + 1));
         },
         label: function(value){
@@ -133,7 +313,7 @@ $("#btn-day").click(function() {
   $("#dateSlider").dateRangeSlider( {
 
     //Note, month 0 is January. Month 4, is May.
-    bounds: {min: new Date(2017, 0, 1), max: new Date(2017, 11, 31)},
+    bounds: {min: dayBoundsMin, max: dayBoundsMax},
     defaultValues: {min: new Date(2017, 0, 10, 0, 0), max: new Date(2017, 3, 20, 0, 0)},
     scales: [{
       first: function(value){ return value; },
@@ -169,7 +349,7 @@ $("#btn-week").click(function() {
   $("#dateSlider").dateRangeSlider( {
 
     //Note, month 0 is January. Month 4, is May.
-    bounds: {min: new Date(2017, 0, 1), max: new Date(2017, 11, 31)},
+    bounds: {min: weekBoundsMin, max: weekBoundsMax},
     defaultValues: {min: new Date(2017, 0, 10), max: new Date(2017, 3, 20)},
     scales: [{
       first: function(value){ return value; },
@@ -206,7 +386,7 @@ $("#btn-month").click(function() {
   $("#dateSlider").dateRangeSlider( {
 
     //Note, month 0 is January. Month 4, is May.
-    bounds: {min: new Date(2017, 0, 1), max: new Date(2017, 12, 31)},
+    bounds: {min: monthBoundsMin, max: monthBoundsMax},
     defaultValues: {min: new Date(2017, 0, 10), max: new Date(2017, 3, 20)},
     scales: [{
       first: function(value){ return value; },
@@ -284,22 +464,17 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
       var tempPoint = data[chosenNodes[currentNodeIndex]][0][timeStampFull[counter2]][0];
       // plotData.push(date in milliseconds, Temperature reading)
       plotData.push(new Array(datePoint, tempPoint));
-
     }
 
     /***********   HEATMAP   **************/
-    // DISPLAY READINGS ON HTML
-    //update div element to display new readings
-    var div = document.getElementById('temp-demo');
 
     // For Kevin's Heatmap, this is a single reading. It is the
     var heatMapMin = data[chosenNodes[currentNodeIndex]][0][timeStampMin][0];
     var heatMapMax = data[chosenNodes[currentNodeIndex]][0][timeStampMax][0];
-    var averageHeat = ((heatMapMin + heatMapMax)/2);
-    console.log("Average heat between min and max: " + averageHeat);
-
-    /***********   PLACE HEATMAP UPDATE HERE USING averageHeat   **************/
-
+    averageHeat = ((heatMapMin + heatMapMax)/2);
+    averageHeat = Math.round(averageHeat);
+    console.log("Updating heatmap reading: " + averageHeat);
+    initMap();
     /***********   HEATMAP END   **************/
 
 
@@ -322,19 +497,41 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
         // }
         //     ];//End of var dataset declaration
 
+        // Setting options variable for plotting graph
+        if(timeStampFull.length < ((16*6)+1)) {
+          var options = {
+              series: {
+                  lines: { show: true },
+                  points: {show: true },
+              },
+              grid: {
+                  hoverable: true,
+                  clickable: true
+              },
+              xaxis:
+              {
+                  mode: "time",
+                  timeformat: "%m/%d/%y\n %h:%M",
+                  //min: ((new Date(dateMin).getTime() - 600000*6*7)),
+                  //max: ((new Date(dateMax).getTime() - 600000*6*7))
+                  min: new Date(dateMin).getTime(),
+                  max: new Date(dateMax).getTime(),
+                  timezone: "browser"
+              },
 
-        var dataset = [
-          {
-             label: chosenNodes[currentNodeIndex],
-             data: plotData,
-             color: "#FF0000"
+              yaxis:
+              {
+                  min: 45,
+                  max: 95,
+                  tickSize: 5
+              }
           }
-        ]
-
-        $.plot($("#placeholder"), dataset, {
+        }
+        else {
+          var options = {
             series: {
                 lines: { show: true },
-                points: {show: true },
+                points: {show: false },
             },
             grid: {
                 hoverable: true,
@@ -347,7 +544,8 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
                 //min: ((new Date(dateMin).getTime() - 600000*6*7)),
                 //max: ((new Date(dateMax).getTime() - 600000*6*7))
                 min: new Date(dateMin).getTime(),
-                max: new Date(dateMax).getTime()
+                max: new Date(dateMax).getTime(),
+                timezone: "browser"
             },
 
             yaxis:
@@ -356,9 +554,25 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
                 max: 95,
                 tickSize: 5
             }
-        });
+          }
+        }
+
+        var dataset = [
+          {
+             label: chosenNodes[currentNodeIndex],
+             data: plotData,
+             color: "#FF0000"
+          }
+        ]
+
+        $.plot($("#placeholder"), dataset, options);
 
     /***********   END OF GRAPH   **************/
+
+
+
+    //update div element to display new readings
+    var div = document.getElementById('temp-demo');
 
     // Display readings on page
     div.innerHTML = ("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMin +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMin][0]) + "\n";
@@ -367,6 +581,12 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
       div.innerHTML = div.innerHTML + ("Node " + (currentNodeIndex+1) + "[0]["+ tempString +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][tempString][0]) + "\n";
     }
     div.innerHTML = div.innerHTML + ("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMax +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMax][0]) + "\n";
+
+    // update div element to display new readings
+    var div2 = document.getElementById('avgheat-demo');
+
+    // Display average heat on page
+    div2.innerHTML = ("Average Heat: " + averageHeat);
 
   }); // End of $.getJSON
 
@@ -619,27 +839,47 @@ function getTimeStamps(timeMin, timeMax){
 
 //================================================================================
 // Functions
-//================================================================================
 
-/*
-|--------------------------------------------------------------------------
-| Function Name
-|--------------------------------------------------------------------------
-|
-| Description of function
-|
-| Inputs:
-| Return:
-|
-|
-*/
+  /*
+  |--------------------------------------------------------------------------
+  | initMap
+  |--------------------------------------------------------------------------
+  |
+  | Initializes Google Map API.
+  |
+  | Inputs: lat,lng, and marker
+  | Return: Map and heatmap
+  */
+  function initMap() {
+    map = new google.maps.Map(document.getElementById('map'), {
+      zoom: 19,
+      center: {lat: 32.777262, lng: -117.070982},
+      mapTypeId: 'satellite'
+    });
+
+    for(var i = 0; i <= 10; i++){
+    marker[i] =  new google.maps.Marker({
+        position: {lat: lat[i], lng: lng[i]},
+        label: (i+1).toString(),
+        map: map
+    });
+    }
+
+    heatmap = new google.maps.visualization.HeatmapLayer({
+      data: tempPoints(),
+      radius: 50,
+      maxIntensity: 100,
+      map: map
+    });
+  }
+
+  function tempPoints(){
+    return[
+    {location: new google.maps.LatLng(lat[0], lng[0]), weight: averageHeat}
+  ]};
 
 //---------------------------------------------------------------------------------------
 //endregion: End of Kevin's Heatmap
-
-
-
-
 
 
 
