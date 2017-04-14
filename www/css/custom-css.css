@@ -1,0 +1,13 @@
+/*Custom CSS formatting for header*/
+@media (min-width: 1200px) {
+    .myContainer {
+            width: 100%;
+    }
+}
+
+@media (min-width: 768px) {
+    .my-navbar-right {
+        float: right !important;
+        margin-right: 0%;
+    }
+}

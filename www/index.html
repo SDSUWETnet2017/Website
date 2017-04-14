@@ -20,11 +20,17 @@
         <!-- Custom CSS for dropdown menu -->
         <link href="css/drop-down-list.css" rel="stylesheet" rel="stylesheet" type="text/css">
 
+        <!-- Custom CSS for Header Alignment -->
+        <link href="css/custom-css.css" rel="stylesheet" type="text/css">
+
         <!-- Custom Fonts -->
         <link href="font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
 
         <!-- Slider texture -->
         <link href="css/iThing.css" rel="stylesheet" type="text/css" />
+
+        <!-- Yusuf's Popout -->
+        <link href="css/side-panel.css" rel="stylesheet" type="text/css" />
 
         <!-- Philippe's Graph-->
         <link href="lib/jquery-ui/css/jquery-ui.min.css" rel="stylesheet" type="text/css">
@@ -42,7 +48,7 @@
           /* Always set the map height explicitly to define the size of the div
            * element that contains the map. */
           #map {
-            height: 70%;
+            height: 100%;
             width: 100%;
           }
           #floating-panel {
@@ -67,7 +73,7 @@
 
         <!-- Navigation -->
         <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-            <div class="container">
+            <div class="myContainer">
 
                 <!-- Brand and toggle get grouped for better mobile display -->
                 <div class="navbar-header">
@@ -82,7 +88,7 @@
 
                 <!-- Collect the nav links, forms, and other content for toggling -->
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                    <ul class="nav navbar-nav navbar-right">
+                    <ul class="nav navbar-nav my-navbar-right">
                         <li>
                             <a href="README.md" download="README.md">Download CSV</a>
                         </li>
@@ -101,22 +107,27 @@
 
         </nav>
 
+
+
+
+
         <div id="map"></div>
 
-        <!-- Page Content -->
-        <div class="container" style = "padding-top:2.5%">
+        <!-- Side Bar (Pop Out) -->
+        <nav class='sidebar sidebar-menu-collapsed' style = "top:50px; position:fixed;">
+          <a href='#' id='justify-icon'>
+            <span class='glyphicon glyphicon-align-justify'></span>
+          </a>
 
-        <!-- Slider Code -->
+          <!-- Page Content -->
+          <div class="container" style = "padding-top:2.5%; top:20%; width: 100%">
+
             <div id = "avgheat-demo" class="col-md-12 text-center"></div>
 
+            <!-- Slider Code -->
             <div class="row">
-
                 <div class="col-md-12 text-center">
                     <div id="dateSlider" class =""></div>
-
-                </div>
-
-                <div class="col-md-4">
                 </div>
             </div>
 
@@ -139,10 +150,10 @@
                 <div id="refreshImage"></div>
                 <div id="refreshImage2"></div>
             </div>
-        <!-- End of Slider Code-->
+          <!-- End of Slider Code-->
 
 
-        <!-- Graph and Check Box Code -->
+          <!-- Graph and Check Box Code -->
             <div class="row">
 
                 <!-- Graph Column -->
@@ -216,14 +227,15 @@
                 <!-- End of area to the right of Graph -->
 
             </div>
-        <!-- End of Graph and Check Box Code -->
+          <!-- End of Graph and Check Box Code -->
+        <!-- End of Side Bar (Pop Out) -->
 
-        <!-- Temporary code to print heat readings on the website-->
-            <div class="row">
+        <!-- Demo to print heat readings on the website-->
+<!--             <div class="row">
                 <div id = "temp-demo" class="col-md-11 text-center" style="word-wrap:break-word;white-space:pre;white-space:-moz-pre-wrap;white-space:pre-wrap;">
                 </div>
             </div>
-
+-->
 
             <hr>
 
@@ -236,8 +248,11 @@
                 </div>
             </footer>
 
-        </div>
-        <!-- End of Page Content /.container -->
+          </div>
+          <!-- End of Page Content /.container -->
+
+
+        </nav>
 
     </body>
 
@@ -278,6 +293,9 @@
 
     <!-- Receive JSON file from server using JQuery -->
     <script src="js/get-json.js" language="javascript" type="text/javascript"></script>
+
+    <!-- Yusuf's Slider -->
+    <script src="js/side-panel.js" language="javascript" type="text/javascript"></script>
 
     <!-- Kevin's Heatmap -->
     <!-- <script src="js/show-map-new.js" language="javascript" type="text/javascript"></script> -->

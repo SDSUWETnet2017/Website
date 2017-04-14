@@ -62,7 +62,7 @@ function myFunction() {
                             instance.showMenuTexts();
                             instance.showActiveSubMenu();
                             $(this).css({
-                                color: "#FFF"
+                                color: "#000"
                             });
                         } else if ($(this).parent("nav.sidebar").hasClass("sidebar-menu-expanded")) {
                             instance.resetOriginalPaddingOnCollapse();

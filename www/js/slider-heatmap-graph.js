@@ -68,8 +68,6 @@ var dateMax;
 //================================================================================
 // A $(document).ready() block.
 $(document).ready(function() {
-  console.log( "ready!" );
-
   //================================================================================
   // Default Constructor for the Slider. Created when the website loads
   //================================================================================
@@ -121,13 +119,23 @@ $(document).ready(function() {
   // This will update the timeStampMid array with all of the inbetween timestamps
   getTimeStamps(dateMin, dateMax);
 
-  console.log(timeStampMin);
-  console.log(timeStampMax);
+
+  // console.log(timeStampMin);
+  // console.log(timeStampMax);
 
   $.getJSON('Node_Json_Data/MasterData.json', function (data) {
+    var testTimeStamps = [];
+
+    testTimeStamps = Object.keys(data[chosenNodes[currentNodeIndex]][0]);
+
+    //console.log("testTimeStamps: " + testTimeStamps + "\n");
+
+    testTimeStamps.forEach(function(element) {
+        //console.log(element + "\n");
+    });
 
     // Print temp reading for lower bound timestamp
-    console.log("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMin +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMin][0]);
+    //console.log("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMin +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMin][0]);
 
     // Fill Graph array with minimum timestamp
     var timeStampFull = [];
@@ -137,14 +145,14 @@ $(document).ready(function() {
     for (var counter = 0; counter < timeStampMid.length; counter++) {
 
       var tempString = timeStampMid[counter];
-      console.log("Node " + (currentNodeIndex+1) + "[0]["+ tempString +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][tempString][0]);
+      //console.log("Node " + (currentNodeIndex+1) + "[0]["+ tempString +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][tempString][0]);
 
       // Fill Graph array with middle timestamps
       timeStampFull.push(tempString);
     }
 
     // Print temp reading for upper bound timestamp
-    console.log("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMax +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMax][0]);
+    //console.log("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMax +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMax][0]);
 
     // Fill Graph array with maximum timestamp
     timeStampFull.push(timeStampMax);
@@ -173,7 +181,7 @@ $(document).ready(function() {
 
 
     // Setting options variable for plotting graph
-    if(timeStampFull.length < ((16*6)+1)) {
+    if(timeStampFull.length < ((8*6)+1)) {
       var options = {
           series: {
               lines: { show: true },
@@ -243,7 +251,7 @@ $(document).ready(function() {
     $.plot($("#placeholder"), dataset, options);
     /***********   END OF GRAPH   **************/
 
-
+/*  // Demo to display all heat readings
     // update div element to display new readings
     var div = document.getElementById('temp-demo');
 
@@ -254,6 +262,7 @@ $(document).ready(function() {
       div.innerHTML = div.innerHTML + ("Node " + (currentNodeIndex+1) + "[0]["+ tempString +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][tempString][0]) + "\n";
     }
     div.innerHTML = div.innerHTML + ("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMax +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMax][0]) + "\n";
+*/
 
     // update div element to display new readings
     var div2 = document.getElementById('avgheat-demo');
@@ -435,7 +444,7 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
   $.getJSON('Node_Json_Data/MasterData.json', function (data) {
 
     // Print temp reading for lower bound timestamp
-    console.log("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMin +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMin][0]);
+    //console.log("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMin +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMin][0]);
 
     // Fill Graph array with minimum timestamp
     var timeStampFull = [];
@@ -445,14 +454,14 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
     for (var counter = 0; counter < timeStampMid.length; counter++) {
 
       var tempString = timeStampMid[counter];
-      console.log("Node " + (currentNodeIndex+1) + "[0]["+ tempString +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][tempString][0]);
+      //console.log("Node " + (currentNodeIndex+1) + "[0]["+ tempString +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][tempString][0]);
 
       // Fill Graph array with middle timestamps
       timeStampFull.push(tempString);
     }
 
     // Print temp reading for upper bound timestamp
-    console.log("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMax +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMax][0]);
+    //console.log("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMax +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMax][0]);
 
     // Fill Graph array with maximum timestamp
     timeStampFull.push(timeStampMax);
@@ -498,7 +507,7 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
         //     ];//End of var dataset declaration
 
         // Setting options variable for plotting graph
-        if(timeStampFull.length < ((16*6)+1)) {
+        if(timeStampFull.length < ((8*6)+1)) {
           var options = {
               series: {
                   lines: { show: true },
@@ -570,7 +579,7 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
     /***********   END OF GRAPH   **************/
 
 
-
+/*  // Demo to display all heat readings
     //update div element to display new readings
     var div = document.getElementById('temp-demo');
 
@@ -581,6 +590,7 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
       div.innerHTML = div.innerHTML + ("Node " + (currentNodeIndex+1) + "[0]["+ tempString +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][tempString][0]) + "\n";
     }
     div.innerHTML = div.innerHTML + ("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMax +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMax][0]) + "\n";
+*/
 
     // update div element to display new readings
     var div2 = document.getElementById('avgheat-demo');
@@ -802,6 +812,12 @@ function getTimeStamps(timeMin, timeMax){
 // Event Handlers
 //================================================================================
 
+//================================================================================
+// Expand button clicked event handler
+//================================================================================
+$('#justify-icon').click(function(){
+  //console.log("Expand button clicked!\n");
+});
 
 //================================================================================
 // Functions
