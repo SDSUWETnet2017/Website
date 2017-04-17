@@ -43,7 +43,7 @@ var averageHeat;
 // Slider Variables
 //================================================================================
 // Used for the slider ruler text within the slider
-var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"];
+var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 var dateMin;
 var dateMax;
 
@@ -274,10 +274,10 @@ $(document).ready(function() {
 //================================================================================
 $("#btn-today").click(function() {
 
-  var todayBoundsMin = new Date(2017, 3, 9);
-  var todayBoundsMax = new Date(2017, 3, 10);
-  var initTodayMin = new Date(2017, 3, 9, 0, 0);
-  var initTodayMax = new Date(2017, 3, 9, 4, 20);
+  var todayBoundsMin = new Date(2017, 3, 12);
+  var todayBoundsMax = new Date(2017, 3, 13);
+  var initTodayMin = new Date(2017, 3, 12, 0, 0);
+  var initTodayMax = new Date(2017, 3, 12, 4, 20);
 
 
 
@@ -316,13 +316,13 @@ $("#btn-today").click(function() {
 //================================================================================
 // Day Change Slider Button Pressed Event Handler
 //================================================================================
-$("#btn-day").click(function() {
+$("#btn-7days").click(function() {
 
 
-  var dayBoundsMin = new Date(2017, 0, 1);
-  var dayBoundsMax = new Date(2017, 11, 31);
-  var initDayMin = new Date(2017, 3, 10);
-  var initDayMax = new Date(2017, 3, 13);
+  var dayBoundsMin = new Date(2017, 3, 7);
+  var dayBoundsMax = new Date(2017, 3, 13);
+  var initDayMin = new Date(2017, 3, 8);
+  var initDayMax = new Date(2017, 3, 10);
 
   $("#dateSlider").dateRangeSlider( {
 
@@ -346,13 +346,11 @@ $("#btn-day").click(function() {
       }
     }],
     step: {
-      days:1
+      minutes:10
     },
 
     // Deactivate ranges in case if the user switches between weeks, months, etc
-    range:{
-      min: {days:1}
-    }
+    range:false
 
     //*** NOTE ***
     // After the slider has been initialized once, we can no longer use
@@ -368,10 +366,10 @@ $("#btn-day").click(function() {
 //================================================================================
 $("#btn-week").click(function() {
 
-  var weekBoundsMin = new Date(2017, 0, 1);
-  var weekBoundsMax = new Date(2017, 11, 31);
-  var initWeekMin = new Date(2017, 3, 12);
-  var iniWeekMax = new Date(2017, 3, 19);
+  var weekBoundsMin = new Date(2017, 3, 12);
+  var weekBoundsMax = new Date(2017, 3, 19);
+  var initWeekMin = new Date(2017, 3, 13);
+  var iniWeekMax = new Date(2017, 3, 14);
 
   $("#dateSlider").dateRangeSlider( {
 
@@ -395,10 +393,10 @@ $("#btn-week").click(function() {
       }
     }],
     step: {
-      weeks:1
+      days:1
     },
     range:{
-      min: {days: 7}
+      min: {days:1}
     }
 
     //*** NOTE ***
@@ -615,7 +613,7 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
     /***********   END OF GRAPH   **************/
 
 
-/*  // Demo to display all heat readings
+  // Demo to display all heat readings
     //update div element to display new readings
     var div = document.getElementById('temp-demo');
 
@@ -626,7 +624,7 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
       div.innerHTML = div.innerHTML + ("Node " + (currentNodeIndex+1) + "[0]["+ tempString +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][tempString][0]) + "\n";
     }
     div.innerHTML = div.innerHTML + ("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMax +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMax][0]) + "\n";
-*/
+
 
     // update div element to display new readings
     var div2 = document.getElementById('avgheat-demo');
@@ -852,7 +850,8 @@ function getTimeStamps(timeMin, timeMax){
 // Expand button clicked event handler
 //================================================================================
 $('#justify-icon').click(function(){
-  //console.log("Expand button clicked!\n");
+  $('#dateSlider').dateRangeSlider('resize');
+  console.log("Expand button clicked!\n");
 });
 
 //================================================================================

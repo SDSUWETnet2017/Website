@@ -114,31 +114,28 @@
         <div id="map"></div>
 
         <!-- Side Bar (Pop Out) -->
-        <nav class='sidebar sidebar-menu-collapsed' style = "top:50px; position:fixed;">
+        <nav class='sidebar sidebar-menu-collapsed' style = "top:50px; position:fixed; overflow-y:auto;">
           <a href='#' id='justify-icon'>
             <span class='glyphicon glyphicon-align-justify'></span>
           </a>
 
           <!-- Page Content -->
-          <div class="container" style = "padding-top:2.5%; top:20%; width: 100%">
-
-            <div id = "avgheat-demo" class="col-md-12 text-center"></div>
-
+          <div class="container" style = "width: 100%">
             <!-- Slider Code -->
             <div class="row">
-                <div class="col-md-12 text-center">
+                <div class="col-md-12 text-center" style="padding-left:40px; padding-right:40px;">
                     <div id="dateSlider" class =""></div>
                 </div>
             </div>
 
             <div class="row">
-                <div class="col-md-12 text-center dropdown">
+                <div class="col-md-12 text-center dropdown" style="margin:auto padding-top:10px; text-align:center">
                     <button id="slider-select" onclick="dropDownFunction()" class = "dropbtn">Change Slider</button>
                     <div id="myDropdown" class="dropdown-content">
                         <button id="btn-today" class="btn btn-secondary">Today</button>
-                        <button id="btn-day" class="btn btn-secondary">Day</button>
-                        <button id="btn-week" class="btn btn-secondary">Week</button>
-                        <button id="btn-month" class="btn btn-secondary">Month</button>
+                        <button id="btn-7days" class="btn btn-secondary">Last 7 Days</button>
+<!--                         <button id="btn-week" class="btn btn-secondary">Week</button> -->
+<!--                         <button id="btn-month" class="btn btn-secondary">Month</button> -->
                         <!--
                         <a href="#">Day</a>
                         <a href="#">Hour</a>
@@ -170,7 +167,7 @@
                 <!-- Graph Column -->
 
                 <!-- Area to the right of Graph -->
-                <div class="col-sm-3 text-center">
+                <div class="col-sm-3 text-center" style="padding-top:15px">
 
                     <div class="row">
                         <button id="get-json" class = "text-center">Get JSON</button>
@@ -181,6 +178,10 @@
                         <h1>
                             Node 1
                         </h1>
+                    </div>
+
+                    <div class="row">
+                        <div id = "avgheat-demo" class="col-md-12 text-center"></div>
                     </div>
 
                     <div class="row">
@@ -231,11 +232,11 @@
         <!-- End of Side Bar (Pop Out) -->
 
         <!-- Demo to print heat readings on the website-->
-<!--             <div class="row">
+             <div class="row">
                 <div id = "temp-demo" class="col-md-11 text-center" style="word-wrap:break-word;white-space:pre;white-space:-moz-pre-wrap;white-space:pre-wrap;">
                 </div>
             </div>
--->
+
 
             <hr>
 
