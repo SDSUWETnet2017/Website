@@ -13,22 +13,6 @@
 //================================================================================
 // Global Variables
 //================================================================================
-// String variables containing the min and max time stamps
-var initTimeMin = new Date(2017, 3, 9, 0, 0);
-var initTimeMax = new Date(2017, 3, 9, 4, 20);
-
-var todayBoundsMin = new Date(2017, 3, 9);
-var todayBoundsMax = Date(2017, 3, 10);
-
-var dayBoundsMin = new Date(2017, 0, 1);
-var dayBoundsMax = new Date(2017, 11, 31);
-
-var weekBoundsMin = new Date(2017, 0, 1);
-var weekBoundsMax = new Date(2017, 11, 31);
-
-var monthBoundsMin = new Date(2017, 0, 1);
-var monthBoundsMax = new Date(2017, 12, 31);
-
 var timeStampMin;
 var timeStampMax;
 
@@ -71,6 +55,13 @@ $(document).ready(function() {
   //================================================================================
   // Default Constructor for the Slider. Created when the website loads
   //================================================================================
+
+  // String variables containing the min and max time stamps
+  var initTimeMin = new Date(2017, 3, 9, 0, 0);
+  var initTimeMax = new Date(2017, 3, 9, 4, 20);
+  var todayBoundsMin = new Date(2017, 3, 9);
+  var todayBoundsMax = new Date(2017, 3, 10);
+
   $("#dateSlider").dateRangeSlider( {
 
       //Note, month 0 is January. Month 4, is May.
@@ -106,7 +97,6 @@ $(document).ready(function() {
 
       // Deactivate ranges in case if the user switches between the different views
       range:false
-
   });
 
   dateMin = new Date(initTimeMin);
@@ -125,6 +115,8 @@ $(document).ready(function() {
 
   $.getJSON('Node_Json_Data/MasterData.json', function (data) {
     var testTimeStamps = [];
+
+
 
     testTimeStamps = Object.keys(data[chosenNodes[currentNodeIndex]][0]);
 
@@ -281,11 +273,17 @@ $(document).ready(function() {
 // Today Change Slider Button Pressed Event Handler
 //================================================================================
 $("#btn-today").click(function() {
-  $("#dateSlider").dateRangeSlider( {
 
+  var todayBoundsMin = new Date(2017, 3, 9);
+  var todayBoundsMax = new Date(2017, 3, 10);
+  var initTodayMin = new Date(2017, 3, 9, 0, 0);
+  var initTodayMax = new Date(2017, 3, 9, 4, 20);
+
+
+
+  $("#dateSlider").dateRangeSlider( {
       //Note, month 0 is January. Month 4, is May.
       bounds: {min: todayBoundsMin, max: todayBoundsMax},
-      defaultValues: {min: new Date(2017, 3, 9, 5, 10), max: new Date(2017, 3, 9, 5, 50)},
       scales: [{
         first: function(value){ return value; },
         end: function(value) {return value; },
@@ -311,7 +309,7 @@ $("#btn-today").click(function() {
     // Deactivate ranges in case if the user switches between weeks, months, etc
     range:false
 
-  });
+  }).dateRangeSlider("values", initTodayMin, initTodayMax);
 });
 
 
@@ -319,11 +317,17 @@ $("#btn-today").click(function() {
 // Day Change Slider Button Pressed Event Handler
 //================================================================================
 $("#btn-day").click(function() {
+
+
+  var dayBoundsMin = new Date(2017, 0, 1);
+  var dayBoundsMax = new Date(2017, 11, 31);
+  var initDayMin = new Date(2017, 3, 10);
+  var initDayMax = new Date(2017, 3, 13);
+
   $("#dateSlider").dateRangeSlider( {
 
     //Note, month 0 is January. Month 4, is May.
     bounds: {min: dayBoundsMin, max: dayBoundsMax},
-    defaultValues: {min: new Date(2017, 0, 10, 0, 0), max: new Date(2017, 3, 20, 0, 0)},
     scales: [{
       first: function(value){ return value; },
       end: function(value) {return value; },
@@ -346,8 +350,16 @@ $("#btn-day").click(function() {
     },
 
     // Deactivate ranges in case if the user switches between weeks, months, etc
-    range:false
-  });
+    range:{
+      min: {days:1}
+    }
+
+    //*** NOTE ***
+    // After the slider has been initialized once, we can no longer use
+    // defaultValues to set its value, it will have no effec.
+    // To set the value after changing view, we need to use the values
+    // function. That is what the line below is doing.
+  }).dateRangeSlider("values", initDayMin, initDayMax);
 });
 
 
@@ -355,11 +367,16 @@ $("#btn-day").click(function() {
 // Week Change Slider Button Pressed Event Handler
 //================================================================================
 $("#btn-week").click(function() {
+
+  var weekBoundsMin = new Date(2017, 0, 1);
+  var weekBoundsMax = new Date(2017, 11, 31);
+  var initWeekMin = new Date(2017, 3, 12);
+  var iniWeekMax = new Date(2017, 3, 19);
+
   $("#dateSlider").dateRangeSlider( {
 
     //Note, month 0 is January. Month 4, is May.
     bounds: {min: weekBoundsMin, max: weekBoundsMax},
-    defaultValues: {min: new Date(2017, 0, 10), max: new Date(2017, 3, 20)},
     scales: [{
       first: function(value){ return value; },
       end: function(value) {return value; },
@@ -383,7 +400,13 @@ $("#btn-week").click(function() {
     range:{
       min: {days: 7}
     }
-  });
+
+    //*** NOTE ***
+    // After the slider has been initialized once, we can no longer use
+    // defaultValues to set its value, it will have no effec.
+    // To set the value after changing view, we need to use the values
+    // function. That is what the line below is doing.
+  }).dateRangeSlider("values", initWeekMin, initWeekMax);
 
 });
 
@@ -392,11 +415,16 @@ $("#btn-week").click(function() {
 // Month Change Slider Button Pressed Event Handler
 //================================================================================
 $("#btn-month").click(function() {
+
+  var monthBoundsMin = new Date(2017, 0, 1);
+  var monthBoundsMax = new Date(2017, 12, 31);
+  var initMonthMin = new Date(2017, 3, 0);
+  var iniMonthMax = new Date(2017, 4, 0);
+
   $("#dateSlider").dateRangeSlider( {
 
     //Note, month 0 is January. Month 4, is May.
     bounds: {min: monthBoundsMin, max: monthBoundsMax},
-    defaultValues: {min: new Date(2017, 0, 10), max: new Date(2017, 3, 20)},
     scales: [{
       first: function(value){ return value; },
       end: function(value) {return value; },
@@ -420,7 +448,13 @@ $("#btn-month").click(function() {
     range:{
       min: {months: 1}
     }
-  });
+
+    //*** NOTE ***
+    // After the slider has been initialized once, we can no longer use
+    // defaultValues to set its value, it will have no effec.
+    // To set the value after changing view, we need to use the values
+    // function. That is what the line below is doing.
+  }).dateRangeSlider("values", initMonthMin, initMonthMax);
 });
 
 
@@ -450,6 +484,8 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
     var timeStampFull = [];
     plotData = [];
     timeStampFull.push(timeStampMin);
+
+    console.log("This is the JSON data: " + data + "\n");
 
     for (var counter = 0; counter < timeStampMid.length; counter++) {
 
