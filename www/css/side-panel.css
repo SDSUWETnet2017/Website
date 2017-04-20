@@ -13,14 +13,13 @@ nav.sidebar {
     top: 0px;
     right: 0px;
     height: 100%;
-    background-color: #111;
-    opacity: 0.85;
+    background-color: rgba(17,17,17,0.85);
     color: white;
     padding: 20px 10px;
 }
 nav.sidebar a#justify-icon {
     outline: 0;
-    color: white;
+    color: #00BFFF;
     font-size: 24px;
     font-style: normal;
 }
@@ -36,7 +35,7 @@ nav.sidebar a#logout-icon {
 nav.sidebar ul.level1 {
     margin: 0;
     padding: 0;
-    margin-top: 60px;
+    margin-top: 20px;
 }
 nav.sidebar ul.level1 li {
     margin: 0;
