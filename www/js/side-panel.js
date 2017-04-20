@@ -9,10 +9,12 @@ function myFunction() {
             function SideBAR() {}
 
             SideBAR.prototype.expandMyMenu = function () {
+                  $('#slider-container').show();
                 return $("nav.sidebar").removeClass("sidebar-menu-collapsed").addClass("sidebar-menu-expanded");
             };
 
             SideBAR.prototype.collapseMyMenu = function () {
+                  $('#slider-container').hide();
                 return $("nav.sidebar").removeClass("sidebar-menu-expanded").addClass("sidebar-menu-collapsed");
             };
 
@@ -53,6 +55,12 @@ function myFunction() {
                 });
             };
 
+            SideBAR.prototype.RotateArrow = function () {
+               return $("#justify-icon").css({
+                    color:"#010"
+                });
+            };
+
             SideBAR.prototype.ignite = function () {
                 return (function (instance) {
                     return $("#justify-icon").click(function (e) {
@@ -61,16 +69,39 @@ function myFunction() {
                             instance.expandMyMenu();
                             instance.showMenuTexts();
                             instance.showActiveSubMenu();
+                            instance.RotateArrow();
+
+                            var iSelector = $(this).find('i:first');
+                            if (iSelector.hasClass('glyphicon-align-right')) {
+                                iSelector.removeClass('glyphicon-align-right')
+                                iSelector.addClass('glyphicon-align-left')
+                            } else if (iSelector.hasClass('glyphicon-align-left')) {
+                                iSelector.removeClass('glyphicon-align-left')
+                                iSelector.addClass('glyphicon-align-right')
+                            }
+
                             $(this).css({
-                                color: "#000"
+                                "color": "#00BFFF"
                             });
-                        } else if ($(this).parent("nav.sidebar").hasClass("sidebar-menu-expanded")) {
+                            //{"propertyname":"value","propertyname":"value",...});
+                        }
+                        else if ($(this).parent("nav.sidebar").hasClass("sidebar-menu-expanded")) {
                             instance.resetOriginalPaddingOnCollapse();
                             instance.collapseMyMenu();
                             instance.hideMenuTexts();
                             instance.hideActiveSubMenu();
+
+                            var iSelector = $(this).find('i:first');
+                            if (iSelector.hasClass('glyphicon-align-right')) {
+                                iSelector.removeClass('glyphicon-align-right')
+                                iSelector.addClass('glyphicon-align-left')
+                            } else if (iSelector.hasClass('glyphicon-align-left')) {
+                                iSelector.removeClass('glyphicon-align-left')
+                                iSelector.addClass('glyphicon-align-right')
+                            }
+
                             $(this).css({
-                                color: "#FFF"
+                                "color": "#00BFFF"
                             });
                         }
                         return false;
