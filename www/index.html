@@ -46,6 +46,7 @@
         <!-- Yusuf's Popout -->
         <link href="css/side-panel.css" rel="stylesheet" type="text/css"/>
         <link href="css/arrow-buttons.css" rel="stylesheet" type="text/css"/>
+        <link href="css/collapsed-view.css" rel="stylesheet" type="text/css"/>
 
         <!-- Philippe's Graph-->
         <link href="lib/jquery-ui/css/jquery-ui.min.css" rel="stylesheet" type="text/css">
@@ -113,7 +114,7 @@
                             <a href="images.html">Images</a>
                         </li>
                         <li>
-                            <a href="contact.html">Contact</a>
+                            <a href="about.html">Contact</a>
                         </li>
                     </ul>
                 </div>
@@ -128,7 +129,7 @@
 
 
 
-        <div id="map"></div>
+        <div id="map" style="overflow:hidden"></div>
 
         <!-- Side Bar (Pop Out) -->
 
@@ -142,136 +143,396 @@
               <ul class='level2'>
 
 
-              <!-- Page Content -->
-              <div class="container" style = "width: 100%">
+                <!-- Page Content -->
+                <div class="container" style = "width: 100%">
 
-                <!-- Slider Code -->
-                <div id="slider-container" class="row">
-                    <div class="col-md-12 text-center" style="padding-left:40px; padding-right:40px;">
-                        <div id="dateSlider" class =""></div>
+
+    <!--                 <div class="row">
+                        <div class="col-sm-12 text-center"> -->
+                            <!-- <span id="ComparisonNode" style="line-height:20px"></span> -->
+    <!--                         <h1>
+                                <button class="arrow-left" id="left"></button>
+                                <span id="Nodename"></span>
+                                <button class="arrow-right" id="right"></button>
+                            </h1>
+                            <button class="RegularButton" id="compare">
+                                Compare
+                            </button>
+                            <button class="RegularButton" id="clear">
+                                Clear
+                            </button>
+                            <button id="btn-today" class="RegularButton">Today</button>
+                            <button id="btn-7days" class="RegularButton">Last 7 Days</button>
+                        </div>
                     </div>
-                </div>
+     -->
+                <div style="margin-top: -80px;">
 
-                <div class="row">
-                    <div class="col-sm-12 text-center dropdown" style="margin:auto padding-top:10px; text-align:center">
-
-                    <button id="btn-today" class="RegularButton">Today</button>
-                    <button id="btn-7days" class="RegularButton">Last 7 Days</button>
-
-                    </div>
-
-                    <div id="refreshImage"></div>
-                    <div id="refreshImage2"></div>
-                </div>
-                <!-- End of Slider Code-->
-
-                <!-- Area to the right of Graph -->
-
-
-                <div class="row">
-                    <div class="col-sm-12 text-center">
-                        <span id="ComparisonNode" style="line-height:20px"></span>
-                        <h1>
-                            <button class="arrow-left" id="left"></button>
-                            <span id="Nodename"></span>
-                            <!-- <div id="Nodename"></div> -->
-                            <button class="arrow-right" id="right"></button>
-                        </h1>
-                        <button class="RegularButton" id="compare">
-                            Compare
-                        </button>
-                        <button class="RegularButton" id="clear">
-                            Clear
-                        </button>
-                    </div>
-                </div>
-
-
-                <div class="col-sm-12 text-center" style="padding-top:15px">
-
-<!--                     <div class="row">
-                        <button id="get-json" class = "text-center">Get JSON</button>
-                        <div id="show-json"></div>
-                    </div> -->
-
-<!--                             <div class="row">
-                        <div id = "avgheat-demo" class="col-md-12 text-center"></div>
-                    </div> -->
-
-                        <input id ="Temperature" name="graph-name" type="radio"  class="data"/>
-                        <font size=3>
-                            <label for="Temperature">
-                                Temperature
-                            </label>
-                        </font>
-
-                        <input id ="Humidity" name="graph-name" type="radio"  class="data"/>
-                        <font size=3>
-                            <label for="Humidity">
-                                Humidity
-                            </label>
-                        </font>
-
-                        <input id ="Wind Speed" name="graph-name" type="radio"  class="data"/>
-                        <font size=3>
-                            <label for="Wind Speed">
-                                Wind Speed
-                            </label>
-                        </font>
-
-                        <input id ="UV Index" type="checkbox"  class="data"/>
-                        <font size=3>
-                            <label for="UV Index">
-                                UV Index
-                            </label>
-                        </font>
-
-                        <input id ="Wind Direction" type="checkbox"  class="data"/>
-                        <font size=3>
-                            <label for="Wind Direction">
-                                Wind Direction
-                            </label>
-                        </font>
-
-
-                </div>
-                <!-- End of area to the right of Graph -->
-
-
-                  <!-- Graph and Check Box Code -->
                     <div class="row">
-
-                        <!-- Graph Column -->
-                        <div class="col-sm-12">
-
-                            <!-- Embedded Google Map -->
-        <!--
-                            <iframe width="100%" height="400px" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="http://maps.google.com/maps?hl=en&amp;ie=UTF8&amp;ll=37.0625,-95.677068&amp;spn=56.506174,79.013672&amp;t=m&amp;z=4&amp;output=embed"></iframe>
-        -->
-                            <div class="flot-graph-container">
-                                <div id="placeholder" class="flot-graph-inner"></div>
-                            </div>
+                        <div class="col-sm-12 text-center">
+    <!--                         <span id="ComparisonNode" style="line-height:20px"></span> -->
+                            <h1>
+                                <button class="arrow-left" id="left"></button>
+                                <span id="Nodename"></span>
+                                <!-- <div id="Nodename"></div> -->
+                                <button class="arrow-right" id="right"></button>
+                            </h1>
                         </div>
-                        <!-- Graph Column -->
+                        <div class="col-sm-12 text-center" style="margin:auto padding-top:10px; text-align:center">
+                            <button id="btn-today" class="RegularButton2">Today</button>
+                            <button id="btn-7days" class="RegularButton2">Last 7 Days</button>
+                            <button class="RegularButton" id="compare">Compare</button>
+                            <button class="RegularButton" id="clear">Clear</button>
+                        </div>
+
+                        <div id="refreshImage"></div>
+                        <div id="refreshImage2"></div>
+                    </div>
+
+
+
+
+
+                    <!-- Slider Code -->
+                    <div id="slider-container" class="row">
+                        <div class="col-md-12 text-center" style="padding-left:40px; padding-right:40px;">
+                            <div id="dateSlider" class =""></div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-12 text-center" style="padding-top:15px">
+
+    <!--                     <div class="row">
+                            <button id="get-json" class = "text-center">Get JSON</button>
+                            <div id="show-json"></div>
+                        </div> -->
+
+    <!--                             <div class="row">
+                            <div id = "avgheat-demo" class="col-md-12 text-center"></div>
+                        </div> -->
+                            <div class="row">
+                                <input id ="temperature" checked="checked" name="graph-name" type="radio"  class="data"/>
+                                <font size=3>
+                                    <label for="temperature">
+                                        Temperature
+                                    </label>
+                                </font>
+
+                                <input id ="humidity" name="graph-name" type="radio"  class="data"/>
+                                <font size=3>
+                                    <label for="humidity">
+                                        Humidity
+                                    </label>
+                                </font>
+
+                                <input id ="uvIndex" name="graph-name" type="radio"  class="data"/>
+                                <font size=3>
+                                    <label for="uvIndex">
+                                        UV Index
+                                    </label>
+                                </font>
+
+                                <input id ="pressure" name="graph-name" type="radio"  class="data"/>
+                                <font size=3>
+                                    <label for="pressure">
+                                        Air Pressure
+                                    </label>
+                                </font>
+
+                                <input id ="windSpeed" name="graph-name" type="radio"  class="data"/>
+                                <font size=3>
+                                    <label for="windSpeed">
+                                        Wind Speed
+                                    </label>
+                                </font>
+                            </div>
+                            <div class="row">
+                                <input id ="windGust" name="graph-name" type="radio"  class="data"/>
+                                <font size=3>
+                                    <label for="windGust">
+                                        Wind Gust
+                                    </label>
+                                </font>
+
+                                <input id ="windDirection" type="checkbox"  class="data"/>
+                                <font size=3>
+                                    <label for="windDirection">
+                                        Wind Direction
+                                    </label>
+                                </font>
+
+                                <input id ="aqi" type="checkbox"  class="data"/>
+                                <font size=3>
+                                    <label for="aqi">
+                                        Air Quality Index
+                                    </label>
+                                </font>
+                            </div>
+                    </div>
+                    <!-- End of area to the right of Graph -->
+
+
+                      <!-- Graph and Check Box Code -->
+                        <div class="row">
+
+                            <!-- Graph Column -->
+                            <div class="col-sm-12">
+
+                                <!-- Embedded Google Map -->
+            <!--
+                                <iframe width="100%" height="400px" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="http://maps.google.com/maps?hl=en&amp;ie=UTF8&amp;ll=37.0625,-95.677068&amp;spn=56.506174,79.013672&amp;t=m&amp;z=4&amp;output=embed"></iframe>
+            -->
+                                <div class="flot-graph-container">
+                                    <div id="placeholder" class="flot-graph-inner"></div>
+                                </div>
+                            </div>
+                            <!-- Graph Column -->
+
+                        </div>
+                        <!-- End of Graph and Check Box Code -->
+
+                        <!-- Demo to print heat readings on the website-->
+    <!--                      <div class="row">
+                            <div id = "temp-demo" class="col-md-11 text-center" style="word-wrap:break-word;white-space:pre;white-space:-moz-pre-wrap;white-space:pre-wrap;">
+                            </div>
+                        </div> -->
+
+
 
                     </div>
-                    <!-- End of Graph and Check Box Code -->
-
-                    <!-- Demo to print heat readings on the website-->
-<!--                      <div class="row">
-                        <div id = "temp-demo" class="col-md-11 text-center" style="word-wrap:break-word;white-space:pre;white-space:-moz-pre-wrap;white-space:pre-wrap;">
-                        </div>
-                    </div> -->
-
-
-
-
-                  </div>
+                </div>
                   <!-- End of Page Content /.container -->
 
                 </ul>
             </li>
           </ul>
+
+          <div class="container" id="inside" style="text-align: center; width:100% ">
+                <div class="row">
+                    <div class="col-md-12" style="text-align: center; width:100%">
+                        <h1 class="headermain" style="margin-top:-50px;">
+                            Latest Stats
+                        </h1>
+                    </div>
+                </div>
+            <!--  /////////////////////////////////////// -->
+                <div class="row typeheader">
+                    <div class="col-md-12" align="left">
+                        Temperture
+                    </div>
+                </div>
+                <div class="row">
+                        <div class="col-md-6" style="padding-left:0px; padding-right:0px">
+                            <li>
+                                Node1:
+                                <span id="Node1TempData"></span>
+                                °F
+                            </li>
+                            <li>
+                                Node2:
+                                <span id="Node2TempData"></span>
+                                °F
+                            </li>
+                            <li>
+                                Node3:
+                                <span id="Node3TempData"></span>
+                                °F
+                            </li>
+                            <li>
+                                Node4:
+                                <span id="Node4TempData"></span>
+                                °F
+                            </li>
+                            <li>
+                                Node5:
+                                <span id="Node5TempData"></span>
+                                °F
+                            </li>
+                        </div>
+                        <div class="col-md-6" style="padding-left:0px; padding-right:0px">
+                            <li>
+                                Node6:
+                                <span id="Node6TempData"></span>
+                                °F
+                            </li>
+                            <li>
+                                Node7:
+                                <span id="Node7TempData"></span>
+                                °F
+                            </li>
+                            <li>
+                                Node8:
+                                <span id="Node8TempData"></span>
+                                °F
+                            </li>
+                            <li>
+                                Node9:
+                                <span id="Node9TempData"></span>
+                                °F
+                            </li>
+                            <li>Node10:<span id="Node10TempData"></span>
+                                °F
+                            </li>
+                        </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-2">
+                        <img id="TemperturePics" style="width:37px;height:75px;">
+                    </div>
+                    <div class="col-sm-10">
+                        <br>
+                        <div class="avgheader">
+                            Average:
+                            <span id="AVGTempData"></span>
+                            °F
+                        </div>
+                    </div>
+                </div>
+               <!--  /////////////////////////////////////// -->
+                <div class="row typeheader">
+                    <div class="col-md-12" align="left">
+                        Humidity
+                    </div>
+                </div>
+                <div class="row">
+                        <div class="col-md-6" style="padding-left:0px; padding-right:0px">
+                            <li>
+                                Node1:
+                                <span id="Node1HumidData"></span>
+                                %
+                            </li>
+                            <li>
+                                Node2:
+                                <span id="Node2HumidData"></span>
+                                %
+                            </li>
+                            <li>
+                                Node3:
+                                <span id="Node3HumidData"></span>
+                                %
+                            </li>
+                            <li>
+                                Node4:
+                                <span id="Node4HumidData"></span>
+                                %
+                            </li>
+                            <li>
+                                Node5:
+                                <span id="Node5HumidData"></span>
+                                %
+                            </li>
+                        </div>
+                        <div class="col-md-6" style="padding-left:0px; padding-right:0px">
+                            <li>
+                                Node6:
+                                <span id="Node6HumidData"></span>
+                                %
+                            </li>
+                            <li>
+                                Node7:
+                                <span id="Node7HumidData"></span>
+                                %
+                            </li>
+                            <li>
+                                Node8:
+                                <span id="Node8HumidData"></span>
+                                %
+                            </li>
+                            <li>
+                                Node9:
+                                <span id="Node9HumidData"></span>
+                                %
+                            </li>
+                            <li>
+                                Node10:
+                                <span id="Node10HumidData"></span>
+                                %
+                            </li>
+                        </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-2">
+                        <img id="HumidityPics" style="width:64px;height:70px;">
+                    </div>
+                    <div class="col-md-10">
+                        <br>
+                        <div class="avgheader">
+                            Average:
+                            <span id="AVGHumidData"></span>
+                            %
+                        </div>
+                    </div>
+                </div>
+                 <!--  /////////////////////////////////////// -->
+                <div class="row typeheader">
+
+                    <div class="col-md-12" align="left">
+                        UV Index
+                    </div>
+                </div>
+                <div class="row">
+                         <div class="col-md-6" style="padding-left:0px; padding-right:0px">
+                            <li>
+                                Node1:
+                                <span id="Node1UVData"></span>
+                            </li>
+                            <li>
+                                Node2:
+                                <span id="Node2UVData"></span>
+                            </li>
+                            <li>
+                                Node3:
+                                <span id="Node3UVData"></span>
+                            </li>
+                            <li>
+                                Node4:
+                                <span id="Node4UVData"></span>
+                            </li>
+                            <li>
+                                Node5:
+                                <span id="Node5UVData"></span>
+                            </li>
+                        </div>
+                         <div class="col-md-6" style="padding-left:0px; padding-right:0px">
+                            <li>
+                                Node6:
+                                <span id="Node6UVData"></span>
+                            </li>
+                            <li>
+                                Node7:
+                                <span id="Node7UVData"></span>
+                            </li>
+                            <li>
+                                Node8:
+                                <span id="Node8UVData"></span>
+                            </li>
+                            <li>
+                                Node9:
+                                <span id="Node9UVData"></span>
+                            </li>
+                            <li>
+                                Node10:
+                                <span id="Node10UVData"></span>
+                            </li>
+                        </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-2">
+                        <img id="UVIndexPics" style="width:60px;height:60px;">
+                    </div>
+                    <div class="col-sm-10">
+                        <br>
+                        <div class="avgheader">
+                            Average:
+                            <span id="AVGUVData"></span>
+                        </div>
+                    </div>
+                </div>
+                 <!--  /////////////////////////////////////// -->
+            </div>
+
+
+
 
             <hr>
 
