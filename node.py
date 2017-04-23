@@ -110,8 +110,9 @@ class Node():
     def get_wind_direction(self,n):
         # randomly change wind direction 
         rand = random.randint(1,11)
+        directs = ["N",'NW','W','SW','S','SE','E','NE']
         if n % rand == 0:
-            self.winddirect = random.random()*360
+            self.winddirect = random.choice(directs)
         return self.winddirect
         
     def get_min(self,n):
