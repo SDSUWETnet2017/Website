@@ -1,0 +1,19 @@
+.typeheader {
+  color: #00BFFF;
+  font-size: 20px;
+}
+.headermain{
+  color: white;
+  font-size: 27px;
+}
+
+.nodedata{
+  color: white;
+  font-size: 20px;
+}
+.avgheader {
+  color: white;
+  /*font-weight: bold;*/
+  font-weight: 500;
+  font-size: 25px;
+}

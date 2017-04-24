@@ -71,6 +71,15 @@ function myFunction() {
                             instance.showActiveSubMenu();
                             instance.RotateArrow();
 
+                            // ****************Hide Feature************************
+                            var x = document.getElementById('inside');
+                            if (x.style.display === 'none') {
+                                x.style.display = 'block';
+                            } else {
+                                x.style.display = 'none';
+                            }
+                            // ***************************************************
+
                             var iSelector = $(this).find('i:first');
                             if (iSelector.hasClass('glyphicon-align-right')) {
                                 iSelector.removeClass('glyphicon-align-right')
@@ -90,6 +99,15 @@ function myFunction() {
                             instance.collapseMyMenu();
                             instance.hideMenuTexts();
                             instance.hideActiveSubMenu();
+
+                            // ****************Hide Feature************************
+                            var x = document.getElementById('inside');
+                            if (x.style.display === 'none') {
+                                x.style.display = 'block';
+                            } else {
+                                x.style.display = 'none';
+                            }
+                            // ***************************************************
 
                             var iSelector = $(this).find('i:first');
                             if (iSelector.hasClass('glyphicon-align-right')) {
