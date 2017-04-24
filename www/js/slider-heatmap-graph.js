@@ -16,12 +16,17 @@
 var timeStampMin;
 var timeStampMax;
 var initialLoad = 0;
+var superNodesChosen = 1;
+var showWindDirection = 0;
+var showAqi = 0;
 
 // Array containing the node names
 var chosenNodes = ["node 1", "node 2", "node 3", "node 4", "node 5", "node 6", "node 7", "node 8", "node 9", "node 10"];
 
 // Variable used to select the elements in chosenNodes
 var currentNodeIndex = 0;
+
+var nodeIndex = 0;
 
 
 //================================================================================
@@ -44,7 +49,7 @@ var plotData10 = [];
 //Initializing variables for min and max y-axis points
 var ymin;
 var ymax;
-var ticks;
+var ticks = 5;
 
 // Initialize to temperature
 var datatype = 0;
@@ -86,12 +91,22 @@ var todayBoundsMin = new Date(2017, 3, 9);
 var todayBoundsMax = new Date(2017, 3, 10);
 
 
-
 //================================================================================
 // Website Initialization on load
 //================================================================================
 // A $(document).ready() block.
 $(document).ready(function() {
+
+  superNodesChosen = 1;
+  showWindDirection = 0;
+  showAqi = 0;
+
+  // Hide AQI and wind Direction on startup
+  $('.node1SuperReadings').hide();
+  $('.node2SuperReadings').hide();
+  $('.windDirectionReadings').hide();
+  $('.aqiReadings').hide();
+
   centerMap = {lat: 32.777262, lng: -117.070982};
 
   NodeAlteration();
@@ -1085,6 +1100,8 @@ $('#justify-icon').click(function(){
       plotData8 = [];
       plotData9 = [];
       plotData10 = [];
+
+      // Initialize graph with node 1 selected on start up
       ComparisonArray[0] = "node 1";
       ComparisonCount = 1;
       finalstring = "Nodes compared: node 1";
@@ -1507,54 +1524,132 @@ $('#uvIndex').on("change", function(){
   updateGraph();
 });
 
+//Air Pressure radio button event handler
 $('#pressure').on("change", function(){
-  console.log("Air Pressure radio button selected!\n");
-  //Air Pressure radio button event handler
-  ComparisonArray= [];
-  // document.getElementById('ComparisonNode').innerHTML = ComparisonArray;
-  ComparisonCount = 0;
-  finalstring = '';
 
+  ComparisonCount = 1;
+
+  // Clear the array containing nodes compared
+  ComparisonArray = [];
+
+  if(nodeIndex == 0) {
+    // Initialize graph with node 1 selected on start up
+    ComparisonArray[0] = "node 1";
+    finalstring = "Nodes compared: node 1";
+  }
+  else if(nodeIndex == 5) {
+    // Initialize graph with node 1 selected on start up
+    ComparisonArray[0] = "node 6";
+    finalstring = "Nodes compared: node 6";
+  }
+  else {
+    console.log("Sub Node selected but air pressure compared");
+    return;
+  }
+
+  // document.getElementById('ComparisonNode').innerHTML = ComparisonArray;
   datatype = 3;
   ticks = 100;
   updateGraph();
 });
 
 $('#windSpeed').on("change", function(){
-  console.log("Wind Speed radio button selected!\n");
-  //Wind Speed radio button event handler
-  ComparisonArray= [];
-  // document.getElementById('ComparisonNode').innerHTML = ComparisonArray;
-  ComparisonCount = 0;
-  finalstring = '';
+
+  ComparisonCount = 1;
+
+  // Clear the array containing nodes compared
+  ComparisonArray = [];
+
+  if(nodeIndex == 0) {
+    // Initialize graph with node 1 selected on start up
+    ComparisonArray[0] = "node 1";
+    finalstring = "Nodes compared: node 1";
+  }
+  else if(nodeIndex == 5) {
+    // Initialize graph with node 1 selected on start up
+    ComparisonArray[0] = "node 6";
+    finalstring = "Nodes compared: node 6";
+  }
+  else {
+    console.log("Sub Node selected but air pressure compared");
+    return;
+  }
 
   datatype = 4;
   ticks = 5;
-
+  updateGraph();
 });
 
 $('#windGust').on("change", function(){
-  console.log("Wind Gust radio button selected!\n");
-  //Wind Gust radio button event handler
-  ComparisonArray= [];
-  // document.getElementById('ComparisonNode').innerHTML = ComparisonArray;
-  ComparisonCount = 0;
-  finalstring = '';
+
+  ComparisonCount = 1;
+
+  // Clear the array containing nodes compared
+  ComparisonArray = [];
+
+  if(nodeIndex == 0) {
+    // Initialize graph with node 1 selected on start up
+    ComparisonArray[0] = "node 1";
+    finalstring = "Nodes compared: node 1";
+  }
+  else if(nodeIndex == 5) {
+    // Initialize graph with node 1 selected on start up
+    ComparisonArray[0] = "node 6";
+    finalstring = "Nodes compared: node 6";
+  }
+  else {
+    console.log("Sub Node selected but air pressure compared");
+    return;
+  }
 
   datatype = 6;
   ticks = 5;
-
+  updateGraph();
 });
 
 $('#windDirection').on("change", function(){
   console.log("Wind Speed radio button selected!\n");
   //humidity radio button event handler
+  if(showWindDirection == 0) {
+    showWindDirection = 1;
+    $('.windDirectionReadings').show();
+  }
+  else {
+    showWindDirection = 0;
+    $('.windDirectionReadings').hide();
+  }
+
+  if( showWindDirection == 1 || showAqi == 1) {
+    $('.node1SuperReadings').show();
+    $('.node2SuperReadings').show();
+  }
+  else {
+    $('.node1SuperReadings').hide();
+    $('.node2SuperReadings').hide();
+  }
 
 });
 
 $('#aqi').on("change", function(){
   console.log("Wind Speed radio button selected!\n");
   //humidity radio button event handler
+  if(showAqi == 0) {
+    showAqi = 1;
+    $('.aqiReadings').show();
+  }
+  else {
+    showAqi = 0;
+    $('.aqiReadings').hide();
+  }
+
+  if( showWindDirection == 1 || showAqi == 1) {
+    $('.node1SuperReadings').show();
+    $('.node2SuperReadings').show();
+  }
+  else {
+    $('.node1SuperReadings').hide();
+    $('.node2SuperReadings').hide();
+  }
 
 });
 
@@ -1588,42 +1683,69 @@ function NodeAlteration() {
     //   var tmpdata = data;
     // });
     var jsonarray = ["node 1","node 2","node 3","node 4","node 5","node 6","node 7","node 8","node 9","node 10"];
-    var i = 0;
+    nodeIndex = 0;
     ComparisonCount = 0;
     finalstring ='';
-    document.getElementById('left').onclick = function()
-    {
+    document.getElementById('left').onclick = function() {
+
+      // Hide super node readings when a non super node is selected
+      if(nodeIndex == 1 || nodeIndex == 6) {
+        $( ".super-node-readings" ).show();
+      }
+      else {
+        $( ".super-node-readings" ).hide();
+      }
+
       //console.log(tmpkeys)
-      if (i >=1)
+      if (nodeIndex >=1)
       {
-        i = i - 1;
+        nodeIndex = nodeIndex - 1;
       }
       else
       {
-        i = 9;
+        nodeIndex = 9;
       }
-        document.getElementById('Nodename').innerHTML = jsonarray[i];
+        document.getElementById('Nodename').innerHTML = jsonarray[nodeIndex];
     };
-    document.getElementById('right').onclick = function()
-    {
-      if (i <9)
-      {
-        i = i + 1;
+    document.getElementById('right').onclick = function() {
+      // Hide super node readings when a non super node is selected
+      if(nodeIndex == 9 || nodeIndex == 4) {
+        $( ".super-node-readings" ).show();
       }
-      else
-      {
-        i = 0;
+      else {
+        $( ".super-node-readings" ).hide();
       }
-        document.getElementById('Nodename').innerHTML = jsonarray[i];
+
+
+      if (nodeIndex <9) {
+        nodeIndex = nodeIndex + 1;
+      }
+      else {
+        nodeIndex = 0;
+      }
+        document.getElementById('Nodename').innerHTML = jsonarray[nodeIndex];
     };
 
 
     document.getElementById('compare').onclick = function() {
-      index = contains.call(ComparisonArray, jsonarray[i]); // true
-      if (String(index) == 'false')
-      {
-        console.log("jsonarray: " + jsonarray + " i: " + i);
-        ComparisonArray[ComparisonCount] = jsonarray[i];
+
+      // If the currently selected node is not a super node and compare is pressed
+      // for any of the super node measurements, don't do anything
+      if(datatype == 3 || datatype == 4 || datatype == 6) {
+
+        if(nodeIndex == 0 || nodeIndex == 5) {
+          console.log("Super Node selected!\n");
+        }
+        else {
+          console.log("Sub Node selected but air pressure compared. compare event handler\n");
+          return;
+        }
+      }
+
+      index = contains.call(ComparisonArray, jsonarray[nodeIndex]); // true
+      if (String(index) == 'false') {
+        console.log("jsonarray: " + jsonarray + " nodeIndex: " + nodeIndex);
+        ComparisonArray[ComparisonCount] = jsonarray[nodeIndex];
         console.log("ComparisonArray: " + ComparisonArray + " ComparisonCount: " + ComparisonCount);
         ComparisonCount = ComparisonCount + 1;
 
@@ -1637,18 +1759,20 @@ function NodeAlteration() {
             finalstring = finalstring + ' , ' + String(ComparisonArray[ComparisonCount-1]);
           }
       }
+
+
         // document.getElementById('ComparisonNode').innerHTML = finalstring;
         updateGraph();
     };
 
     document.getElementById('clear').onclick = function() {
-      ComparisonArray= [];
+      ComparisonArray = [];
         // document.getElementById('ComparisonNode').innerHTML = ComparisonArray;
         ComparisonCount = 0;
         finalstring = '';
         updateGraph();
     };
-    document.getElementById('Nodename').innerHTML = jsonarray[i];
+    document.getElementById('Nodename').innerHTML = jsonarray[nodeIndex];
 
 
     // console.log(Object.keys(tmpdata));
@@ -1680,9 +1804,6 @@ var contains = function(needle) {
 
     return indexOf.call(this, needle) > -1;
 };
-
-
-
 
 
 
@@ -2390,11 +2511,6 @@ function updateGraph() {
      data9 = [];
      data10 = [];
      dataset = [];
-
-     console.log("Temperature radio button selected!\n");
-     //temperature radio button event handler
-     datatype = 0;
-     ticks = 5;
 
   var data1 =
   {

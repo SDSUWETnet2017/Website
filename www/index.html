@@ -108,7 +108,7 @@
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                     <ul class="nav navbar-nav my-navbar-right">
                         <li>
-                            <a href="README.md" download="README.md">Download CSV</a>
+                            <a href="Node_Json_Data/MasterData.csv" download="MasterData.csv">Download CSV</a>
                         </li>
                         <li>
                             <a href="images.html">Images</a>
@@ -124,9 +124,6 @@
             <!-- /.container -->
 
         </nav>
-
-
-
 
 
         <div id="map" style="overflow:hidden"></div>
@@ -148,7 +145,7 @@
 
 
     <!--                 <div class="row">
-                        <div class="col-sm-12 text-center"> -->
+                        <div class="col-md-12 text-center"> -->
                             <!-- <span id="ComparisonNode" style="line-height:20px"></span> -->
     <!--                         <h1>
                                 <button class="arrow-left" id="left"></button>
@@ -169,7 +166,7 @@
                 <div style="margin-top: -80px;">
 
                     <div class="row">
-                        <div class="col-sm-12 text-center">
+                        <div class="col-md-12 text-center">
     <!--                         <span id="ComparisonNode" style="line-height:20px"></span> -->
                             <h1>
                                 <button class="arrow-left" id="left"></button>
@@ -178,7 +175,7 @@
                                 <button class="arrow-right" id="right"></button>
                             </h1>
                         </div>
-                        <div class="col-sm-12 text-center" style="margin:auto padding-top:10px; text-align:center">
+                        <div class="col-md-12 text-center" style="margin:auto padding-top:10px; text-align:center">
                             <button id="btn-today" class="RegularButton2">Today</button>
                             <button id="btn-7days" class="RegularButton2">Last 7 Days</button>
                             <button class="RegularButton" id="compare">Compare</button>
@@ -190,9 +187,6 @@
                     </div>
 
 
-
-
-
                     <!-- Slider Code -->
                     <div id="slider-container" class="row">
                         <div class="col-md-12 text-center" style="padding-left:40px; padding-right:40px;">
@@ -200,7 +194,7 @@
                         </div>
                     </div>
 
-                    <div class="col-sm-12 text-center" style="padding-top:15px">
+                    <div class="col-md-12 text-center" style="padding-top:15px">
 
     <!--                     <div class="row">
                             <button id="get-json" class = "text-center">Get JSON</button>
@@ -232,27 +226,28 @@
                                     </label>
                                 </font>
 
-                                <input id ="pressure" name="graph-name" type="radio"  class="data"/>
-                                <font size=3>
-                                    <label for="pressure">
-                                        Air Pressure
-                                    </label>
-                                </font>
 
-                                <input id ="windSpeed" name="graph-name" type="radio"  class="data"/>
-                                <font size=3>
-                                    <label for="windSpeed">
-                                        Wind Speed
-                                    </label>
-                                </font>
+                                    <input id ="pressure" name="graph-name" type="radio"  class="data super-node-readings"/>
+                                    <font size=3>
+                                        <label for="pressure" class="super-node-readings">
+                                            Air Pressure
+                                        </label>
+                                    </font>
+
+                                    <input id ="windSpeed" name="graph-name" type="radio"  class="data super-node-readings"/>
+                                    <font size=3>
+                                        <label for="windSpeed" class="super-node-readings">
+                                            Wind Speed
+                                        </label>
+                                    </font>
                             </div>
                             <div class="row">
-                                <input id ="windGust" name="graph-name" type="radio"  class="data"/>
-                                <font size=3>
-                                    <label for="windGust">
-                                        Wind Gust
-                                    </label>
-                                </font>
+                                    <input id ="windGust" name="graph-name" type="radio"  class="data super-node-readings"/>
+                                    <font size=3>
+                                        <label for="windGust" class="super-node-readings">
+                                            Wind Gust
+                                        </label>
+                                    </font>
 
                                 <input id ="windDirection" type="checkbox"  class="data"/>
                                 <font size=3>
@@ -276,7 +271,7 @@
                         <div class="row">
 
                             <!-- Graph Column -->
-                            <div class="col-sm-12">
+                            <div class="col-md-12">
 
                                 <!-- Embedded Google Map -->
             <!--
@@ -290,6 +285,34 @@
 
                         </div>
                         <!-- End of Graph and Check Box Code -->
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="row">
+                                    <h1 class="node1SuperReadings" style="display: block; text-align: center; font-size: 28px;">Node 1</h1>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <img id="windDirection" class="windDirectionReadings" src="img/data-graphics/direction_North.png" width="80%" height="80%"/>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <img id="aqiImage"  class="aqiReadings" src="img/data-graphics/gradient_good.png" width="80%" height="80%"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="row">
+                                    <h1 class="node2SuperReadings" style="display: block; text-align: center; font-size: 28px;">Node 6</h1>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <img id="windDirection" class="windDirectionReadings" src="img/data-graphics/direction_South.png" width="80%" height="80%"/>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <img id="aqiImage" class="aqiReadings" src="img/data-graphics/gradient_moderate.png" width="80%" height="80%"/>
+                                    </div>
+                                </div>
+                        </div>
 
                         <!-- Demo to print heat readings on the website-->
     <!--                      <div class="row">
@@ -318,7 +341,7 @@
             <!--  /////////////////////////////////////// -->
                 <div class="row typeheader">
                     <div class="col-md-12" align="left">
-                        Temperture
+                        Temperature
                     </div>
                 </div>
                 <div class="row">
@@ -376,10 +399,10 @@
                         </div>
                 </div>
                 <div class="row">
-                    <div class="col-sm-2">
+                    <div class="col-md-2">
                         <img id="TemperturePics" style="width:37px;height:75px;">
                     </div>
-                    <div class="col-sm-10">
+                    <div class="col-md-10">
                         <br>
                         <div class="avgheader">
                             Average:
@@ -517,10 +540,10 @@
                         </div>
                 </div>
                 <div class="row">
-                    <div class="col-sm-2">
+                    <div class="col-md-2">
                         <img id="UVIndexPics" style="width:60px;height:60px;">
                     </div>
-                    <div class="col-sm-10">
+                    <div class="col-md-10">
                         <br>
                         <div class="avgheader">
                             Average:
