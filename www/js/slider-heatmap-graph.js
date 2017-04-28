@@ -10,11 +10,27 @@
 // | Functions
 // |--------------------------------------------------------------------------
 
-//================================================================================
-// Global Variables
-//================================================================================
-var timeStampMin;
-var timeStampMax;
+
+// region: Initialize Global Variables
+//---------------------------------------------------------------------------------------
+
+// Actual timestamps read in dynamically from the JSON file
+// This will contain every single time stamp in the JSON file
+var TestMasterDataUnsorted = [];
+// This will contain only the time stamps correlating to the slider's selected time frame
+var TestMasterDataSorted = [];
+
+// Array used to store all inbetween time stamps desired by the user in the form of actual timestamps in the JSON file
+// We will determine which timestamps to snap to for min and max based on sliderSelectedTimeStamps.
+// Note that we are pulling these timestamps directly from the JSON file so these timestamps may not be
+// perfect 10 minute incrmenets.
+var selectedJsonTimeStamps = [];
+var selectedJsonMinTimeStamp;
+var selectedJsonMaxTimeStamp;
+
+// This will tell us when we should begin filling our selectedJsonTimeStamps array with inbetween timestamps.
+// It will be set to 1 once our selectedJsonMinTimeStamp is found and set to 0 once our selectedJsonMaxTimeStamp is found.
+var startFilling = 0;
 var initialLoad = 0;
 var superNodesChosen = 1;
 var showWindDirection = 0;
@@ -25,9 +41,7 @@ var chosenNodes = ["node 1", "node 2", "node 3", "node 4", "node 5", "node 6", "
 
 // Variable used to select the elements in chosenNodes
 var currentNodeIndex = 0;
-
 var nodeIndex = 0;
-
 
 //================================================================================
 // Graph Variables
@@ -77,167 +91,188 @@ var centerMap = {lat: 32.777262, lng: -117.070982};
 //================================================================================
 // Used for the slider ruler text within the slider
 var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-var dateMin;
-var dateMax;
+
+// Date object containing the minimum date of the slider
+var sliderMinDate;
+
+// Date object containing the maximum date of the slider
+var sliderMaxDate;
+
+// All of the timestamp strings currently selected by the slider
+// Array used to store all time stamps desired by the user in the form of perfect 10 minute increments
+var sliderSelectedTimeStamps = [];
+var minimumDate;
+var maximumDate;
+
+// Minimum boundary returned from the time slider
+var sliderTimeStampMin;
 
 // This will contain every timestamp between the slider's chosen minimum
 // and maximum date in string format. This will be in 10 minute increments
-var timeStampMid = [];
+// Used in conjunction with sliderMinDate and sliderMaxDate.
+// This is used for timestamps perfectly on 10 minute increments.
+// Possibly to be used for graph labels
+var sliderTimeStampMid = [];
+
+// Maximum boundary returned from the slider
+var sliderTimeStampMax;
 
 // String variables containing the min and max time stamps
 var initTimeMin = new Date(2017, 3, 9, 0, 0);
 var initTimeMax = new Date(2017, 3, 9, 4, 20);
 var todayBoundsMin = new Date(2017, 3, 9);
 var todayBoundsMax = new Date(2017, 3, 10);
+//---------------------------------------------------------------------------------------
+//endregion: Initialize Global Variables
 
 
-//================================================================================
-// Website Initialization on load
-//================================================================================
-// A $(document).ready() block.
+
+// region: Website Initialization on load
+//---------------------------------------------------------------------------------------
 $(document).ready(function() {
 
-  superNodesChosen = 1;
-  showWindDirection = 0;
-  showAqi = 0;
+  // Indicate that this is the very first time the webpage has loaded
+  // This will be used by the expand button to first initialize the expnaded
+  // view of the side panel
+  initialLoad = 0;
 
-  // Hide AQI and wind Direction on startup
-  $('.node1SuperReadings').hide();
-  $('.node2SuperReadings').hide();
-  $('.windDirectionReadings').hide();
-  $('.aqiReadings').hide();
+  // Initialize collapsed view pictures
+  CollapsedViewAverages();
 
-  centerMap = {lat: 32.777262, lng: -117.070982};
+  // Reading the .JSON file from the server
+  $.getJSON('Node_Json_Data/TestMasterData.json', function (data) {
 
-  NodeAlteration();
+    // Empty out the master lists
+    TestMasterDataUnsorted = [];
+    TestMasterDataSorted = [];
 
-  dateMin = new Date(initTimeMin);
-  dateMax = new Date(initTimeMax);
+    // This is necessary on load in order to populate the heat map when the website is first loaded
+    /***********   Slider Time Stamp Creation   **************/
+    // Array used to store all time stamps desired by the user in the form of perfect 10 minute increments
+    sliderSelectedTimeStamps = [];
 
-  // Create a string for the minimum and maximum timestamps
-  timeStampMin = (dateMin.getMonth()+1) +"/"+ dateMin.getDate() +"/"+  dateMin.getFullYear() +" "+ dateMin.getHours() +":"+ dateMin.getMinutes();
-  timeStampMax = (dateMax.getMonth()+1) +"/"+ dateMax.getDate() +"/"+ dateMax.getFullYear() +" "+ dateMax.getHours() +":"+ dateMax.getMinutes();
+    // Initialize the slider's min and max to the initTime variables. These will be used by the heatmap
+    sliderMinDate = new Date(initTimeMin);
+    sliderMaxDate = new Date(initTimeMax);
 
-  // This will update the timeStampMid array with all of the inbetween timestamps
-  getTimeStamps(dateMin, dateMax);
+    // ***** Form the time stamps strings for perfect 10 minute increments *****
+    // Create a string for the minimum and maximum timestamps
+    sliderTimeStampMin = (sliderMinDate.getMonth()+1) +"/"+ sliderMinDate.getDate() +"/"+  sliderMinDate.getFullYear() +" "+ sliderMinDate.getHours() +":"+ sliderMinDate.getMinutes();
+    sliderTimeStampMax = (sliderMaxDate.getMonth()+1) +"/"+ sliderMaxDate.getDate() +"/"+ sliderMaxDate.getFullYear() +" "+ sliderMaxDate.getHours() +":"+ sliderMaxDate.getMinutes();
 
-// Reading the .JSON file from the server
-  $.getJSON('Node_Json_Data/MasterData.json', function (data) {
+    // This will update the sliderTimeStampMid array with all of the inbetween timestamps
+    getTimeStamps(sliderMinDate, sliderMaxDate);
 
-    // Print temp reading for lower bound timestamp
-    //console.log("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMin +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMin][0]);
+    // Fill slider array with minimum timestamp
+    sliderSelectedTimeStamps.push(sliderTimeStampMin);
 
-    // Fill Graph array with minimum timestamp
-    var timeStampFull = [];
+    for (var counter = 0; counter < sliderTimeStampMid.length; counter++) {
+      var tempString = sliderTimeStampMid[counter];
 
-    //Clear arrays
-    minset = [];
-    maxset = [];
-    plotData = [];
-    plotData1 = [];
-    plotData2 = [];
-    plotData3 = [];
-    plotData4 = [];
-    plotData5 = [];
-    plotData6 = [];
-    plotData7 = [];
-    plotData8 = [];
-    plotData9 = [];
-    plotData10 = [];
-
-    timeStampFull.push(timeStampMin);
-
-    for (var counter = 0; counter < timeStampMid.length; counter++) {
-
-      var tempString = timeStampMid[counter];
-      //console.log("Node " + (currentNodeIndex+1) + "[0]["+ tempString +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][tempString][0]);
-
-      // Fill Graph array with middle timestamps
-      timeStampFull.push(tempString);
+      // Fill slider array with middle timestamps
+      sliderSelectedTimeStamps.push(tempString);
     }
 
-    // Print temp reading for upper bound timestamp
-    //console.log("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMax +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMax][0]);
+    // Fill slider array with maximum timestamp
+    sliderSelectedTimeStamps.push(sliderTimeStampMax);
+    /***********   Slider Time Stamp Creation End  **************/
 
-    // Fill Graph array with maximum timestamp
-    timeStampFull.push(timeStampMax);
+    /***********   JSON Selected Time Stamp Creation  **************/
+    // Array used to store all time stamps desired by the user in the form of actual timestamps in the JSON file
+    selectedJsonTimeStamps = [];
+    startFilling = 0;
+    TestMasterDataUnsorted = Object.keys(data[chosenNodes[currentNodeIndex]][0]);
 
-    for(var counter2 = 0; counter2 < timeStampFull.length; counter2++) {
+    // Cycle through each element of the dynamically read in timestamps and being populating a 0 padded sorted version
+    TestMasterDataUnsorted.forEach(function(element) {
+      var tempDate = new Date(element);
 
-      // Take date in milliseconds
-      var datePoint = new Date(timeStampFull[counter2]).getTime();
-      var tempPoint = data[chosenNodes[currentNodeIndex]][0][timeStampFull[counter2]][0];
-      // plotData.push(date in milliseconds, Temperature reading)
-      plotData.push(new Array(datePoint, tempPoint));
-    }
+      // *** Very important to add 1 to account for month offset! ***
+      tempDate.setMonth(tempDate.getMonth() + 1);
+      var tempDateString;
+
+      // Add 0 padding so the timestamps can be sorted properly using the .sort function
+      // Make sure you add 1 month since month starts at 1
+      tempDateString = ('0' + (tempDate.getMonth())).slice(-2) + '/' + ('0' + tempDate.getDate()).slice(-2) + '/' +  tempDate.getFullYear() +" "+ ('0' + tempDate.getHours()).slice(-2) +":"+ ('0' + tempDate.getMinutes()).slice(-2);
+      TestMasterDataSorted.push(tempDateString);
+
+    }); // End of cycling through each of the timestamps from the JSON file
+
+    // Now that we have all of the timestamps, sort them. The 0 padding is necessary for this to work properly
+    TestMasterDataSorted.sort();
+
+    // Cycle through the sorted master data and begin filling your selectedJsonTimeStamps array with the dynamic timestamps
+    // This loop will break once the correlated maximum value of the slider timeframe is selected.
+    for(var element of TestMasterDataSorted) {
+
+      // By creating a new date using the 0 padded timestamps, tempDate will become unpadded, which is what we want in order to read the json file
+      var tempDate = new Date(element);
+      var tempDateString = ((tempDate.getMonth()+1) +"/"+ tempDate.getDate() +"/"+  tempDate.getFullYear() +" "+ tempDate.getHours() +":"+ tempDate.getMinutes());
+
+      // Find a timestamp that is within 9.99 minutes of the 10 minute increment.
+      // We take the actual timestamp received from the JSON file and subtract the exact 10 minute increment and populate
+      // the selectedJsonMinTimeStamp and selectedJsonMaxTimeStamp if the current timestamp is within 0 and 9 minutes difference.
+      if(((tempDate.getTime() - sliderMinDate.getTime()) >= 0) && ((tempDate.getTime() - sliderMinDate.getTime()) < 600000)) {
+        startFilling = 1;
+        selectedJsonMinTimeStamp = tempDateString;
+      }
+      // Find a timestamp that is within 9.99 minutes of the 10 minute increment.
+      else if(((tempDate.getTime() - sliderMaxDate.getTime()) >= 0) && ((tempDate.getTime() - sliderMaxDate.getTime()) < 600000)) {
+        startFilling = 0;
+
+        // Push the last element into the array before breaking out of this loop
+        selectedJsonTimeStamps.push(tempDateString);
+        selectedJsonMaxTimeStamp = tempDateString;
+
+        // There's no sense in continuing searching our sorted master data since the maximum time stamp has been found
+        break;
+      }
+
+      // If the minimum was found, begin populating selectedJsonTimeStamps with the timestamp strings
+      if(startFilling == 1) {
+        selectedJsonTimeStamps.push(tempDateString);
+      }
+    } // End of for loop
+    /***********   JSON Selected Time Stamp Creation End  **************/
 
     /***********   HEATMAP   **************/
-
     for(var i=0; i < 10; i++) {
 
       // For Kevin's Heatmap, this is a single reading. It is the
-      var heatMapMin = data[chosenNodes[i]][0][timeStampMin][0];
-      var heatMapMax = data[chosenNodes[i]][0][timeStampMax][0];
+      var heatMapMin = data[chosenNodes[i]][0][sliderTimeStampMin][0];
+      var heatMapMax = data[chosenNodes[i]][0][sliderTimeStampMax][0];
       var tempVariable = ((heatMapMin + heatMapMax)/2);
-      // console.log("tempvar before rounding: "+ tempVariable);
+
       tempVariable = Math.round(tempVariable);
-      // console.log("tempvar after rounding: "+ tempVariable);
       averageHeat[i] = tempVariable;
 
-      var humidMin = data[chosenNodes[i]][0][timeStampMin][1];
-      var humidMax = data[chosenNodes[i]][0][timeStampMax][1];
+      var humidMin = data[chosenNodes[i]][0][sliderTimeStampMin][1];
+      var humidMax = data[chosenNodes[i]][0][sliderTimeStampMax][1];
+
       tempVariable = ((humidMin + humidMax)/2);
       averageHumidity[i] = Math.round(tempVariable);
 
-
-      var UVMin = data[chosenNodes[i]][0][timeStampMin][2];
-      var UVMax = data[chosenNodes[i]][0][timeStampMax][2];
+      var UVMin = data[chosenNodes[i]][0][sliderTimeStampMin][2];
+      var UVMax = data[chosenNodes[i]][0][sliderTimeStampMax][2];
       averageUV[i] = ((UVMin + UVMax)/2);
 
-      // console.log("Updating heatmap reading for node " + (i+1) + ": " + averageHeat[i]);
-      // console.log("min: " + heatMapMin + "max: "+ heatMapMax);
-      // console.log("Updating heatmap reading for node " + (i+1) + ": " + averageHeat[i]);
       if(i == 0 || i == 5){
-        var windspeedMin = data[chosenNodes[i]][0][timeStampMin][4];
-        var windspeedMax = data[chosenNodes[i]][0][timeStampMax][4];
+        var windspeedMin = data[chosenNodes[i]][0][sliderTimeStampMin][4];
+        var windspeedMax = data[chosenNodes[i]][0][sliderTimeStampMax][4];
         tempVariable = ((windspeedMin + windspeedMax)/2);
         averageWindSpeed[i] = Math.round(tempVariable);
       }
-
-      // console.log("Updating heatmap reading for node " + (i+1) + ": " + averageHeat[i]);
-      // console.log("min: " + heatMapMin + "max: "+ heatMapMax);
-      // console.log("Updating heatmap reading for node " + (i+1) + ": " + averageHeat[i]);
     }
 
-     initMap();
-
-  // Demo to display all heat readings
-    //update div element to display new readings
-    // var div = document.getElementById('temp-demo');
-
-    // // Display readings on page
-    // div.innerHTML = ("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMin +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMin][0]) + "\n";
-    // for (counter = 0; counter < timeStampMid.length; counter++) {
-    //   var tempString = timeStampMid[counter];
-    //   div.innerHTML = div.innerHTML + ("Node " + (currentNodeIndex+1) + "[0]["+ tempString +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][tempString][0]) + "\n";
-    // }
-    // div.innerHTML = div.innerHTML + ("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMax +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMax][0]) + "\n";
-
-
-    // // update div element to display new readings
-    // var div2 = document.getElementById('avgheat-demo');
-
-    // // Display average heat on page
-    // div2.innerHTML = ("Average Heat: " + averageHeat[0]);
-
+    // Initialize the center of the heat map
+    centerMap = {lat: 32.777262, lng: -117.070982};
+    initMap();
+    /***********   HEATMAP END   **************/
   }); // End of $.getJSON
-
-
-  AveragePictures();
-
 }); // End of Document.Ready
+//---------------------------------------------------------------------------------------
+//endregion: Website initialization on load
 
-// End of Website Initialization on load
 
 
 // region: Brandon's Slider Default Load, Change Slider Button Event Handlers, and Slider Value Changed Event Handler
@@ -248,10 +283,10 @@ $(document).ready(function() {
 //================================================================================
 $("#btn-today").click(function() {
 
-  var todayBoundsMin = new Date(2017, 3, 12);
-  var todayBoundsMax = new Date(2017, 3, 13);
-  var initTodayMin = new Date(2017, 3, 12, 0, 0);
-  var initTodayMax = new Date(2017, 3, 12, 4, 20);
+  var todayBoundsMin = new Date(2017, 3, 9);
+  var todayBoundsMax = new Date(2017, 3, 10);
+  var initTodayMin = new Date(2017, 3, 9, 0, 0);
+  var initTodayMax = new Date(2017, 3, 9, 4, 20);
 
   $("#dateSlider").dateRangeSlider( {
       //Note, month 0 is January. Month 4, is May.
@@ -337,439 +372,147 @@ $("#btn-7days").click(function() {
 //================================================================================
 $("#dateSlider").bind("valuesChanged", function(e, data){;
 
-  //Center map
-  centerMap = {lat: 32.777187, lng: -117.069876};
+  /***********   Slider Time Stamp Creation   **************/
+  // Array used to store all time stamps desired by the user in the form of perfect 10 minute increments
+  sliderSelectedTimeStamps = [];
 
-  dateMin = new Date(data.values.min);
-  dateMax = new Date(data.values.max);
+  // Initialize with the currently selected values
+  sliderMinDate = new Date(data.values.min);
+  sliderMaxDate = new Date(data.values.max);
 
+  //* Form the time stamps strings for perfect 10 minute increments *
   // Create a string for the minimum and maximum timestamps
-  timeStampMin = (dateMin.getMonth()+1) +"/"+ dateMin.getDate() +"/"+  dateMin.getFullYear() +" "+ dateMin.getHours() +":"+ dateMin.getMinutes();
-  timeStampMax = (dateMax.getMonth()+1) +"/"+ dateMax.getDate() +"/"+ dateMax.getFullYear() +" "+ dateMax.getHours() +":"+ dateMax.getMinutes();
+  sliderTimeStampMin = (sliderMinDate.getMonth()+1) +"/"+ sliderMinDate.getDate() +"/"+  sliderMinDate.getFullYear() +" "+ sliderMinDate.getHours() +":"+ sliderMinDate.getMinutes();
+  sliderTimeStampMax = (sliderMaxDate.getMonth()+1) +"/"+ sliderMaxDate.getDate() +"/"+ sliderMaxDate.getFullYear() +" "+ sliderMaxDate.getHours() +":"+ sliderMaxDate.getMinutes();
 
-  // This will update the timeStampMid array with all of the inbetween timestamps
-  getTimeStamps(dateMin, dateMax);
+  // This will update the sliderTimeStampMid array with all of the inbetween timestamps
+  getTimeStamps(sliderMinDate, sliderMaxDate);
 
+  // Fill slider array with minimum timestamp
+  sliderSelectedTimeStamps.push(sliderTimeStampMin);
 
-  // Reading the .JSON file from the server
-  $.getJSON('Node_Json_Data/MasterData.json', function (data) {
-    // Print temp reading for lower bound timestamp
-    //console.log("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMin +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMin][0]);
+  for (var counter = 0; counter < sliderTimeStampMid.length; counter++) {
+    var tempString = sliderTimeStampMid[counter];
 
-    // Fill Graph array with minimum timestamp
-    var timeStampFull = [];
-
-    //Clear arrays
-    minset = [];
-    maxset = [];
-    plotData = [];
-    plotData1 = [];
-    plotData2 = [];
-    plotData3 = [];
-    plotData4 = [];
-    plotData5 = [];
-    plotData6 = [];
-    plotData7 = [];
-    plotData8 = [];
-    plotData9 = [];
-    plotData10 = [];
-
-
-    timeStampFull.push(timeStampMin);
-
-    for (var counter = 0; counter < timeStampMid.length; counter++) {
-
-      var tempString = timeStampMid[counter];
-      //console.log("Node " + (currentNodeIndex+1) + "[0]["+ tempString +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][tempString][0]);
-
-      // Fill Graph array with middle timestamps
-      timeStampFull.push(tempString);
-    }
-
-    // Print temp reading for upper bound timestamp
-    //console.log("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMax +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMax][0]);
-
-    // Fill Graph array with maximum timestamp
-    timeStampFull.push(timeStampMax);
-
-
-    for(var counter2 = 0; counter2 < timeStampFull.length; counter2++) {
-
-      var datePoint = new Date(timeStampFull[counter2]).getTime();
-      var dataPoint1 = data[chosenNodes[0]][0][timeStampFull[counter2]][datatype];
-      var dataPoint2 = data[chosenNodes[1]][0][timeStampFull[counter2]][datatype];
-      var dataPoint3 = data[chosenNodes[2]][0][timeStampFull[counter2]][datatype];
-      var dataPoint4 = data[chosenNodes[3]][0][timeStampFull[counter2]][datatype];
-      var dataPoint5 = data[chosenNodes[4]][0][timeStampFull[counter2]][datatype];
-      var dataPoint6 = data[chosenNodes[5]][0][timeStampFull[counter2]][datatype];
-      var dataPoint7 = data[chosenNodes[6]][0][timeStampFull[counter2]][datatype];
-      var dataPoint8 = data[chosenNodes[7]][0][timeStampFull[counter2]][datatype];
-      var dataPoint9 = data[chosenNodes[8]][0][timeStampFull[counter2]][datatype];
-      var dataPoint10 = data[chosenNodes[9]][0][timeStampFull[counter2]][datatype];
-
-      // plotData.push(date in milliseconds, Temperature reading)
-      plotData1.push(new Array(datePoint, dataPoint1));
-      plotData2.push(new Array(datePoint, dataPoint2));
-      plotData3.push(new Array(datePoint, dataPoint3));
-      plotData4.push(new Array(datePoint, dataPoint4));
-      plotData5.push(new Array(datePoint, dataPoint5));
-      plotData6.push(new Array(datePoint, dataPoint6));
-      plotData7.push(new Array(datePoint, dataPoint7));
-      plotData8.push(new Array(datePoint, dataPoint8));
-      plotData9.push(new Array(datePoint, dataPoint9));
-      plotData10.push(new Array(datePoint, dataPoint10));
-    }
-
-
-    /***********   HEATMAP   **************/
-
-    for(var i=0; i < 10; i++) {
-
-      // For Kevin's Heatmap, this is a single reading. It is the
-      var heatMapMin = data[chosenNodes[i]][0][timeStampMin][0];
-      var heatMapMax = data[chosenNodes[i]][0][timeStampMax][0];
-      var tempVariable = ((heatMapMin + heatMapMax)/2);
-      // console.log("tempvar before rounding: "+ tempVariable);
-      tempVariable = Math.round(tempVariable);
-      // console.log("tempvar after rounding: "+ tempVariable);
-      averageHeat[i] = tempVariable;
-
-
-      var humidMin = data[chosenNodes[i]][0][timeStampMin][1];
-      var humidMax = data[chosenNodes[i]][0][timeStampMax][1];
-      tempVariable = ((humidMin + humidMax)/2);
-      averageHumidity[i] = Math.round(tempVariable);
-
-
-      var UVMin = data[chosenNodes[i]][0][timeStampMin][2];
-      console.log("UVMin: " + UVMin + "\n");
-      var UVMax = data[chosenNodes[i]][0][timeStampMax][2];
-      console.log("UVMin: " + UVMax + "\n");
-      averageUV[i] = ((UVMin + UVMax)/2);
-
-      // console.log("Updating heatmap reading for node " + (i+1) + ": " + averageHeat[i]);
-      // console.log("min: " + heatMapMin + "max: "+ heatMapMax);
-      // console.log("Updating heatmap reading for node " + (i+1) + ": " + averageHeat[i]);
-      if(i == 0 || i == 5){
-        var windspeedMin = data[chosenNodes[i]][0][timeStampMin][4];
-        var windspeedMax = data[chosenNodes[i]][0][timeStampMax][4];
-        tempVariable = ((windspeedMin + windspeedMax)/2);
-        averageWindSpeed[i] = Math.round(tempVariable);
-      }
-
-
-
-
-      // console.log("Updating heatmap reading for node " + (i+1) + ": " + averageHeat[i]);
-      // console.log("min: " + heatMapMin + "max: "+ heatMapMax);
-      // console.log("Updating heatmap reading for node " + (i+1) + ": " + averageHeat[i]);
-    }
-
-     initMap();
-
-    // // For Kevin's Heatmap, this is a single reading. It is the
-    // var heatMapMin = data[chosenNodes[currentNodeIndex]][0][timeStampMin][0];
-    // var heatMapMax = data[chosenNodes[currentNodeIndex]][0][timeStampMax][0];
-    // averageHeat = ((heatMapMin + heatMapMax)/2);
-    // averageHeat = Math.round(averageHeat);
-    // console.log("Updating heatmap reading: " + averageHeat);
-    // initMap();
-    /***********   HEATMAP END   **************/
-
-
-     /***********   GRAPH   **************/
-
-     data1 = [];
-     data2 = [];
-     data3 = [];
-     data4 = [];
-     data5 = [];
-     data6 = [];
-     data7 = [];
-     data8 = [];
-     data9 = [];
-     data10 = [];
-     dataset = [];
-
-  var data1 =
-  {
-
-    label: "node 1",
-    data: plotData1,
-    color: "#000000"
-
-  };
-
-  var data2 =
-  {
-
-    label: "node 2",
-    data: plotData2,
-    color: "#FF0000"
-
-  };
-
-  var data3 =
-  {
-
-    label: "node 3",
-    data: plotData3,
-    color: "#00BB00"
-
-  };
-
-  var data4 =
-  {
-
-    label: "node 4",
-    data: plotData4,
-    color: "#0000FF"
-
-  };
-
-  var data5 =
-  {
-
-    label: "node 5",
-    data: plotData5,
-    color: "#FFBBFF"
-
-  };
-
-  var data6 =
-  {
-
-    label: "node 6",
-    data: plotData6,
-    color: "#00FFFF"
-
-  };
-
-  var data7 =
-  {
-
-    label: "node 7",
-    data: plotData7,
-    color: "#FFFF00"
-
-  };
-
-  var data8 =
-  {
-
-    label: "node 8",
-    data: plotData8,
-    color: "#B0B0B0"
-
-  };
-
-  var data9 =
-  {
-
-    label: "node 9",
-    data: plotData9,
-    color: "#4B0066"
-
-  };
-
-  var data10 =
-  {
-
-    label: "node 10",
-    data: plotData10,
-    color: "#FF8000"
-
-  };
-
-  //Taking range of y-values from each set of plotData
-  var yrange1 = plotData1.map(function(range1){return range1[1];});
-  var yrange2 = plotData2.map(function(range2){return range2[1];});
-  var yrange3 = plotData3.map(function(range3){return range3[1];});
-  var yrange4 = plotData4.map(function(range4){return range4[1];});
-  var yrange5 = plotData5.map(function(range5){return range5[1];});
-  var yrange6 = plotData6.map(function(range6){return range6[1];});
-  var yrange7 = plotData7.map(function(range7){return range7[1];});
-  var yrange8 = plotData8.map(function(range8){return range8[1];});
-  var yrange9 = plotData9.map(function(range9){return range9[1];});
-  var yrange10 = plotData10.map(function(range10){return range10[1];});
-
-  for(var i = 0; i < ComparisonArray.length; i++)
-  {
-
-    if(ComparisonArray[i] == "node 1")
-    {
-      dataset.push(data1);
-      minset.push(Math.min.apply(null,yrange1));
-      maxset.push(Math.max.apply(null,yrange1));
-    }
-
-    if(ComparisonArray[i] == "node 2")
-    {
-      dataset.push(data2);
-      minset.push(Math.min.apply(null,yrange2));
-      maxset.push(Math.max.apply(null,yrange2));
-    }
-
-    if(ComparisonArray[i] == "node 3")
-    {
-      dataset.push(data3);
-      minset.push(Math.min.apply(null,yrange3));
-      maxset.push(Math.max.apply(null,yrange3));
-    }
-
-    if(ComparisonArray[i] == "node 4")
-    {
-      dataset.push(data4);
-      minset.push(Math.min.apply(null,yrange4));
-      maxset.push(Math.max.apply(null,yrange4));
-    }
-
-    if(ComparisonArray[i] == "node 5")
-    {
-      dataset.push(data5);
-      minset.push(Math.min.apply(null,yrange5));
-      maxset.push(Math.max.apply(null,yrange5));
-    }
-
-    if(ComparisonArray[i] == "node 6")
-    {
-      dataset.push(data6);
-      minset.push(Math.min.apply(null,yrange6));
-      maxset.push(Math.max.apply(null,yrange6));
-    }
-
-    if(ComparisonArray[i] == "node 7")
-    {
-      dataset.push(data7);
-      minset.push(Math.min.apply(null,yrange7));
-      maxset.push(Math.max.apply(null,yrange7));
-    }
-
-    if(ComparisonArray[i] == "node 8")
-    {
-      dataset.push(data8);
-      minset.push(Math.min.apply(null,yrange8));
-      maxset.push(Math.max.apply(null,yrange8));
-    }
-
-    if(ComparisonArray[i] == "node 9")
-    {
-      dataset.push(data9);
-      minset.push(Math.min.apply(null,yrange9));
-      maxset.push(Math.max.apply(null,yrange9));
-    }
-
-    if(ComparisonArray[i] == "node 10")
-    {
-      dataset.push(data10);
-      minset.push(Math.min.apply(null,yrange10));
-      maxset.push(Math.max.apply(null,yrange10));
-    }
-
+    // Fill slider array with middle timestamps
+    sliderSelectedTimeStamps.push(tempString);
   }
 
-  ymin = Math.min.apply(null,minset);
-  ymax = Math.max.apply(null,maxset);
+  // Fill slider array with maximum timestamp
+  sliderSelectedTimeStamps.push(sliderTimeStampMax);
+  /***********   Slider Time Stamp Creation End  **************/
 
-  console.log("ymin: " + ymin);
-  console.log("ymax: " + ymax);
-  console.log("ComparisonArray: " + ComparisonArray);
-  console.log("data1 " + data1);
 
-    // Setting options variable for plotting graph
-    if(timeStampFull.length < ((8*6)+1)) {
-      var options = {
-          series: {
-              lines: { show: true },
-              points: {show: true },
-          },
-          grid: {
-              hoverable: true,
-              clickable: true
-          },
-          xaxis:
-          {
-              mode: "time",
-              timeformat: "%m/%d/%y\n %h:%M",
-              //min: ((new Date(dateMin).getTime() - 600000*6*7)),
-              //max: ((new Date(dateMax).getTime() - 600000*6*7))
-              min: new Date(dateMin).getTime(),
-              max: new Date(dateMax).getTime(),
-              timezone: "browser"
-          },
+  /***********   Reading the .JSON file from the server  **************/
+  $.getJSON('Node_Json_Data/TestMasterData.json', function (data) {
 
-          yaxis:
-          {
-              min: ymin - ticks,
-        max: ymax + ticks,
-        ticksize: ticks
-          }
-      }
-    }
-    else {
-      var options = {
-        series: {
-            lines: { show: true },
-            points: {show: false },
-        },
-        grid: {
-            hoverable: true,
-            clickable: true
-        },
-        xaxis:
-        {
-            mode: "time",
-            timeformat: "%m/%d/%y\n %h:%M",
-            //min: ((new Date(dateMin).getTime() - 600000*6*7)),
-            //max: ((new Date(dateMax).getTime() - 600000*6*7))
-            min: new Date(dateMin).getTime(),
-            max: new Date(dateMax).getTime(),
-            timezone: "browser"
-        },
+      // Empty out the master lists
+      TestMasterDataUnsorted = [];
+      TestMasterDataSorted = [];
 
-        yaxis:
-        {
-          min: ymin - ticks,
-      max: ymax + ticks,
-      ticksize: ticks
+
+      /***********   JSON Selected Time Stamp Creation  **************/
+      // Array used to store all time stamps desired by the user in the form of actual timestamps in the JSON file
+      selectedJsonTimeStamps = [];
+      startFilling = 0;
+      TestMasterDataUnsorted = Object.keys(data[chosenNodes[currentNodeIndex]][0]);
+
+      // Cycle through each element of the dynamically read in timestamps and being populating a 0 padded sorted version
+      TestMasterDataUnsorted.forEach(function(element) {
+        var tempDate = new Date(element);
+
+        // *** Very important to add 1 to account for month offset! ***
+        tempDate.setMonth(tempDate.getMonth() + 1);
+        var tempDateString;
+
+        // Add 0 padding so the timestamps can be sorted properly using the .sort function
+        // Make sure you add 1 month since month starts at 1
+        tempDateString = ('0' + (tempDate.getMonth())).slice(-2) + '/' + ('0' + tempDate.getDate()).slice(-2) + '/' +  tempDate.getFullYear() +" "+ ('0' + tempDate.getHours()).slice(-2) +":"+ ('0' + tempDate.getMinutes()).slice(-2);
+        TestMasterDataSorted.push(tempDateString);
+
+      }); // End of cycling through each of the timestamps from the JSON file
+
+      // Now that we have all of the timestamps, sort them. The 0 padding is necessary for this to work properly
+      TestMasterDataSorted.sort();
+
+      // Cycle through the sorted master data and begin filling your selectedJsonTimeStamps array with the dynamic timestamps
+      // This loop will break once the correlated maximum value of the slider timeframe is selected.
+      for(var element of TestMasterDataSorted) {
+        // By creating a new date using the 0 padded timestamps, tempDate will become unpadded, which is what we want in order to read the json file
+        var tempDate = new Date(element);
+        var tempDateString = ((tempDate.getMonth()+1) +"/"+ tempDate.getDate() +"/"+  tempDate.getFullYear() +" "+ tempDate.getHours() +":"+ tempDate.getMinutes());
+
+        // Find a timestamp that is within 9.99 minutes of the 10 minute increment.
+        // We take the actual timestamp received from the JSON file and subtract the exact 10 minute increment and populate
+        // the selectedJsonMinTimeStamp and selectedJsonMaxTimeStamp if the current timestamp is within 0 and 9 minutes difference.
+        if(((tempDate.getTime() - sliderMinDate.getTime()) >= 0) && ((tempDate.getTime() - sliderMinDate.getTime()) < 600000)) {
+          startFilling = 1;
+          selectedJsonMinTimeStamp = tempDateString;
         }
-      }
-    }
+        // Find a timestamp that is within 9.99 minutes of the 10 minute increment.
+        else if(((tempDate.getTime() - sliderMaxDate.getTime()) >= 0) && ((tempDate.getTime() - sliderMaxDate.getTime()) < 600000)) {
+          startFilling = 0;
 
-    /*var dataset = [
-      {
-         label: chosenNodes[currentNodeIndex],
-         data: plotData,
-         color: "#FF0000"
-      }
-    ]*/
+          // Push the last element into the array before breaking out of this loop
+          selectedJsonTimeStamps.push(tempDateString);
+          selectedJsonMaxTimeStamp = tempDateString;
 
-    $.plot($("#placeholder"), dataset, options);
-    /***********   END OF GRAPH   **************/
+          // There's no sense in continuing searching our sorted master data since the maximum time stamp has been found
+          break;
+        }
 
+        // If the minimum was found, begin populating selectedJsonTimeStamps with the timestamp strings
+        if(startFilling == 1) {
+          selectedJsonTimeStamps.push(tempDateString);
+        }
 
-
-  // Demo to display all heat readings
-    //update div element to display new readings
-    // var div = document.getElementById('temp-demo');
-
-    // // Display readings on page
-    // div.innerHTML = ("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMin +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMin][0]) + "\n";
-    // for (counter = 0; counter < timeStampMid.length; counter++) {
-    //   var tempString = timeStampMid[counter];
-    //   div.innerHTML = div.innerHTML + ("Node " + (currentNodeIndex+1) + "[0]["+ tempString +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][tempString][0]) + "\n";
-    // }
-    // div.innerHTML = div.innerHTML + ("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMax +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMax][0]) + "\n";
+        //console.log((tempDate.getMonth()+1) +"/"+ tempDate.getDate() +"/"+  tempDate.getFullYear() +" "+ tempDate.getHours() +":"+ tempDate.getMinutes());
+      };
+      /***********   JSON Selected Time Stamp Creation End  **************/
 
 
-    // // update div element to display new readings
-    // var div2 = document.getElementById('avgheat-demo');
+      /***********   HEATMAP   **************/
+      //Set the center of the map to be used by initMap()
+      centerMap = {lat: 32.777187, lng: -117.069876};
 
-    // // Display average heat on page
-    // div2.innerHTML = ("Average Heat: " + averageHeat[0]);
+      for(var i=0; i < 10; i++) {
+        var heatMapMin = data[chosenNodes[i]][0][selectedJsonMinTimeStamp][0];
+        var heatMapMax = data[chosenNodes[i]][0][selectedJsonMaxTimeStamp][0];
+        var tempVariable = ((heatMapMin + heatMapMax)/2);
 
+        tempVariable = Math.round(tempVariable);
+        averageHeat[i] = tempVariable;
+
+        var humidMin = data[chosenNodes[i]][0][selectedJsonMinTimeStamp][1];
+        var humidMax = data[chosenNodes[i]][0][selectedJsonMaxTimeStamp][1];
+
+        tempVariable = ((humidMin + humidMax)/2);
+        averageHumidity[i] = Math.round(tempVariable);
+
+        var UVMin = data[chosenNodes[i]][0][selectedJsonMinTimeStamp][2];
+        var UVMax = data[chosenNodes[i]][0][selectedJsonMaxTimeStamp][2];
+
+        averageUV[i] = ((UVMin + UVMax)/2);
+
+        if(i == 0 || i == 5){
+          var windspeedMin = data[chosenNodes[i]][0][selectedJsonMinTimeStamp][4];
+          var windspeedMax = data[chosenNodes[i]][0][selectedJsonMaxTimeStamp][4];
+
+          tempVariable = ((windspeedMin + windspeedMax)/2);
+          averageWindSpeed[i] = Math.round(tempVariable);
+        }
+      } // End of for loop
+
+      initMap();
+      /***********   HEATMAP END   **************/
+
+      /***********   GRAPH   **************/
+      updateGraph();
+      /***********   GRAPH END   **************/
   }); // End of $.getJSON
+  /***********   Reading the .JSON file from the server End  **************/
 }); // End of $("#dateSlider").bind("valuesChanged")
+
 
 
 //================================================================================
@@ -782,7 +525,7 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
 |--------------------------------------------------------------------------
 |
 | Takes the minimum and maximum timestamps of the slider as an input and
-| fills the timeStampMid array with every timestamp inbetween in
+| fills the sliderTimeStampMid array with every timestamp inbetween in
 | increments of 10 minutes.
 |
 | Input: two Date objects
@@ -801,15 +544,15 @@ function getTimeStamps(timeMin, timeMax){
   var minCopy = new Date(timeMin);
   var maxCopy = new Date(timeMax);
 
-  // If the current min and max are the same, clear out timeStampMid and return
+  // If the current min and max are the same, clear out sliderTimeStampMid and return
   if(minCopy.getTime() == maxCopy.getTime()) {
 
-    // Clear out timeStampMid
-    timeStampMid = [];
+    // Clear out sliderTimeStampMid
+    sliderTimeStampMid = [];
     return;
   }
 
-  // NOTE: Instead of comparing dates using the operators directly,(dateMin == dateMax),
+  // NOTE: Instead of comparing dates using the operators directly,(sliderMinDate == sliderMaxDate),
   // a good practice is to compare the dates but using the milliseconds format.
   // You can obtain milliseconds format using the getTime( ) function.
   // Reference: https://wiki.base22.com/display/btg/How+to+compare+dates+in+JavaScript
@@ -818,14 +561,14 @@ function getTimeStamps(timeMin, timeMax){
   // (equivalent to 10 minutes), we do not need to calculate inbetween values.
   else if((maxCopy.getTime() - minCopy.getTime()) == 600000) {
 
-    // Clear out timeStampMid
-    timeStampMid = [];
+    // Clear out sliderTimeStampMid
+    sliderTimeStampMid = [];
     return;
   }
   else {
 
-    // Clear out timeStampMid
-    timeStampMid = [];
+    // Clear out sliderTimeStampMid
+    sliderTimeStampMid = [];
 
     // Only loop if the difference in min and max is greater than 10 minutes
     // This will continue incrementing the minimum by 10 minutes
@@ -838,131 +581,12 @@ function getTimeStamps(timeMin, timeMax){
       // Create a new timestamp after incrementing minutes by 10
       var tempString =  (minCopy.getMonth()+1) +"/"+ minCopy.getDate() +"/"+ minCopy.getFullYear() +" "+ minCopy.getHours() +":"+ minCopy.getMinutes();
 
-      // Append the current string into the timeStampMid array
-      timeStampMid.push(tempString);
+      // Append the current string into the sliderTimeStampMid array
+      sliderTimeStampMid.push(tempString);
     } // End of While loop
 
     return;
   } // End of else
-
-/* //*** Not necessary since Date object handles rollover
-    // Don't cache ajax or content won't be fresh
-    $.ajaxSetup ({
-        cache: false,
-        complete: function() {
-          // Schedule the next request when the current one's complete
-          if(i == true) {
-            i = false;
-          }
-          else {
-            i = true;
-          }
-          setTimeout(updatePageInfo, timeDelay);
-        }
-    });
-
-    // **** IT IS IMPORTANT TO DISPLAY THE INFO BEFORE INCREMENTING IT ****
-    //console.log(myDate.getDate() +"/"+ myDate.getMonth() +"/"+ myDate.getFullYear()+" "+ myDate.getHours() +":"+ myDate.getMinutes()+":"+ myDate.getSeconds());
-
-    // load() functions
-    var loadUrl = myDate.getDate() +"/"+ myDate.getMonth() +"/"+ myDate.getFullYear() +" "+ myDate.getHours() +":"+ myDate.getMinutes()+":"+ myDate.getSeconds();
-    var loadUrl2;
-    if(i == true) {
-      loadUrl2 = "/www/test-data/example.json";
-    }
-    else {
-      loadUrl2 = "/www/test-data/test_data_subnodes.json";
-    }
-
-//DEBUG
-    //$("#refreshImage").html(loadUrl);
-    //$("#refreshImage2").load(loadUrl2);
-
-    // |*-- If we chose to update at an interval of seconds --*|
-    if(refreshSecond == true) {
-
-      //** Only increment second if it is less than 60
-      if(myDate.getSeconds() < 60) {
-        myDate.setSeconds(myDate.getSeconds() + refreshSecondInterval);
-      }
-
-      //** Otherwise, Reset seconds and update the minutes  hours (if applicable)
-      else {
-        // if we have reached the 60th second, reset seconds and increment minutes and hour
-        myDate.setSeconds(0);
-
-        // Only increment minutes if the current minute is 59 or lower
-        if(myDate.getMinutes() < 60) {
-          myDate.setMinutes(myDate.getMinutes() + 1);
-        }
-
-        // Otherwise, reset minutes and update the hours
-        else {
-          // if we have reached the 60th minute, reset minutes and increment hour
-          myDate.setMinutes(0);
-
-          // If the current hour is already 24, start over at the 0th hour
-          if(myDate.getHours() > 23) {
-             myDate.setHour(0);
-          }
-          // If the current hour is not 24, go to the next hour
-          else {
-            myDate.setHour(myDate.getHours() + 1);
-          }
-        }
-
-      } // End of resetting minutes and hours
-    }
-
-
-    // |*-- If we chose to update at an interval of minutes --*|
-    else if(refreshMinute == true) {
-
-      //** Only increment if the current minute is 59 or lower
-      if(myDate.getMinutes() < 60) {
-        myDate.setMinutes(myDate.getMinutes() + refreshMinuteInterval);
-      }
-
-      //** Otherwise, reset minutes and update the hours
-      else {
-        // if we have reached the 60th minute, reset minutes and increment hour
-        myDate.setMinutes(0);
-
-        // If the current hour is already 24, start over at the 0th hour
-        if(myDate.getHours() > 23) {
-           myDate.setHour(0);
-        }
-        // If the current hour is not 24, go to the next hour
-        else {
-          myDate.setHour(myDate.getHours() + 1);
-        }
-      }
-    } // end of updating by specified minute interval
-
-
-    // |*-- Otherwise, increment by a default of 10 minutes --*|
-    else {
-      //** Only increment if the current minute is 59 or lower
-      if(myDate.getMinutes() < 60) {
-        myDate.setMinutes(myDate.getMinutes() + 10);
-      }
-
-      //** Otherwise, reset minutes and update the hours
-      else {
-        // if we have reached the 60th minute, reset minutes and increment hour
-        myDate.setMinutes(0);
-
-        // If the current hour is already 24, start over at the 0th hour
-        if(myDate.getHours() > 23) {
-           myDate.setHour(0);
-        }
-        // If the current hour is not 24, go to the next hour
-        else {
-          myDate.setHour(myDate.getHours() + 1);
-        }
-      }
-    }
-*/
 }; // End of getTimeStamps()
 
 //---------------------------------------------------------------------------------------
@@ -970,10 +594,7 @@ function getTimeStamps(timeMin, timeMax){
 
 
 
-
-
-
-// region: Yusuf's checkboxes
+// region: Yusuf's Side Panel
 //---------------------------------------------------------------------------------------
 
 //================================================================================
@@ -988,7 +609,21 @@ $('#justify-icon').click(function(){
   // This will only happen once
   if(initialLoad == 0) {
 
+    // Set initialLoad to 1 so that this never happens again
     initialLoad = 1;
+
+    // Initialize expanded view elements
+    superNodesChosen = 1;
+    showWindDirection = 0;
+    showAqi = 0;
+
+    // Hide AQI and wind Direction on startup
+    $('.node1SuperReadings').hide();
+    $('.node2SuperReadings').hide();
+    $('.windDirectionReadings').hide();
+    $('.aqiReadings').hide();
+
+    NodeAlteration();
 
     //================================================================================
     // Default Constructor for the Slider. Created when the expand button is first pressed
@@ -1030,586 +665,302 @@ $('#justify-icon').click(function(){
         range:false
     });
 
-    dateMin = new Date(initTimeMin);
-    dateMax = new Date(initTimeMax);
+    $.getJSON('Node_Json_Data/TestMasterData.json', function (data) {
 
-    // Create a string for the minimum and maximum timestamps
-    timeStampMin = (dateMin.getMonth()+1) +"/"+ dateMin.getDate() +"/"+  dateMin.getFullYear() +" "+ dateMin.getHours() +":"+ dateMin.getMinutes();
-    timeStampMax = (dateMax.getMonth()+1) +"/"+ dateMax.getDate() +"/"+ dateMax.getFullYear() +" "+ dateMax.getHours() +":"+ dateMax.getMinutes();
+      // Empty out the master lists
+      TestMasterDataUnsorted = [];
+      TestMasterDataSorted = [];
 
-    // This will update the timeStampMid array with all of the inbetween timestamps
-    getTimeStamps(dateMin, dateMax);
+      /***********   Slider Time Stamp Creation   **************/
+      // Array used to store all time stamps desired by the user in the form of perfect 10 minute increments
+      sliderSelectedTimeStamps = [];
+      sliderMinDate = new Date(initTimeMin);
+      sliderMaxDate = new Date(initTimeMax);
 
+      // * Form the time stamps strings for perfect 10 minute increments *
+      // Create a string for the minimum and maximum timestamps
+      sliderTimeStampMin = (sliderMinDate.getMonth()+1) +"/"+ sliderMinDate.getDate() +"/"+  sliderMinDate.getFullYear() +" "+ sliderMinDate.getHours() +":"+ sliderMinDate.getMinutes();
+      sliderTimeStampMax = (sliderMaxDate.getMonth()+1) +"/"+ sliderMaxDate.getDate() +"/"+ sliderMaxDate.getFullYear() +" "+ sliderMaxDate.getHours() +":"+ sliderMaxDate.getMinutes();
 
-    // console.log(timeStampMin);
-    // console.log(timeStampMax);
-
-    $.getJSON('Node_Json_Data/MasterData.json', function (data) {
-
-      //Center map
-      centerMap = {lat: 32.777187, lng: -117.069876};
-
-
-      var testTimeStamps = [];
-      var timeStampStrings = [];
-
-
-      testTimeStamps = Object.keys(data[chosenNodes[currentNodeIndex]][0]);
-
-      //console.log("testTimeStamps: " + testTimeStamps + "\n");
-
-      //testTimeStamps.sort();
-
-      testTimeStamps.forEach(function(element) {
-        var MyDate = new Date(element);
-        var MyDateString;
-
-        MyDate.setDate(MyDate.getDate() + 20);
-
-        MyDateString = ('0' + (MyDate.getMonth())).slice(-2) + '/' + ('0' + MyDate.getDate()).slice(-2) + '/' +  MyDate.getFullYear() +" "+ MyDate.getHours() +":"+ MyDate.getMinutes();
-
-        //console.log(MyDateString + "\n");
-        timeStampStrings.push(MyDateString);
-
-          //console.log(element + "\n");
-      });
-
-      timeStampStrings.sort();
-
-      timeStampStrings.forEach(function(element) {
-        console.log(element + "\n");
-      });
-
-      // Print temp reading for lower bound timestamp
-      //console.log("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMin +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMin][0]);
+      // This will update the sliderTimeStampMid array with all of the inbetween timestamps
+      getTimeStamps(sliderMinDate, sliderMaxDate);
 
       // Fill Graph array with minimum timestamp
-      var timeStampFull = [];
+      sliderSelectedTimeStamps.push(sliderTimeStampMin);
 
-      //Clear arrays
-      minset = [];
-      maxset = [];
-      plotData = [];
-      plotData1 = [];
-      plotData2 = [];
-      plotData3 = [];
-      plotData4 = [];
-      plotData5 = [];
-      plotData6 = [];
-      plotData7 = [];
-      plotData8 = [];
-      plotData9 = [];
-      plotData10 = [];
+      for (var counter = 0; counter < sliderTimeStampMid.length; counter++) {
+        var tempString = sliderTimeStampMid[counter];
 
+        // Fill Graph array with middle timestamps
+        sliderSelectedTimeStamps.push(tempString);
+      }
+
+      // Fill Graph array with maximum timestamp
+      sliderSelectedTimeStamps.push(sliderTimeStampMax);
+      /***********   Slider Time Stamp Creation End  **************/
+
+
+      /***********   JSON Selected Time Stamp Creation  **************/
+      // Array used to store all time stamps desired by the user in the form of actual timestamps in the JSON file
+      selectedJsonTimeStamps = [];
+      startFilling = 0;
+      TestMasterDataUnsorted = Object.keys(data[chosenNodes[currentNodeIndex]][0]);
+
+      // Cycle through each element of the dynamically read in timestamps and being populating a 0 padded sorted version
+      TestMasterDataUnsorted.forEach(function(element) {
+        var tempDate = new Date(element);
+
+        // *** Very important to add 1 to account for month offset! ***
+        tempDate.setMonth(tempDate.getMonth() + 1);
+        var tempDateString;
+
+        // Add 0 padding so the timestamps can be sorted properly using the .sort function
+        // Make sure you add 1 month since month starts at 1
+        tempDateString = ('0' + (tempDate.getMonth())).slice(-2) + '/' + ('0' + tempDate.getDate()).slice(-2) + '/' +  tempDate.getFullYear() +" "+ ('0' + tempDate.getHours()).slice(-2) +":"+ ('0' + tempDate.getMinutes()).slice(-2);
+        TestMasterDataSorted.push(tempDateString);
+
+      }); // End of cycling through each of the timestamps from the JSON file
+
+      // Now that we have all of the timestamps, sort them. The 0 padding is necessary for this to work properly
+      TestMasterDataSorted.sort();
+
+      // Cycle through the sorted master data and begin filling your selectedJsonTimeStamps array with the dynamic timestamps
+      // This loop will break once the correlated maximum value of the slider timeframe is selected.
+      for(var element of TestMasterDataSorted) {
+        // By creating a new date using the 0 padded timestamps, tempDate will become unpadded, which is what we want in order to read the json file
+        var tempDate = new Date(element);
+        var tempDateString = ((tempDate.getMonth()+1) +"/"+ tempDate.getDate() +"/"+  tempDate.getFullYear() +" "+ tempDate.getHours() +":"+ tempDate.getMinutes());
+
+        // Find a timestamp that is within 9.99 minutes of the 10 minute increment.
+        // We take the actual timestamp received from the JSON file and subtract the exact 10 minute increment and populate
+        // the selectedJsonMinTimeStamp and selectedJsonMaxTimeStamp if the current timestamp is within 0 and 9 minutes difference.
+        if(((tempDate.getTime() - sliderMinDate.getTime()) >= 0) && ((tempDate.getTime() - sliderMinDate.getTime()) < 600000)) {
+          startFilling = 1;
+          selectedJsonMinTimeStamp = tempDateString;
+        }
+        // Find a timestamp that is within 9.99 minutes of the 10 minute increment.
+        else if(((tempDate.getTime() - sliderMaxDate.getTime()) >= 0) && ((tempDate.getTime() - sliderMaxDate.getTime()) < 600000)) {
+          startFilling = 0;
+
+          // Push the last element into the array before breaking out of this loop
+          selectedJsonTimeStamps.push(tempDateString);
+          selectedJsonMaxTimeStamp = tempDateString;
+
+          // There's no sense in continuing searching our sorted master data since the maximum time stamp has been found
+          break;
+        }
+
+        // If the minimum was found, begin populating selectedJsonTimeStamps with the timestamp strings
+        if(startFilling == 1) {
+          selectedJsonTimeStamps.push(tempDateString);
+        }
+
+        //console.log((tempDate.getMonth()+1) +"/"+ tempDate.getDate() +"/"+  tempDate.getFullYear() +" "+ tempDate.getHours() +":"+ tempDate.getMinutes());
+      };
+      /***********   JSON Selected Time Stamp Creation End  **************/
+
+
+      /***********   HEATMAP   **************/
+      //Set the center of the map to be used by initMap()
+      centerMap = {lat: 32.777187, lng: -117.069876};
+
+      for(var i=0; i < 10; i++) {
+        var heatMapMin = data[chosenNodes[i]][0][selectedJsonMinTimeStamp][0];
+        var heatMapMax = data[chosenNodes[i]][0][selectedJsonMaxTimeStamp][0];
+        var tempVariable = ((heatMapMin + heatMapMax)/2);
+
+        tempVariable = Math.round(tempVariable);
+        averageHeat[i] = tempVariable;
+
+        var humidMin = data[chosenNodes[i]][0][selectedJsonMinTimeStamp][1];
+        var humidMax = data[chosenNodes[i]][0][selectedJsonMaxTimeStamp][1];
+
+        tempVariable = ((humidMin + humidMax)/2);
+        averageHumidity[i] = Math.round(tempVariable);
+
+        var UVMin = data[chosenNodes[i]][0][selectedJsonMinTimeStamp][2];
+        var UVMax = data[chosenNodes[i]][0][selectedJsonMaxTimeStamp][2];
+
+        averageUV[i] = ((UVMin + UVMax)/2);
+
+        if(i == 0 || i == 5){
+          var windspeedMin = data[chosenNodes[i]][0][selectedJsonMinTimeStamp][4];
+          var windspeedMax = data[chosenNodes[i]][0][selectedJsonMaxTimeStamp][4];
+
+          tempVariable = ((windspeedMin + windspeedMax)/2);
+          averageWindSpeed[i] = Math.round(tempVariable);
+        }
+      } // End of for
+
+      initMap();
+      /***********   HEATMAP END   **************/
+
+
+      /***********   GRAPH   **************/
       // Initialize graph with node 1 selected on start up
       ComparisonArray[0] = "node 1";
       ComparisonCount = 1;
       finalstring = "Nodes compared: node 1";
 
-      //document.getElementById('ComparisonNode').innerHTML = finalstring;
-
-
-      timeStampFull.push(timeStampMin);
-
-      for (var counter = 0; counter < timeStampMid.length; counter++) {
-
-        var tempString = timeStampMid[counter];
-        //console.log("Node " + (currentNodeIndex+1) + "[0]["+ tempString +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][tempString][0]);
-
-        // Fill Graph array with middle timestamps
-        timeStampFull.push(tempString);
-      }
-
-      // Print temp reading for upper bound timestamp
-      //console.log("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMax +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMax][0]);
-
-      // Fill Graph array with maximum timestamp
-      timeStampFull.push(timeStampMax);
-
-    for(var counter2 = 0; counter2 < timeStampFull.length; counter2++) {
-
-      var datePoint = new Date(timeStampFull[counter2]).getTime();
-      var dataPoint1 = data[chosenNodes[0]][0][timeStampFull[counter2]][datatype];
-      var dataPoint2 = data[chosenNodes[1]][0][timeStampFull[counter2]][datatype];
-      var dataPoint3 = data[chosenNodes[2]][0][timeStampFull[counter2]][datatype];
-      var dataPoint4 = data[chosenNodes[3]][0][timeStampFull[counter2]][datatype];
-      var dataPoint5 = data[chosenNodes[4]][0][timeStampFull[counter2]][datatype];
-      var dataPoint6 = data[chosenNodes[5]][0][timeStampFull[counter2]][datatype];
-      var dataPoint7 = data[chosenNodes[6]][0][timeStampFull[counter2]][datatype];
-      var dataPoint8 = data[chosenNodes[7]][0][timeStampFull[counter2]][datatype];
-      var dataPoint9 = data[chosenNodes[8]][0][timeStampFull[counter2]][datatype];
-      var dataPoint10 = data[chosenNodes[9]][0][timeStampFull[counter2]][datatype];
-
-      // plotData.push(date in milliseconds, Temperature reading)
-      plotData1.push(new Array(datePoint, dataPoint1));
-      plotData2.push(new Array(datePoint, dataPoint2));
-      plotData3.push(new Array(datePoint, dataPoint3));
-      plotData4.push(new Array(datePoint, dataPoint4));
-      plotData5.push(new Array(datePoint, dataPoint5));
-      plotData6.push(new Array(datePoint, dataPoint6));
-      plotData7.push(new Array(datePoint, dataPoint7));
-      plotData8.push(new Array(datePoint, dataPoint8));
-      plotData9.push(new Array(datePoint, dataPoint9));
-      plotData10.push(new Array(datePoint, dataPoint10));
-    }
-
-      /***********   HEATMAP   **************/
-
-      for(var i=0; i < 10; i++) {
-
-      var heatMapMin = data[chosenNodes[i]][0][timeStampMin][0];
-      var heatMapMax = data[chosenNodes[i]][0][timeStampMax][0];
-      var tempVariable = ((heatMapMin + heatMapMax)/2);
-      // console.log("tempvar before rounding: "+ tempVariable);
-      tempVariable = Math.round(tempVariable);
-      // console.log("tempvar after rounding: "+ tempVariable);
-      averageHeat[i] = tempVariable;
-
-
-      var humidMin = data[chosenNodes[i]][0][timeStampMin][1];
-      var humidMax = data[chosenNodes[i]][0][timeStampMax][1];
-      tempVariable = ((humidMin + humidMax)/2);
-      averageHumidity[i] = Math.round(tempVariable);
-
-
-      var UVMin = data[chosenNodes[i]][0][timeStampMin][2];
-      var UVMax = data[chosenNodes[i]][0][timeStampMax][2];
-      averageUV[i] = ((UVMin + UVMax)/2);
-
-      // console.log("Updating heatmap reading for node " + (i+1) + ": " + averageHeat[i]);
-      // console.log("min: " + heatMapMin + "max: "+ heatMapMax);
-      // console.log("Updating heatmap reading for node " + (i+1) + ": " + averageHeat[i]);
-      if(i == 0 || i == 5){
-        var windspeedMin = data[chosenNodes[i]][0][timeStampMin][4];
-        var windspeedMax = data[chosenNodes[i]][0][timeStampMax][4];
-        tempVariable = ((windspeedMin + windspeedMax)/2);
-        averageWindSpeed[i] = Math.round(tempVariable);
-      }
-
-
-      // console.log("Updating heatmap reading for node " + (i+1) + ": " + averageHeat[i]);
-      // console.log("min: " + heatMapMin + "max: "+ heatMapMax);
-      // console.log("Updating heatmap reading for node " + (i+1) + ": " + averageHeat[i]);
-      }
-
-      initMap();
-      /***********   HEATMAP END   **************/
-
-      /***********   GRAPH   **************/
-
-     data1 = [];
-     data2 = [];
-     data3 = [];
-     data4 = [];
-     data5 = [];
-     data6 = [];
-     data7 = [];
-     data8 = [];
-     data9 = [];
-     data10 = [];
-     dataset = [];
-
-     console.log("Temperature radio button selected!\n");
-     //temperature radio button event handler
-     datatype = 0;
-     ticks = 5;
-
-  var data1 =
-  {
-
-    label: "node 1",
-    data: plotData1,
-    color: "#000000"
-
-  };
-
-  var data2 =
-  {
-
-    label: "node 2",
-    data: plotData2,
-    color: "#FF0000"
-
-  };
-
-  var data3 =
-  {
-
-    label: "node 3",
-    data: plotData3,
-    color: "#00BB00"
-
-  };
-
-  var data4 =
-  {
-
-    label: "node 4",
-    data: plotData4,
-    color: "#0000FF"
-
-  };
-
-  var data5 =
-  {
-
-    label: "node 5",
-    data: plotData5,
-    color: "#FFBBFF"
-
-  };
-
-  var data6 =
-  {
-
-    label: "node 6",
-    data: plotData6,
-    color: "#00FFFF"
-
-  };
-
-  var data7 =
-  {
-
-    label: "node 7",
-    data: plotData7,
-    color: "#FFFF00"
-
-  };
-
-  var data8 =
-  {
-
-    label: "node 8",
-    data: plotData8,
-    color: "#B0B0B0"
-
-  };
-
-  var data9 =
-  {
-
-    label: "node 9",
-    data: plotData9,
-    color: "#4B0066"
-
-  };
-
-  var data10 =
-  {
-
-    label: "node 10",
-    data: plotData10,
-    color: "#FF8000"
-
-  };
-
-  //Taking range of y-values from each set of plotData
-  var yrange1 = plotData1.map(function(range1){return range1[1];});
-  var yrange2 = plotData2.map(function(range2){return range2[1];});
-  var yrange3 = plotData3.map(function(range3){return range3[1];});
-  var yrange4 = plotData4.map(function(range4){return range4[1];});
-  var yrange5 = plotData5.map(function(range5){return range5[1];});
-  var yrange6 = plotData6.map(function(range6){return range6[1];});
-  var yrange7 = plotData7.map(function(range7){return range7[1];});
-  var yrange8 = plotData8.map(function(range8){return range8[1];});
-  var yrange9 = plotData9.map(function(range9){return range9[1];});
-  var yrange10 = plotData10.map(function(range10){return range10[1];});
-
-  for(var i = 0; i < ComparisonArray.length; i++)
-  {
-
-    if(ComparisonArray[i] == "node 1")
-    {
-      dataset.push(data1);
-      minset.push(Math.min.apply(null,yrange1));
-      maxset.push(Math.max.apply(null,yrange1));
-    }
-
-    if(ComparisonArray[i] == "node 2")
-    {
-      dataset.push(data2);
-      minset.push(Math.min.apply(null,yrange2));
-      maxset.push(Math.max.apply(null,yrange2));
-    }
-
-    if(ComparisonArray[i] == "node 3")
-    {
-      dataset.push(data3);
-      minset.push(Math.min.apply(null,yrange3));
-      maxset.push(Math.max.apply(null,yrange3));
-    }
-
-    if(ComparisonArray[i] == "node 4")
-    {
-      dataset.push(data4);
-      minset.push(Math.min.apply(null,yrange4));
-      maxset.push(Math.max.apply(null,yrange4));
-    }
-
-    if(ComparisonArray[i] == "node 5")
-    {
-      dataset.push(data5);
-      minset.push(Math.min.apply(null,yrange5));
-      maxset.push(Math.max.apply(null,yrange5));
-    }
-
-    if(ComparisonArray[i] == "node 6")
-    {
-      dataset.push(data6);
-      minset.push(Math.min.apply(null,yrange6));
-      maxset.push(Math.max.apply(null,yrange6));
-    }
-
-    if(ComparisonArray[i] == "node 7")
-    {
-      dataset.push(data7);
-      minset.push(Math.min.apply(null,yrange7));
-      maxset.push(Math.max.apply(null,yrange7));
-    }
-
-    if(ComparisonArray[i] == "node 8")
-    {
-      dataset.push(data8);
-      minset.push(Math.min.apply(null,yrange8));
-      maxset.push(Math.max.apply(null,yrange8));
-    }
-
-    if(ComparisonArray[i] == "node 9")
-    {
-      dataset.push(data9);
-      minset.push(Math.min.apply(null,yrange9));
-      maxset.push(Math.max.apply(null,yrange9));
-    }
-
-    if(ComparisonArray[i] == "node 10")
-    {
-      dataset.push(data10);
-      minset.push(Math.min.apply(null,yrange10));
-      maxset.push(Math.max.apply(null,yrange10));
-    }
-
-  }
-
-  ymin = Math.min.apply(null,minset);
-  ymax = Math.max.apply(null,maxset);
-
-  console.log("ymin: " + ymin);
-  console.log("ymax: " + ymax);
-  console.log("ComparisonArray: " + ComparisonArray);
-  console.log("data1 " + data1);
-
-    // Setting options variable for plotting graph
-    if(timeStampFull.length < ((8*6)+1)) {
-      var options = {
-          series: {
-              lines: { show: true },
-              points: {show: true },
-          },
-          grid: {
-              hoverable: true,
-              clickable: true
-          },
-          xaxis:
-          {
-              mode: "time",
-              timeformat: "%m/%d/%y\n %h:%M",
-              //min: ((new Date(dateMin).getTime() - 600000*6*7)),
-              //max: ((new Date(dateMax).getTime() - 600000*6*7))
-              min: new Date(dateMin).getTime(),
-              max: new Date(dateMax).getTime(),
-              timezone: "browser"
-          },
-
-          yaxis:
-          {
-              min: ymin - ticks,
-        max: ymax + ticks,
-        ticksize: ticks
-          }
-      }
-    }
-    else {
-      var options = {
-        series: {
-            lines: { show: true },
-            points: {show: false },
-        },
-        grid: {
-            hoverable: true,
-            clickable: true
-        },
-        xaxis:
-        {
-            mode: "time",
-            timeformat: "%m/%d/%y\n %h:%M",
-            //min: ((new Date(dateMin).getTime() - 600000*6*7)),
-            //max: ((new Date(dateMax).getTime() - 600000*6*7))
-            min: new Date(dateMin).getTime(),
-            max: new Date(dateMax).getTime(),
-            timezone: "browser"
-        },
-
-        yaxis:
-        {
-          min: ymin - ticks,
-      max: ymax + ticks,
-      ticksize: ticks
-        }
-      }
-    }
-
-    /*var dataset = [
-      {
-         label: chosenNodes[currentNodeIndex],
-         data: plotData,
-         color: "#FF0000"
-      }
-    ]*/
-
-    $.plot($("#placeholder"), dataset, options);
-    /***********   END OF GRAPH   **************/
-
-  /*  // Demo to display all heat readings
-      // update div element to display new readings
-      var div = document.getElementById('temp-demo');
-
-      // Display readings on page
-      div.innerHTML = ("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMin +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMin][0]) + "\n";
-      for (counter = 0; counter < timeStampMid.length; counter++) {
-        var tempString = timeStampMid[counter];
-        div.innerHTML = div.innerHTML + ("Node " + (currentNodeIndex+1) + "[0]["+ tempString +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][tempString][0]) + "\n";
-      }
-      div.innerHTML = div.innerHTML + ("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMax +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMax][0]) + "\n";
-  */
-
-      // // update div element to display new readings
-      // var div2 = document.getElementById('avgheat-demo');
-
-      // // Display average heat on page
-      // div2.innerHTML = ("Average Heat: " + averageHeat[0]);
+      // Initialize temperature datatype and make the temperature radio button selected
+      datatype = 0;
+      ticks = 5;
+      updateGraph();
+      /***********   GRAPH END   **************/
 
     }); // End of getJSON
-  } // End of if
+  } // End of if. This is the event handler for the first time expand button is pressed
+
+  // If this was not the very first time the expand button was pressed
   else {
 
   }
-
 }); // End of expandButton press
 
-
-
+//================================================================================
+// Temperature radio button event handler
+//================================================================================
 $('#temperature').on("change", function(){
-  console.log("Temperature radio button selected!\n");
-  //temperature radio button event handler
   datatype = 0;
   ticks = 5;
   updateGraph();
 
 });
 
+//================================================================================
+// Humidity radio button event handler
+//================================================================================
 $('#humidity').on("change", function(){
-  console.log("Humidity radio button selected!\n");
-  //humidity radio button event handler
   datatype = 1;
   ticks = 10;
   updateGraph();
 });
 
+//================================================================================
+// UVI radio button event handler
+//================================================================================
 $('#uvIndex').on("change", function(){
-  console.log("UV Index radio button selected!\n");
-  //UVI radio button event handler
   datatype = 2;
   ticks = .5;
   updateGraph();
 });
 
-//Air Pressure radio button event handler
+//================================================================================
+// Air Pressure radio button event handler
+//================================================================================
 $('#pressure').on("change", function(){
 
+  // Initialize the graph with only 1 node
   ComparisonCount = 1;
 
   // Clear the array containing nodes compared
   ComparisonArray = [];
 
+  // If Node 1 is currently selected
   if(nodeIndex == 0) {
+
     // Initialize graph with node 1 selected on start up
     ComparisonArray[0] = "node 1";
-    finalstring = "Nodes compared: node 1";
+    finalstring = "Nodes compared: Node 1";
   }
+
+  // If Node 6 is currently selected
   else if(nodeIndex == 5) {
-    // Initialize graph with node 1 selected on start up
+
+    // Initialize graph with node 6 selected on start up
     ComparisonArray[0] = "node 6";
     finalstring = "Nodes compared: node 6";
   }
+
+  // Air Pressure compared but Sub Node selected, so do nothing
   else {
-    console.log("Sub Node selected but air pressure compared");
     return;
   }
 
-  // document.getElementById('ComparisonNode').innerHTML = ComparisonArray;
+  // Set data type to Air Pressure and update graph
   datatype = 3;
   ticks = 100;
   updateGraph();
 });
 
+//================================================================================
+// Wind Speed radio button event handler
+//================================================================================
 $('#windSpeed').on("change", function(){
 
+  // Initialize the graph with only 1 node
   ComparisonCount = 1;
 
   // Clear the array containing nodes compared
   ComparisonArray = [];
 
+  // If Node 1 is currently selected
   if(nodeIndex == 0) {
+
     // Initialize graph with node 1 selected on start up
     ComparisonArray[0] = "node 1";
     finalstring = "Nodes compared: node 1";
   }
+  // If Node 6 is currently selected
   else if(nodeIndex == 5) {
-    // Initialize graph with node 1 selected on start up
+
+    // Initialize graph with node 6 selected on start up
     ComparisonArray[0] = "node 6";
     finalstring = "Nodes compared: node 6";
   }
+  // Wind Speed compared but Sub Node selected, so do nothing
   else {
-    console.log("Sub Node selected but air pressure compared");
     return;
   }
 
+  // Set data type to Wind Speed and update graph
   datatype = 4;
   ticks = 5;
   updateGraph();
 });
 
+//================================================================================
+// Wind Gust radio button event handler
+//================================================================================
 $('#windGust').on("change", function(){
 
+  // Initialize the graph with only 1 node
   ComparisonCount = 1;
 
   // Clear the array containing nodes compared
   ComparisonArray = [];
 
+  // If Node 1 is currently selected
   if(nodeIndex == 0) {
+
     // Initialize graph with node 1 selected on start up
     ComparisonArray[0] = "node 1";
     finalstring = "Nodes compared: node 1";
   }
+  // If Node 6 is currently selected
   else if(nodeIndex == 5) {
-    // Initialize graph with node 1 selected on start up
+
+    // Initialize graph with node 6 selected on start up
     ComparisonArray[0] = "node 6";
     finalstring = "Nodes compared: node 6";
   }
+  // Wind Gust compared but Sub Node selected, so do nothing
   else {
-    console.log("Sub Node selected but air pressure compared");
     return;
   }
 
+  // Set data type to Wind Gust and update graph
   datatype = 6;
   ticks = 5;
   updateGraph();
 });
 
+//================================================================================
+// Wind Direction Check Box event handler
+//================================================================================
 $('#windDirection').on("change", function(){
-  console.log("Wind Speed radio button selected!\n");
-  //humidity radio button event handler
+
+  // Toggle Wind Direction
   if(showWindDirection == 0) {
     showWindDirection = 1;
     $('.windDirectionReadings').show();
@@ -1619,6 +970,7 @@ $('#windDirection').on("change", function(){
     $('.windDirectionReadings').hide();
   }
 
+  // Show the Node 1 and Node 6 labels if either the Wind Direction or AQI are selected
   if( showWindDirection == 1 || showAqi == 1) {
     $('.node1SuperReadings').show();
     $('.node2SuperReadings').show();
@@ -1630,9 +982,12 @@ $('#windDirection').on("change", function(){
 
 });
 
+//================================================================================
+// AQI Check Box event handler
+//================================================================================
 $('#aqi').on("change", function(){
-  console.log("Wind Speed radio button selected!\n");
-  //humidity radio button event handler
+
+  // Toggle AQI
   if(showAqi == 0) {
     showAqi = 1;
     $('.aqiReadings').show();
@@ -1642,6 +997,7 @@ $('#aqi').on("change", function(){
     $('.aqiReadings').hide();
   }
 
+  // Show the Node 1 and Node 6 labels if either the Wind Direction or AQI are selected
   if( showWindDirection == 1 || showAqi == 1) {
     $('.node1SuperReadings').show();
     $('.node2SuperReadings').show();
@@ -1653,19 +1009,12 @@ $('#aqi').on("change", function(){
 
 });
 
-
-
-
-
-
-
 //================================================================================
 // Functions
 //================================================================================
-
 /*
 |--------------------------------------------------------------------------
-| Function Name
+| NodeAlteration
 |--------------------------------------------------------------------------
 |
 | Description of function
@@ -1676,9 +1025,8 @@ $('#aqi').on("change", function(){
 |
 */
 
-
 function NodeAlteration() {
-    // $.getJSON('Node_Json_Data/MasterData.json', function (data)
+    // $.getJSON('Node_Json_Data/TestMasterData.json', function (data)
     // {
     //   var tmpdata = data;
     // });
@@ -1733,20 +1081,21 @@ function NodeAlteration() {
       // for any of the super node measurements, don't do anything
       if(datatype == 3 || datatype == 4 || datatype == 6) {
 
+        // If node 1 or 6 was chosen, do something.
         if(nodeIndex == 0 || nodeIndex == 5) {
-          console.log("Super Node selected!\n");
+
         }
+
+        // If a subnode was selected, do nothing
         else {
-          console.log("Sub Node selected but air pressure compared. compare event handler\n");
+
           return;
         }
       }
 
       index = contains.call(ComparisonArray, jsonarray[nodeIndex]); // true
       if (String(index) == 'false') {
-        console.log("jsonarray: " + jsonarray + " nodeIndex: " + nodeIndex);
         ComparisonArray[ComparisonCount] = jsonarray[nodeIndex];
-        console.log("ComparisonArray: " + ComparisonArray + " ComparisonCount: " + ComparisonCount);
         ComparisonCount = ComparisonCount + 1;
 
         var arrayLength = ComparisonArray.length;
@@ -1760,7 +1109,6 @@ function NodeAlteration() {
           }
       }
 
-
         // document.getElementById('ComparisonNode').innerHTML = finalstring;
         updateGraph();
     };
@@ -1773,7 +1121,6 @@ function NodeAlteration() {
         updateGraph();
     };
     document.getElementById('Nodename').innerHTML = jsonarray[nodeIndex];
-
 
     // console.log(Object.keys(tmpdata));
 }
@@ -1806,23 +1153,29 @@ var contains = function(needle) {
 };
 
 
+/*
+|--------------------------------------------------------------------------
+| CollapsedViewAverages
+|--------------------------------------------------------------------------
+|
+| Description of function
+|
+| Inputs:
+| Return:
+|
+|
+*/
 
-
-function AveragePictures() {
-
+function CollapsedViewAverages() {
 
     // console.log(Object.keys(tmpdata));
     var avgtmp = 88;
     var avghumid = 68;
     var avgUV = 2;
 
-
-
     var Temperture = document.getElementById("TemperturePics");
     var Humidity = document.getElementById("HumidityPics");
     var UVIndex = document.getElementById("UVIndexPics");
-
-
 
     document.getElementById('Node1TempData').innerHTML = 70;
     document.getElementById('Node2TempData').innerHTML = 73;
@@ -1861,81 +1214,51 @@ function AveragePictures() {
     document.getElementById('AVGHumidData').innerHTML = 68;
     document.getElementById('AVGUVData').innerHTML = 2;
 
-    if (avgtmp > 85)
-    {
+    if (avgtmp > 85) {
       Temperture.src="./img/side-panel/Temp3.png";
     }
-    else if (avgtmp > 70)
-    {
+    else if (avgtmp > 70) {
       Temperture.src="./img/side-panel/Temp2.png";
     }
-    else if(avgtmp > 50)
-    {
-        Temperture.src="./img/side-panel/Temp1.png";
+    else if(avgtmp > 50) {
+      Temperture.src="./img/side-panel/Temp1.png";
     }
-    else
-    {
-        Temperture.src="./img/side-panel/Temp0.png";
+    else {
+      Temperture.src="./img/side-panel/Temp0.png";
     }
 
-    if (avghumid > 85)
-    {
+    if (avghumid > 85) {
       Humidity.src="./img/side-panel/HumidityLevel3.png";
     }
-    else if (avghumid > 70)
-    {
+    else if (avghumid > 70) {
       Humidity.src="./img/side-panel/HumidityLevel2.png";
     }
-    else if (avghumid > 50)
-    {
-        Humidity.src="./img/side-panel/HumidityLevel1.png";
+    else if (avghumid > 50) {
+      Humidity.src="./img/side-panel/HumidityLevel1.png";
     }
-    else
-    {
-        Humidity.src="./img/side-panel/HumidityLevel0.png";
+    else {
+      Humidity.src="./img/side-panel/HumidityLevel0.png";
     }
 
-    if (avgUV > 7)
-    {
+    if (avgUV > 7) {
       UVIndex.src="./img/side-panel/UV3.png";
     }
-    else if (avgUV > 4)
-    {
+    else if (avgUV > 4) {
       UVIndex.src="./img/side-panel/UV2.png";
     }
-    else
-    {
+    else {
       UVIndex.src="./img/side-panel/UV1.png";
     }
 
 }
 
-//endregion: End of Yusuf's Collapsed
-
-
-
-
-
-
-
-
-
 //---------------------------------------------------------------------------------------
-//endregion: End of Yusuf's checkboxes
-
-
-
-
+//endregion: End of Yusuf's Side Panel
 
 
 
 // region: Kevin's Heatmap
 //---------------------------------------------------------------------------------------
-
-//================================================================================
-// Event Handlers
-//================================================================================
-
 
 //================================================================================
 // Functions
@@ -2399,15 +1722,8 @@ function tempPoints() {
 
 
 
-
 // region: Philippe's Graph
 //---------------------------------------------------------------------------------------
-
-//================================================================================
-// Event Handlers
-//================================================================================
-
-
 
 //================================================================================
 // Functions
@@ -2425,15 +1741,16 @@ function tempPoints() {
 |
 |
 */
+
 function updateGraph() {
 
-// Reading the .JSON file from the server
-  $.getJSON('Node_Json_Data/MasterData.json', function (data) {
+  // Reading the .JSON file from the server
+  $.getJSON('Node_Json_Data/TestMasterData.json', function (data) {
     // Print temp reading for lower bound timestamp
-    //console.log("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMin +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMin][0]);
+    //console.log("Node " + (currentNodeIndex+1) + "[0]["+ sliderTimeStampMin +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][sliderTimeStampMin][0]);
 
     // Fill Graph array with minimum timestamp
-    var timeStampFull = [];
+    sliderSelectedTimeStamps = [];
 
     //Clear arrays
     minset = [];
@@ -2450,38 +1767,33 @@ function updateGraph() {
     plotData9 = [];
     plotData10 = [];
 
+    // Fill Graph array with minimum timestamp
+    sliderSelectedTimeStamps.push(sliderTimeStampMin);
 
-    timeStampFull.push(timeStampMin);
+    for (var counter = 0; counter < sliderTimeStampMid.length; counter++) {
 
-    for (var counter = 0; counter < timeStampMid.length; counter++) {
-
-      var tempString = timeStampMid[counter];
+      var tempString = sliderTimeStampMid[counter];
       //console.log("Node " + (currentNodeIndex+1) + "[0]["+ tempString +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][tempString][0]);
 
       // Fill Graph array with middle timestamps
-      timeStampFull.push(tempString);
+      sliderSelectedTimeStamps.push(tempString);
     }
-
-    // Print temp reading for upper bound timestamp
-    //console.log("Node " + (currentNodeIndex+1) + "[0]["+ timeStampMax +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][timeStampMax][0]);
-
     // Fill Graph array with maximum timestamp
-    timeStampFull.push(timeStampMax);
+    sliderSelectedTimeStamps.push(sliderTimeStampMax);
 
+    for(var counter2 = 0; counter2 < selectedJsonTimeStamps.length; counter2++) {
 
-    for(var counter2 = 0; counter2 < timeStampFull.length; counter2++) {
-
-      var datePoint = new Date(timeStampFull[counter2]).getTime();
-      var dataPoint1 = data[chosenNodes[0]][0][timeStampFull[counter2]][datatype];
-      var dataPoint2 = data[chosenNodes[1]][0][timeStampFull[counter2]][datatype];
-      var dataPoint3 = data[chosenNodes[2]][0][timeStampFull[counter2]][datatype];
-      var dataPoint4 = data[chosenNodes[3]][0][timeStampFull[counter2]][datatype];
-      var dataPoint5 = data[chosenNodes[4]][0][timeStampFull[counter2]][datatype];
-      var dataPoint6 = data[chosenNodes[5]][0][timeStampFull[counter2]][datatype];
-      var dataPoint7 = data[chosenNodes[6]][0][timeStampFull[counter2]][datatype];
-      var dataPoint8 = data[chosenNodes[7]][0][timeStampFull[counter2]][datatype];
-      var dataPoint9 = data[chosenNodes[8]][0][timeStampFull[counter2]][datatype];
-      var dataPoint10 = data[chosenNodes[9]][0][timeStampFull[counter2]][datatype];
+      var datePoint = new Date(selectedJsonTimeStamps[counter2]).getTime();
+      var dataPoint1 = data[chosenNodes[0]][0][selectedJsonTimeStamps[counter2]][datatype];
+      var dataPoint2 = data[chosenNodes[1]][0][selectedJsonTimeStamps[counter2]][datatype];
+      var dataPoint3 = data[chosenNodes[2]][0][selectedJsonTimeStamps[counter2]][datatype];
+      var dataPoint4 = data[chosenNodes[3]][0][selectedJsonTimeStamps[counter2]][datatype];
+      var dataPoint5 = data[chosenNodes[4]][0][selectedJsonTimeStamps[counter2]][datatype];
+      var dataPoint6 = data[chosenNodes[5]][0][selectedJsonTimeStamps[counter2]][datatype];
+      var dataPoint7 = data[chosenNodes[6]][0][selectedJsonTimeStamps[counter2]][datatype];
+      var dataPoint8 = data[chosenNodes[7]][0][selectedJsonTimeStamps[counter2]][datatype];
+      var dataPoint9 = data[chosenNodes[8]][0][selectedJsonTimeStamps[counter2]][datatype];
+      var dataPoint10 = data[chosenNodes[9]][0][selectedJsonTimeStamps[counter2]][datatype];
 
       // plotData.push(date in milliseconds, Temperature reading)
       plotData1.push(new Array(datePoint, dataPoint1));
@@ -2497,276 +1809,218 @@ function updateGraph() {
     }
 
 
+    /***********   GRAPH   **************/
+    data1 = [];
+    data2 = [];
+    data3 = [];
+    data4 = [];
+    data5 = [];
+    data6 = [];
+    data7 = [];
+    data8 = [];
+    data9 = [];
+    data10 = [];
+    dataset = [];
 
-      /***********   GRAPH   **************/
+    var data1 =
+    { label: "node 1",
+      data: plotData1,
+      color: "#000000"
+    };
 
-     data1 = [];
-     data2 = [];
-     data3 = [];
-     data4 = [];
-     data5 = [];
-     data6 = [];
-     data7 = [];
-     data8 = [];
-     data9 = [];
-     data10 = [];
-     dataset = [];
+    var data2 =
+    { label: "node 2",
+      data: plotData2,
+      color: "#FF0000"
+    };
 
-  var data1 =
-  {
+    var data3 =
+    { label: "node 3",
+      data: plotData3,
+      color: "#00BB00"
+    };
 
-    label: "node 1",
-    data: plotData1,
-    color: "#000000"
+    var data4 =
+    { label: "node 4",
+      data: plotData4,
+      color: "#0000FF"
+    };
 
-  };
+    var data5 =
+    { label: "node 5",
+      data: plotData5,
+      color: "#FFBBFF"
+    };
 
-  var data2 =
-  {
+    var data6 =
+    { label: "node 6",
+      data: plotData6,
+      color: "#00FFFF"
+    };
 
-    label: "node 2",
-    data: plotData2,
-    color: "#FF0000"
+    var data7 =
+    { label: "node 7",
+      data: plotData7,
+      color: "#FFFF00"
+    };
 
-  };
+    var data8 =
+    { label: "node 8",
+      data: plotData8,
+      color: "#B0B0B0"
+    };
 
-  var data3 =
-  {
+    var data9 =
+    { label: "node 9",
+      data: plotData9,
+      color: "#4B0066"
+    };
 
-    label: "node 3",
-    data: plotData3,
-    color: "#00BB00"
+    var data10 =
+    { label: "node 10",
+      data: plotData10,
+      color: "#FF8000"
+    };
 
-  };
+    //Taking range of y-values from each set of plotData
+    var yrange1 = plotData1.map(function(range1){return range1[1];});
+    var yrange2 = plotData2.map(function(range2){return range2[1];});
+    var yrange3 = plotData3.map(function(range3){return range3[1];});
+    var yrange4 = plotData4.map(function(range4){return range4[1];});
+    var yrange5 = plotData5.map(function(range5){return range5[1];});
+    var yrange6 = plotData6.map(function(range6){return range6[1];});
+    var yrange7 = plotData7.map(function(range7){return range7[1];});
+    var yrange8 = plotData8.map(function(range8){return range8[1];});
+    var yrange9 = plotData9.map(function(range9){return range9[1];});
+    var yrange10 = plotData10.map(function(range10){return range10[1];});
 
-  var data4 =
-  {
+    for(var i = 0; i < ComparisonArray.length; i++) {
+      if(ComparisonArray[i] == "node 1")
+      {
+        dataset.push(data1);
+        minset.push(Math.min.apply(null,yrange1));
+        maxset.push(Math.max.apply(null,yrange1));
+      }
+      if(ComparisonArray[i] == "node 2")
+      {
+        dataset.push(data2);
+        minset.push(Math.min.apply(null,yrange2));
+        maxset.push(Math.max.apply(null,yrange2));
+      }
+      if(ComparisonArray[i] == "node 3")
+      {
+        dataset.push(data3);
+        minset.push(Math.min.apply(null,yrange3));
+        maxset.push(Math.max.apply(null,yrange3));
+      }
+      if(ComparisonArray[i] == "node 4")
+      {
+        dataset.push(data4);
+        minset.push(Math.min.apply(null,yrange4));
+        maxset.push(Math.max.apply(null,yrange4));
+      }
+      if(ComparisonArray[i] == "node 5")
+      {
+        dataset.push(data5);
+        minset.push(Math.min.apply(null,yrange5));
+        maxset.push(Math.max.apply(null,yrange5));
+      }
+      if(ComparisonArray[i] == "node 6")
+      {
+        dataset.push(data6);
+        minset.push(Math.min.apply(null,yrange6));
+        maxset.push(Math.max.apply(null,yrange6));
+      }
+      if(ComparisonArray[i] == "node 7")
+      {
+        dataset.push(data7);
+        minset.push(Math.min.apply(null,yrange7));
+        maxset.push(Math.max.apply(null,yrange7));
+      }
+      if(ComparisonArray[i] == "node 8")
+      {
+        dataset.push(data8);
+        minset.push(Math.min.apply(null,yrange8));
+        maxset.push(Math.max.apply(null,yrange8));
+      }
+      if(ComparisonArray[i] == "node 9")
+      {
+        dataset.push(data9);
+        minset.push(Math.min.apply(null,yrange9));
+        maxset.push(Math.max.apply(null,yrange9));
+      }
+      if(ComparisonArray[i] == "node 10")
+      {
+        dataset.push(data10);
+        minset.push(Math.min.apply(null,yrange10));
+        maxset.push(Math.max.apply(null,yrange10));
+      }
+    } // End of for loop
 
-    label: "node 4",
-    data: plotData4,
-    color: "#0000FF"
-
-  };
-
-  var data5 =
-  {
-
-    label: "node 5",
-    data: plotData5,
-    color: "#FFBBFF"
-
-  };
-
-  var data6 =
-  {
-
-    label: "node 6",
-    data: plotData6,
-    color: "#00FFFF"
-
-  };
-
-  var data7 =
-  {
-
-    label: "node 7",
-    data: plotData7,
-    color: "#FFFF00"
-
-  };
-
-  var data8 =
-  {
-
-    label: "node 8",
-    data: plotData8,
-    color: "#B0B0B0"
-
-  };
-
-  var data9 =
-  {
-
-    label: "node 9",
-    data: plotData9,
-    color: "#4B0066"
-
-  };
-
-  var data10 =
-  {
-
-    label: "node 10",
-    data: plotData10,
-    color: "#FF8000"
-
-  };
-
-  //Taking range of y-values from each set of plotData
-  var yrange1 = plotData1.map(function(range1){return range1[1];});
-  var yrange2 = plotData2.map(function(range2){return range2[1];});
-  var yrange3 = plotData3.map(function(range3){return range3[1];});
-  var yrange4 = plotData4.map(function(range4){return range4[1];});
-  var yrange5 = plotData5.map(function(range5){return range5[1];});
-  var yrange6 = plotData6.map(function(range6){return range6[1];});
-  var yrange7 = plotData7.map(function(range7){return range7[1];});
-  var yrange8 = plotData8.map(function(range8){return range8[1];});
-  var yrange9 = plotData9.map(function(range9){return range9[1];});
-  var yrange10 = plotData10.map(function(range10){return range10[1];});
-
-  for(var i = 0; i < ComparisonArray.length; i++)
-  {
-
-    if(ComparisonArray[i] == "node 1")
-    {
-      dataset.push(data1);
-      minset.push(Math.min.apply(null,yrange1));
-      maxset.push(Math.max.apply(null,yrange1));
-    }
-
-    if(ComparisonArray[i] == "node 2")
-    {
-      dataset.push(data2);
-      minset.push(Math.min.apply(null,yrange2));
-      maxset.push(Math.max.apply(null,yrange2));
-    }
-
-    if(ComparisonArray[i] == "node 3")
-    {
-      dataset.push(data3);
-      minset.push(Math.min.apply(null,yrange3));
-      maxset.push(Math.max.apply(null,yrange3));
-    }
-
-    if(ComparisonArray[i] == "node 4")
-    {
-      dataset.push(data4);
-      minset.push(Math.min.apply(null,yrange4));
-      maxset.push(Math.max.apply(null,yrange4));
-    }
-
-    if(ComparisonArray[i] == "node 5")
-    {
-      dataset.push(data5);
-      minset.push(Math.min.apply(null,yrange5));
-      maxset.push(Math.max.apply(null,yrange5));
-    }
-
-    if(ComparisonArray[i] == "node 6")
-    {
-      dataset.push(data6);
-      minset.push(Math.min.apply(null,yrange6));
-      maxset.push(Math.max.apply(null,yrange6));
-    }
-
-    if(ComparisonArray[i] == "node 7")
-    {
-      dataset.push(data7);
-      minset.push(Math.min.apply(null,yrange7));
-      maxset.push(Math.max.apply(null,yrange7));
-    }
-
-    if(ComparisonArray[i] == "node 8")
-    {
-      dataset.push(data8);
-      minset.push(Math.min.apply(null,yrange8));
-      maxset.push(Math.max.apply(null,yrange8));
-    }
-
-    if(ComparisonArray[i] == "node 9")
-    {
-      dataset.push(data9);
-      minset.push(Math.min.apply(null,yrange9));
-      maxset.push(Math.max.apply(null,yrange9));
-    }
-
-    if(ComparisonArray[i] == "node 10")
-    {
-      dataset.push(data10);
-      minset.push(Math.min.apply(null,yrange10));
-      maxset.push(Math.max.apply(null,yrange10));
-    }
-
-  }
-
-  ymin = Math.min.apply(null,minset);
-  ymax = Math.max.apply(null,maxset);
-
-  console.log("ymin: " + ymin);
-  console.log("ymax: " + ymax);
-  console.log("ComparisonArray: " + ComparisonArray);
-  console.log("data1 " + data1);
+    ymin = Math.min.apply(null,minset);
+    ymax = Math.max.apply(null,maxset);
 
     // Setting options variable for plotting graph
-    if(timeStampFull.length < ((8*6)+1)) {
+    if(selectedJsonTimeStamps.length < ((8*6)+1)) {
       var options = {
           series: {
-              lines: { show: true },
-              points: {show: true },
+            lines: { show: true },
+            points: {show: true },
           },
           grid: {
-              hoverable: true,
-              clickable: true
+            hoverable: true,
+            clickable: true
           },
           xaxis:
           {
-              mode: "time",
-              timeformat: "%m/%d/%y\n %h:%M",
-              //min: ((new Date(dateMin).getTime() - 600000*6*7)),
-              //max: ((new Date(dateMax).getTime() - 600000*6*7))
-              min: new Date(dateMin).getTime(),
-              max: new Date(dateMax).getTime(),
-              timezone: "browser"
+            mode: "time",
+            timeformat: "%m/%d/%y\n %h:%M",
+            //min: ((new Date(sliderMinDate).getTime() - 600000*6*7)),
+            //max: ((new Date(sliderMaxDate).getTime() - 600000*6*7))
+            min: new Date(sliderMinDate).getTime(),
+            max: new Date(sliderMaxDate).getTime(),
+            timezone: "browser"
           },
-
           yaxis:
           {
-              min: ymin - ticks,
-        max: ymax + ticks,
-        ticksize: ticks
+            min: ymin - ticks,
+            max: ymax + ticks,
+            ticksize: ticks
           }
-      }
-    }
+      } // End of options
+    } // End of if
     else {
       var options = {
         series: {
-            lines: { show: true },
-            points: {show: false },
+          lines: { show: true },
+          points: {show: false },
         },
         grid: {
-            hoverable: true,
-            clickable: true
+          hoverable: true,
+          clickable: true
         },
         xaxis:
         {
-            mode: "time",
-            timeformat: "%m/%d/%y\n %h:%M",
-            //min: ((new Date(dateMin).getTime() - 600000*6*7)),
-            //max: ((new Date(dateMax).getTime() - 600000*6*7))
-            min: new Date(dateMin).getTime(),
-            max: new Date(dateMax).getTime(),
-            timezone: "browser"
+          mode: "time",
+          timeformat: "%m/%d/%y\n %h:%M",
+          //min: ((new Date(sliderMinDate).getTime() - 600000*6*7)),
+          //max: ((new Date(sliderMaxDate).getTime() - 600000*6*7))
+          min: new Date(sliderMinDate).getTime(),
+          max: new Date(sliderMaxDate).getTime(),
+          timezone: "browser"
         },
-
         yaxis:
         {
           min: ymin - ticks,
-      max: ymax + ticks,
-      ticksize: ticks
+          max: ymax + ticks,
+          ticksize: ticks
         }
-      }
-    }
+      } // End of options
+    } // End of else
 
-    /*var dataset = [
-      {
-         label: chosenNodes[currentNodeIndex],
-         data: plotData,
-         color: "#FF0000"
-      }
-    ]*/
-
-    $.plot($("#placeholder"), dataset, options);
+    $.plot($("#dataGraph"), dataset, options);
     /***********   END OF GRAPH   **************/
+
   }); // End of getJSON
 }
 
