@@ -16,7 +16,7 @@
 
 // Actual timestamps read in dynamically from the JSON file
 // This will contain every single time stamp in the JSON file
-var TestMasterDataUnsorted = [];
+var MasterDataUnsorted = [];
 // This will contain only the time stamps correlating to the slider's selected time frame
 var TestMasterDataSorted = [];
 
@@ -104,6 +104,12 @@ var sliderSelectedTimeStamps = [];
 var minimumDate;
 var maximumDate;
 
+var superNode1MinImgFilename;
+var superNode1MaxImgFilename;
+
+var superNode2MinImgFilename;
+var superNode2MaxImgFilename;
+
 // Minimum boundary returned from the time slider
 var sliderTimeStampMin;
 
@@ -126,7 +132,6 @@ var todayBoundsMax = new Date(2017, 3, 10);
 //endregion: Initialize Global Variables
 
 
-
 // region: Website Initialization on load
 //---------------------------------------------------------------------------------------
 $(document).ready(function() {
@@ -139,11 +144,15 @@ $(document).ready(function() {
   // Initialize collapsed view pictures
   CollapsedViewAverages();
 
+  // Hide super node images on load
+  $("#superNode1Images").hide();
+  $("#superNode2Images").hide();
+
   // Reading the .JSON file from the server
   $.getJSON('Node_Json_Data/TestMasterData.json', function (data) {
 
     // Empty out the master lists
-    TestMasterDataUnsorted = [];
+    MasterDataUnsorted = [];
     TestMasterDataSorted = [];
 
     // This is necessary on load in order to populate the heat map when the website is first loaded
@@ -181,10 +190,10 @@ $(document).ready(function() {
     // Array used to store all time stamps desired by the user in the form of actual timestamps in the JSON file
     selectedJsonTimeStamps = [];
     startFilling = 0;
-    TestMasterDataUnsorted = Object.keys(data[chosenNodes[currentNodeIndex]][0]);
+    MasterDataUnsorted = Object.keys(data[chosenNodes[currentNodeIndex]]);
 
     // Cycle through each element of the dynamically read in timestamps and being populating a 0 padded sorted version
-    TestMasterDataUnsorted.forEach(function(element) {
+    MasterDataUnsorted.forEach(function(element) {
       var tempDate = new Date(element);
 
       // *** Very important to add 1 to account for month offset! ***
@@ -239,26 +248,26 @@ $(document).ready(function() {
     for(var i=0; i < 10; i++) {
 
       // For Kevin's Heatmap, this is a single reading. It is the
-      var heatMapMin = data[chosenNodes[i]][0][sliderTimeStampMin][0];
-      var heatMapMax = data[chosenNodes[i]][0][sliderTimeStampMax][0];
+      var heatMapMin = data[chosenNodes[i]][selectedJsonMinTimeStamp][0];
+      var heatMapMax = data[chosenNodes[i]][selectedJsonMaxTimeStamp][0];
       var tempVariable = ((heatMapMin + heatMapMax)/2);
 
       tempVariable = Math.round(tempVariable);
       averageHeat[i] = tempVariable;
 
-      var humidMin = data[chosenNodes[i]][0][sliderTimeStampMin][1];
-      var humidMax = data[chosenNodes[i]][0][sliderTimeStampMax][1];
+      var humidMin = data[chosenNodes[i]][selectedJsonMinTimeStamp][1];
+      var humidMax = data[chosenNodes[i]][selectedJsonMaxTimeStamp][1];
 
       tempVariable = ((humidMin + humidMax)/2);
       averageHumidity[i] = Math.round(tempVariable);
 
-      var UVMin = data[chosenNodes[i]][0][sliderTimeStampMin][2];
-      var UVMax = data[chosenNodes[i]][0][sliderTimeStampMax][2];
+      var UVMin = data[chosenNodes[i]][selectedJsonMinTimeStamp][2];
+      var UVMax = data[chosenNodes[i]][selectedJsonMaxTimeStamp][2];
       averageUV[i] = ((UVMin + UVMax)/2);
 
       if(i == 0 || i == 5){
-        var windspeedMin = data[chosenNodes[i]][0][sliderTimeStampMin][4];
-        var windspeedMax = data[chosenNodes[i]][0][sliderTimeStampMax][4];
+        var windspeedMin = data[chosenNodes[i]][selectedJsonMinTimeStamp][4];
+        var windspeedMax = data[chosenNodes[i]][selectedJsonMaxTimeStamp][4];
         tempVariable = ((windspeedMin + windspeedMax)/2);
         averageWindSpeed[i] = Math.round(tempVariable);
       }
@@ -325,9 +334,9 @@ $("#btn-today").click(function() {
 //================================================================================
 $("#btn-7days").click(function() {
 
-  var dayBoundsMin = new Date(2017, 3, 7);
+  var dayBoundsMin = new Date(2017, 3, 8);
   var dayBoundsMax = new Date(2017, 3, 13);
-  var initDayMin = new Date(2017, 3, 8);
+  var initDayMin = new Date(2017, 3, 9);
   var initDayMax = new Date(2017, 3, 10);
 
   $("#dateSlider").dateRangeSlider( {
@@ -380,6 +389,39 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
   sliderMinDate = new Date(data.values.min);
   sliderMaxDate = new Date(data.values.max);
 
+
+  // *** Create file paths for min and max images from raspberry pi camera ***
+  superNode1MinImgFilename =(sliderMinDate.getMonth()+1) +"_"+ sliderMinDate.getDate() +"_"+  sliderMinDate.getFullYear() +"_"+ sliderMinDate.getHours() +":"+ sliderMinDate.getMinutes();
+  superNode2MinImgFilename =(sliderMinDate.getMonth()+1) +"_"+ sliderMinDate.getDate() +"_"+  sliderMinDate.getFullYear() +"_"+ sliderMinDate.getHours() +":"+ sliderMinDate.getMinutes();
+
+  // var minFilePath1 = ("Node_Json_Data/PIPictures/Node_1/" + superNode1MinImgFilename + ".jpg");
+  // var minFilePath2 = ("Node_Json_Data/PIPictures/Node_6/" + superNode2MinImgFilename + ".jpg");
+  var minFilePath1 = ("Node_Json_Data/PIPictures/Node_1/" + "yo" + ".png");
+  var minFilePath2 = ("Node_Json_Data/PIPictures/Node_6/" + "yo" + ".png");
+  document.getElementById("superNode1MinImage").src = minFilePath1;
+  document.getElementById("superNode2MinImage").src = minFilePath2;
+
+  console.log("superNode1MinImgFilename: "+ superNode1MinImgFilename+"\n");
+  console.log("superNode2MinImgFilename: "+ superNode2MinImgFilename+"\n");
+  console.log("minFilePath1: "+ minFilePath1+"\n");
+  console.log("minFilePath2: "+ minFilePath2+"\n");
+
+  superNode1MaxImgFilename = (sliderMaxDate.getMonth()+1) +"_"+ sliderMaxDate.getDate() +"_"+ sliderMaxDate.getFullYear() +"_"+ sliderMaxDate.getHours() +":"+ sliderMaxDate.getMinutes();
+  superNode2MaxImgFilename = (sliderMaxDate.getMonth()+1) +"_"+ sliderMaxDate.getDate() +"_"+ sliderMaxDate.getFullYear() +"_"+ sliderMaxDate.getHours() +":"+ sliderMaxDate.getMinutes();
+  // var maxFilePath1 = ("Node_Json_Data/PIPictures/Node_1/" + superNode1MaxImgFilename + ".jpg");
+  // var maxFilePath2 = ("Node_Json_Data/PIPictures/Node_6/" + superNode2MaxImgFilename + ".jpg");
+  var maxFilePath1 = ("Node_Json_Data/PIPictures/Node_1/" + "yo" + ".png");
+  var maxFilePath2 = ("Node_Json_Data/PIPictures/Node_6/" + "yo" + ".png");
+  document.getElementById("superNode1MaxImage").src = maxFilePath1;
+  document.getElementById("superNode2MaxImage").src = maxFilePath2;
+
+  console.log("superNode1MaxImgFilename: "+ superNode1MaxImgFilename+"\n");
+  console.log("superNode2MaxImgFilename: "+ superNode2MaxImgFilename+"\n");
+  console.log("maxFilePath1: "+ maxFilePath1+"\n");
+  console.log("maxFilePath2: "+ maxFilePath2+"\n");
+  // *** Create file paths for min and max images from raspberry pi camera End ***
+
+
   //* Form the time stamps strings for perfect 10 minute increments *
   // Create a string for the minimum and maximum timestamps
   sliderTimeStampMin = (sliderMinDate.getMonth()+1) +"/"+ sliderMinDate.getDate() +"/"+  sliderMinDate.getFullYear() +" "+ sliderMinDate.getHours() +":"+ sliderMinDate.getMinutes();
@@ -407,7 +449,7 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
   $.getJSON('Node_Json_Data/TestMasterData.json', function (data) {
 
       // Empty out the master lists
-      TestMasterDataUnsorted = [];
+      MasterDataUnsorted = [];
       TestMasterDataSorted = [];
 
 
@@ -415,10 +457,10 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
       // Array used to store all time stamps desired by the user in the form of actual timestamps in the JSON file
       selectedJsonTimeStamps = [];
       startFilling = 0;
-      TestMasterDataUnsorted = Object.keys(data[chosenNodes[currentNodeIndex]][0]);
+      MasterDataUnsorted = Object.keys(data[chosenNodes[currentNodeIndex]]);
 
       // Cycle through each element of the dynamically read in timestamps and being populating a 0 padded sorted version
-      TestMasterDataUnsorted.forEach(function(element) {
+      MasterDataUnsorted.forEach(function(element) {
         var tempDate = new Date(element);
 
         // *** Very important to add 1 to account for month offset! ***
@@ -476,27 +518,27 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
       centerMap = {lat: 32.777187, lng: -117.069876};
 
       for(var i=0; i < 10; i++) {
-        var heatMapMin = data[chosenNodes[i]][0][selectedJsonMinTimeStamp][0];
-        var heatMapMax = data[chosenNodes[i]][0][selectedJsonMaxTimeStamp][0];
+        var heatMapMin = data[chosenNodes[i]][selectedJsonMinTimeStamp][0];
+        var heatMapMax = data[chosenNodes[i]][selectedJsonMaxTimeStamp][0];
         var tempVariable = ((heatMapMin + heatMapMax)/2);
 
         tempVariable = Math.round(tempVariable);
         averageHeat[i] = tempVariable;
 
-        var humidMin = data[chosenNodes[i]][0][selectedJsonMinTimeStamp][1];
-        var humidMax = data[chosenNodes[i]][0][selectedJsonMaxTimeStamp][1];
+        var humidMin = data[chosenNodes[i]][selectedJsonMinTimeStamp][1];
+        var humidMax = data[chosenNodes[i]][selectedJsonMaxTimeStamp][1];
 
         tempVariable = ((humidMin + humidMax)/2);
         averageHumidity[i] = Math.round(tempVariable);
 
-        var UVMin = data[chosenNodes[i]][0][selectedJsonMinTimeStamp][2];
-        var UVMax = data[chosenNodes[i]][0][selectedJsonMaxTimeStamp][2];
+        var UVMin = data[chosenNodes[i]][selectedJsonMinTimeStamp][2];
+        var UVMax = data[chosenNodes[i]][selectedJsonMaxTimeStamp][2];
 
         averageUV[i] = ((UVMin + UVMax)/2);
 
         if(i == 0 || i == 5){
-          var windspeedMin = data[chosenNodes[i]][0][selectedJsonMinTimeStamp][4];
-          var windspeedMax = data[chosenNodes[i]][0][selectedJsonMaxTimeStamp][4];
+          var windspeedMin = data[chosenNodes[i]][selectedJsonMinTimeStamp][4];
+          var windspeedMax = data[chosenNodes[i]][selectedJsonMaxTimeStamp][4];
 
           tempVariable = ((windspeedMin + windspeedMax)/2);
           averageWindSpeed[i] = Math.round(tempVariable);
@@ -631,7 +673,7 @@ $('#justify-icon').click(function(){
     $("#dateSlider").dateRangeSlider( {
 
         //Note, month 0 is January. Month 4, is May.
-        bounds: {min: new Date(2017, 3, 9, 0, 0), max: new Date(2017, 3, 9, 24, 0)},
+        bounds: {min: todayBoundsMin, max: todayBoundsMax},
         defaultValues: {min: initTimeMin, max: initTimeMax},
         scales: [{
           first: function(value){ return value; },
@@ -668,7 +710,7 @@ $('#justify-icon').click(function(){
     $.getJSON('Node_Json_Data/TestMasterData.json', function (data) {
 
       // Empty out the master lists
-      TestMasterDataUnsorted = [];
+      MasterDataUnsorted = [];
       TestMasterDataSorted = [];
 
       /***********   Slider Time Stamp Creation   **************/
@@ -676,6 +718,39 @@ $('#justify-icon').click(function(){
       sliderSelectedTimeStamps = [];
       sliderMinDate = new Date(initTimeMin);
       sliderMaxDate = new Date(initTimeMax);
+
+      // *** Create file paths for min and max images from raspberry pi camera ***
+      // Since we start off on node 1, show node 1 and hide node 6
+      $("#superNode1Images").show();
+      $("#superNode2Images").hide();
+
+      superNode1MinImgFilename =(sliderMinDate.getMonth()+1) +"_"+ sliderMinDate.getDate() +"_"+  sliderMinDate.getFullYear() +"_"+ sliderMinDate.getHours() +":"+ sliderMinDate.getMinutes();
+      superNode2MinImgFilename =(sliderMinDate.getMonth()+1) +"_"+ sliderMinDate.getDate() +"_"+  sliderMinDate.getFullYear() +"_"+ sliderMinDate.getHours() +":"+ sliderMinDate.getMinutes();
+
+      var minFilePath1 = ("Node_Json_Data/PIPictures/Node_1/" + superNode1MinImgFilename + ".jpg");
+      var minFilePath2 = ("Node_Json_Data/PIPictures/Node_6/" + superNode2MinImgFilename + ".jpg");
+      // document.getElementById("superNode1MinImage").src = minFilePath1;
+      // document.getElementById("superNode2MinImage").src = minFilePath2;
+
+      console.log("superNode1MinImgFilename: "+ superNode1MinImgFilename+"\n");
+      console.log("superNode2MinImgFilename: "+ superNode2MinImgFilename+"\n");
+      console.log("minFilePath1: "+ minFilePath1+"\n");
+      console.log("minFilePath2: "+ minFilePath2+"\n");
+
+      // document.getElementById("superNode1MinImage").src="Node_Json_Data/PIPictures/Node_1/water_drop.png";
+      superNode1MaxImgFilename = (sliderMaxDate.getMonth()+1) +"_"+ sliderMaxDate.getDate() +"_"+ sliderMaxDate.getFullYear() +"_"+ sliderMaxDate.getHours() +":"+ sliderMaxDate.getMinutes();
+      superNode2MaxImgFilename = (sliderMaxDate.getMonth()+1) +"_"+ sliderMaxDate.getDate() +"_"+ sliderMaxDate.getFullYear() +"_"+ sliderMaxDate.getHours() +":"+ sliderMaxDate.getMinutes();
+      var maxFilePath1 = ("Node_Json_Data/PIPictures/Node_1/" + superNode1MaxImgFilename + ".jpg");
+      var maxFilePath2 = ("Node_Json_Data/PIPictures/Node_6/" + superNode2MaxImgFilename + ".jpg");
+      // document.getElementById("superNode1MaxImage").src = maxFilePath1;
+      // document.getElementById("superNode2MaxImage").src = maxFilePath2;
+
+      console.log("superNode1MaxImgFilename: "+ superNode1MaxImgFilename+"\n");
+      console.log("superNode2MaxImgFilename: "+ superNode2MaxImgFilename+"\n");
+      console.log("maxFilePath1: "+ maxFilePath1+"\n");
+      console.log("maxFilePath2: "+ maxFilePath2+"\n");
+      // *** Create file paths for min and max images from raspberry pi camera End ***
+
 
       // * Form the time stamps strings for perfect 10 minute increments *
       // Create a string for the minimum and maximum timestamps
@@ -704,10 +779,10 @@ $('#justify-icon').click(function(){
       // Array used to store all time stamps desired by the user in the form of actual timestamps in the JSON file
       selectedJsonTimeStamps = [];
       startFilling = 0;
-      TestMasterDataUnsorted = Object.keys(data[chosenNodes[currentNodeIndex]][0]);
+      MasterDataUnsorted = Object.keys(data[chosenNodes[currentNodeIndex]]);
 
       // Cycle through each element of the dynamically read in timestamps and being populating a 0 padded sorted version
-      TestMasterDataUnsorted.forEach(function(element) {
+      MasterDataUnsorted.forEach(function(element) {
         var tempDate = new Date(element);
 
         // *** Very important to add 1 to account for month offset! ***
@@ -765,27 +840,27 @@ $('#justify-icon').click(function(){
       centerMap = {lat: 32.777187, lng: -117.069876};
 
       for(var i=0; i < 10; i++) {
-        var heatMapMin = data[chosenNodes[i]][0][selectedJsonMinTimeStamp][0];
-        var heatMapMax = data[chosenNodes[i]][0][selectedJsonMaxTimeStamp][0];
+        var heatMapMin = data[chosenNodes[i]][selectedJsonMinTimeStamp][0];
+        var heatMapMax = data[chosenNodes[i]][selectedJsonMaxTimeStamp][0];
         var tempVariable = ((heatMapMin + heatMapMax)/2);
 
         tempVariable = Math.round(tempVariable);
         averageHeat[i] = tempVariable;
 
-        var humidMin = data[chosenNodes[i]][0][selectedJsonMinTimeStamp][1];
-        var humidMax = data[chosenNodes[i]][0][selectedJsonMaxTimeStamp][1];
+        var humidMin = data[chosenNodes[i]][selectedJsonMinTimeStamp][1];
+        var humidMax = data[chosenNodes[i]][selectedJsonMaxTimeStamp][1];
 
         tempVariable = ((humidMin + humidMax)/2);
         averageHumidity[i] = Math.round(tempVariable);
 
-        var UVMin = data[chosenNodes[i]][0][selectedJsonMinTimeStamp][2];
-        var UVMax = data[chosenNodes[i]][0][selectedJsonMaxTimeStamp][2];
+        var UVMin = data[chosenNodes[i]][selectedJsonMinTimeStamp][2];
+        var UVMax = data[chosenNodes[i]][selectedJsonMaxTimeStamp][2];
 
         averageUV[i] = ((UVMin + UVMax)/2);
 
         if(i == 0 || i == 5){
-          var windspeedMin = data[chosenNodes[i]][0][selectedJsonMinTimeStamp][4];
-          var windspeedMax = data[chosenNodes[i]][0][selectedJsonMaxTimeStamp][4];
+          var windspeedMin = data[chosenNodes[i]][selectedJsonMinTimeStamp][4];
+          var windspeedMax = data[chosenNodes[i]][selectedJsonMaxTimeStamp][4];
 
           tempVariable = ((windspeedMin + windspeedMax)/2);
           averageWindSpeed[i] = Math.round(tempVariable);
@@ -1034,6 +1109,7 @@ function NodeAlteration() {
     nodeIndex = 0;
     ComparisonCount = 0;
     finalstring ='';
+
     document.getElementById('left').onclick = function() {
 
       // Hide super node readings when a non super node is selected
@@ -1053,9 +1129,27 @@ function NodeAlteration() {
       {
         nodeIndex = 9;
       }
-        document.getElementById('Nodename').innerHTML = jsonarray[nodeIndex];
+
+      // Show Raspberry Pi Images if node 1 or 6 is selected
+      if(nodeIndex == 0) {
+        console.log("Node 1 chosen\n");
+        $("#superNode1Images").show();
+        $("#superNode2Images").hide();
+      }
+      else if(nodeIndex == 5) {
+        console.log("Node 6 chosen\n");
+        $("#superNode2Images").show();
+        $("#superNode1Images").hide();
+      }
+      else {
+        $("#superNode2Images").hide();
+        $("#superNode1Images").hide();
+      }
+
+      document.getElementById('Nodename').innerHTML = jsonarray[nodeIndex];
     };
     document.getElementById('right').onclick = function() {
+
       // Hide super node readings when a non super node is selected
       if(nodeIndex == 9 || nodeIndex == 4) {
         $( ".super-node-readings" ).show();
@@ -1064,14 +1158,30 @@ function NodeAlteration() {
         $( ".super-node-readings" ).hide();
       }
 
-
       if (nodeIndex <9) {
         nodeIndex = nodeIndex + 1;
       }
       else {
         nodeIndex = 0;
       }
-        document.getElementById('Nodename').innerHTML = jsonarray[nodeIndex];
+
+      // Show Raspberry Pi Images if node 1 or 6 is selected
+      if(nodeIndex == 0) {
+        console.log("Node 1 chosen\n");
+        $("#superNode1Images").show();
+        $("#superNode2Images").hide();
+      }
+      else if(nodeIndex == 5) {
+        console.log("Node 6 chosen\n");
+        $("#superNode2Images").show();
+        $("#superNode1Images").hide();
+      }
+      else {
+        $("#superNode2Images").hide();
+        $("#superNode1Images").hide();
+      }
+
+      document.getElementById('Nodename').innerHTML = jsonarray[nodeIndex];
     };
 
 
@@ -1747,7 +1857,7 @@ function updateGraph() {
   // Reading the .JSON file from the server
   $.getJSON('Node_Json_Data/TestMasterData.json', function (data) {
     // Print temp reading for lower bound timestamp
-    //console.log("Node " + (currentNodeIndex+1) + "[0]["+ sliderTimeStampMin +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][sliderTimeStampMin][0]);
+    //console.log("Node " + (currentNodeIndex+1) + "[0]["+ sliderTimeStampMin +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][sliderTimeStampMin][0]);
 
     // Fill Graph array with minimum timestamp
     sliderSelectedTimeStamps = [];
@@ -1773,7 +1883,7 @@ function updateGraph() {
     for (var counter = 0; counter < sliderTimeStampMid.length; counter++) {
 
       var tempString = sliderTimeStampMid[counter];
-      //console.log("Node " + (currentNodeIndex+1) + "[0]["+ tempString +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][0][tempString][0]);
+      //console.log("Node " + (currentNodeIndex+1) + "[0]["+ tempString +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][tempString][0]);
 
       // Fill Graph array with middle timestamps
       sliderSelectedTimeStamps.push(tempString);
@@ -1784,16 +1894,16 @@ function updateGraph() {
     for(var counter2 = 0; counter2 < selectedJsonTimeStamps.length; counter2++) {
 
       var datePoint = new Date(selectedJsonTimeStamps[counter2]).getTime();
-      var dataPoint1 = data[chosenNodes[0]][0][selectedJsonTimeStamps[counter2]][datatype];
-      var dataPoint2 = data[chosenNodes[1]][0][selectedJsonTimeStamps[counter2]][datatype];
-      var dataPoint3 = data[chosenNodes[2]][0][selectedJsonTimeStamps[counter2]][datatype];
-      var dataPoint4 = data[chosenNodes[3]][0][selectedJsonTimeStamps[counter2]][datatype];
-      var dataPoint5 = data[chosenNodes[4]][0][selectedJsonTimeStamps[counter2]][datatype];
-      var dataPoint6 = data[chosenNodes[5]][0][selectedJsonTimeStamps[counter2]][datatype];
-      var dataPoint7 = data[chosenNodes[6]][0][selectedJsonTimeStamps[counter2]][datatype];
-      var dataPoint8 = data[chosenNodes[7]][0][selectedJsonTimeStamps[counter2]][datatype];
-      var dataPoint9 = data[chosenNodes[8]][0][selectedJsonTimeStamps[counter2]][datatype];
-      var dataPoint10 = data[chosenNodes[9]][0][selectedJsonTimeStamps[counter2]][datatype];
+      var dataPoint1 = data[chosenNodes[0]][selectedJsonTimeStamps[counter2]][datatype];
+      var dataPoint2 = data[chosenNodes[1]][selectedJsonTimeStamps[counter2]][datatype];
+      var dataPoint3 = data[chosenNodes[2]][selectedJsonTimeStamps[counter2]][datatype];
+      var dataPoint4 = data[chosenNodes[3]][selectedJsonTimeStamps[counter2]][datatype];
+      var dataPoint5 = data[chosenNodes[4]][selectedJsonTimeStamps[counter2]][datatype];
+      var dataPoint6 = data[chosenNodes[5]][selectedJsonTimeStamps[counter2]][datatype];
+      var dataPoint7 = data[chosenNodes[6]][selectedJsonTimeStamps[counter2]][datatype];
+      var dataPoint8 = data[chosenNodes[7]][selectedJsonTimeStamps[counter2]][datatype];
+      var dataPoint9 = data[chosenNodes[8]][selectedJsonTimeStamps[counter2]][datatype];
+      var dataPoint10 = data[chosenNodes[9]][selectedJsonTimeStamps[counter2]][datatype];
 
       // plotData.push(date in milliseconds, Temperature reading)
       plotData1.push(new Array(datePoint, dataPoint1));
