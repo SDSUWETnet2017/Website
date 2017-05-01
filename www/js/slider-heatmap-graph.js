@@ -18,7 +18,11 @@
 // This will contain every single time stamp in the JSON file
 var MasterDataUnsorted = [];
 // This will contain only the time stamps correlating to the slider's selected time frame
-var TestMasterDataSorted = [];
+var MasterDataSorted = [];
+
+// These will contain the most recent timestamps for each super node
+var mostRecentTimeStampSuperNode1;
+var mostRecentTimeStampSuperNode2;
 
 // Array used to store all inbetween time stamps desired by the user in the form of actual timestamps in the JSON file
 // We will determine which timestamps to snap to for min and max based on sliderSelectedTimeStamps.
@@ -42,6 +46,55 @@ var chosenNodes = ["node 1", "node 2", "node 3", "node 4", "node 5", "node 6", "
 // Variable used to select the elements in chosenNodes
 var currentNodeIndex = 0;
 var nodeIndex = 0;
+
+
+//================================================================================
+// Wind Direction Variables
+//================================================================================
+var ctrN1 = 0;
+var ctrNE1 = 0;
+var ctrE1 = 0;
+var ctrSE1 = 0;
+var ctrS1 = 0;
+var ctrSW1 = 0;
+var ctrW1 = 0;
+var ctrNW1 = 0;
+var ctrDir1 = new Array();
+var maxDir1 = 0;
+var ctrMax1 = 0;
+var dispDir1 = "";
+
+var ctrN6 = 0;
+var ctrNE6 = 0;
+var ctrE6 = 0;
+var ctrSE6 = 0;
+var ctrS6 = 0;
+var ctrSW6 = 0;
+var ctrW6 = 0;
+var ctrNW6 = 0;
+var ctrDir6 = new Array();
+var maxDir6 = 0;
+var ctrMax6 = 0;
+var dispDir6 = "";
+
+//================================================================================
+// AQI Variables
+//================================================================================
+var ctrGood1 = 0;
+var ctrGood6 = 0;
+var ctrMod1 = 0;
+var ctrMod6 = 0;
+var ctrUsg1 = 0;
+var ctrUsg6 = 0;
+var maxAQI1 = 0;
+var maxAQI6 = 0;
+var ctrAQI1 = new Array();
+var ctrAQI6 = new Array();
+var ctrMaxAQI1 = 0;
+var ctrMaxAQI6 = 0;
+var dispAQI1 = "";
+var dispAQI6 = "";
+
 
 //================================================================================
 // Graph Variables
@@ -83,8 +136,16 @@ var map;
 var averageHeat = new Array();
 var averageHumidity = new Array();
 var averageUV = new Array();
+var averageAirPressure = new Array();
 var averageWindSpeed = new Array();
-var centerMap = {lat: 32.777262, lng: -117.070982};
+var averageWindGust = new Array();
+var latitudeArray = new Array();
+var longitudeArray = new Array();
+var deploymentdets = new Array();
+var aqiLevel = new Array();
+var windDir = new Array();
+var centerMap = {lat: 32.776689, lng: -117.069733};
+
 
 //================================================================================
 // Slider Variables
@@ -141,9 +202,6 @@ $(document).ready(function() {
   // view of the side panel
   initialLoad = 0;
 
-  // Initialize collapsed view pictures
-  CollapsedViewAverages();
-
   // Hide super node images on load
   $("#superNode1Images").hide();
   $("#superNode2Images").hide();
@@ -153,7 +211,7 @@ $(document).ready(function() {
 
     // Empty out the master lists
     MasterDataUnsorted = [];
-    TestMasterDataSorted = [];
+    MasterDataSorted = [];
 
     // This is necessary on load in order to populate the heat map when the website is first loaded
     /***********   Slider Time Stamp Creation   **************/
@@ -203,16 +261,16 @@ $(document).ready(function() {
       // Add 0 padding so the timestamps can be sorted properly using the .sort function
       // Make sure you add 1 month since month starts at 1
       tempDateString = ('0' + (tempDate.getMonth())).slice(-2) + '/' + ('0' + tempDate.getDate()).slice(-2) + '/' +  tempDate.getFullYear() +" "+ ('0' + tempDate.getHours()).slice(-2) +":"+ ('0' + tempDate.getMinutes()).slice(-2);
-      TestMasterDataSorted.push(tempDateString);
+      MasterDataSorted.push(tempDateString);
 
     }); // End of cycling through each of the timestamps from the JSON file
 
     // Now that we have all of the timestamps, sort them. The 0 padding is necessary for this to work properly
-    TestMasterDataSorted.sort();
+    MasterDataSorted.sort();
 
     // Cycle through the sorted master data and begin filling your selectedJsonTimeStamps array with the dynamic timestamps
     // This loop will break once the correlated maximum value of the slider timeframe is selected.
-    for(var element of TestMasterDataSorted) {
+    for(var element of MasterDataSorted) {
 
       // By creating a new date using the 0 padded timestamps, tempDate will become unpadded, which is what we want in order to read the json file
       var tempDate = new Date(element);
@@ -244,40 +302,76 @@ $(document).ready(function() {
     } // End of for loop
     /***********   JSON Selected Time Stamp Creation End  **************/
 
+    updateWindDirection();
+    updateAQI();
+
     /***********   HEATMAP   **************/
     for(var i=0; i < 10; i++) {
+        var sumHeat = 0;
+        var sumHumidity = 0;
+        var sumUV = 0;
+        var sumAirPressure = 0;
+        var sumWindSpeed = 0;
+        var sumWindGust = 0;
 
-      // For Kevin's Heatmap, this is a single reading. It is the
-      var heatMapMin = data[chosenNodes[i]][selectedJsonMinTimeStamp][0];
-      var heatMapMax = data[chosenNodes[i]][selectedJsonMaxTimeStamp][0];
-      var tempVariable = ((heatMapMin + heatMapMax)/2);
+        for(var j=0; j < selectedJsonTimeStamps.length; j++) {
+          sumHeat += data[chosenNodes[i]][selectedJsonTimeStamps[j]][0]
+        }
+        var tempVariable = (sumHeat/selectedJsonTimeStamps.length);
+        tempVariable = Math.round(tempVariable);
+        averageHeat[i]=tempVariable;
 
-      tempVariable = Math.round(tempVariable);
-      averageHeat[i] = tempVariable;
+        for(var j=0; j < selectedJsonTimeStamps.length; j++) {
+          sumHumidity += data[chosenNodes[i]][selectedJsonTimeStamps[j]][1]
+        }
+        tempVariable = (sumHumidity/selectedJsonTimeStamps.length);
+        averageHumidity[i] = Math.round(tempVariable);
 
-      var humidMin = data[chosenNodes[i]][selectedJsonMinTimeStamp][1];
-      var humidMax = data[chosenNodes[i]][selectedJsonMaxTimeStamp][1];
+        for(var j=0; j < selectedJsonTimeStamps.length; j++) {
+          sumUV += data[chosenNodes[i]][selectedJsonTimeStamps[j]][2]
+        }
+        tempVariable = (sumUV/selectedJsonTimeStamps.length);
+        averageUV[i] = Math.round(tempVariable);
 
-      tempVariable = ((humidMin + humidMax)/2);
-      averageHumidity[i] = Math.round(tempVariable);
+        if(i == 0 || i == 5){
+          for(var j=0; j < selectedJsonTimeStamps.length; j++) {
+            sumAirPressure += data[chosenNodes[i]][selectedJsonTimeStamps[j]][3]
+          }
+          tempVariable = (sumAirPressure/selectedJsonTimeStamps.length);
+          averageAirPressure[i]= Math.round(tempVariable);
 
-      var UVMin = data[chosenNodes[i]][selectedJsonMinTimeStamp][2];
-      var UVMax = data[chosenNodes[i]][selectedJsonMaxTimeStamp][2];
-      averageUV[i] = ((UVMin + UVMax)/2);
+          for(var j=0; j < selectedJsonTimeStamps.length; j++) {
+            sumWindSpeed += data[chosenNodes[i]][selectedJsonTimeStamps[j]][4]
+          }
+          tempVariable = (sumWindSpeed/selectedJsonTimeStamps.length);
+          averageWindSpeed[i]= Math.round(tempVariable);
 
-      if(i == 0 || i == 5){
-        var windspeedMin = data[chosenNodes[i]][selectedJsonMinTimeStamp][4];
-        var windspeedMax = data[chosenNodes[i]][selectedJsonMaxTimeStamp][4];
-        tempVariable = ((windspeedMin + windspeedMax)/2);
-        averageWindSpeed[i] = Math.round(tempVariable);
-      }
-    }
+          for(var j=0; j < selectedJsonTimeStamps.length; j++) {
+            sumWindGust += data[chosenNodes[i]][selectedJsonTimeStamps[j]][6]
+          }
+          tempVariable = (sumWindGust/selectedJsonTimeStamps.length);
+          averageWindGust[i]= Math.round(tempVariable);
+        }
+    } // End of for loop
 
     // Initialize the center of the heat map
-    centerMap = {lat: 32.777262, lng: -117.070982};
+    centerMap = {lat: 32.776689, lng: -117.069733};
     initMap();
     /***********   HEATMAP END   **************/
+
+    var tempLastDate = new Date(MasterDataSorted[MasterDataSorted.length-1]);
+    var tempLastDateString = ((tempLastDate.getMonth()+1) +"/"+ tempLastDate.getDate() +"/"+  tempLastDate.getFullYear() +" "+ tempLastDate.getHours() +":"+ tempLastDate.getMinutes());
+
+    mostRecentTimeStampSuperNode1 = tempLastDateString;
+    mostRecentTimeStampSuperNode2 = tempLastDateString;
+
+    // Initialize collapsed view averages
+    CollapsedViewAverages();
   }); // End of $.getJSON
+
+
+
+
 }); // End of Document.Ready
 //---------------------------------------------------------------------------------------
 //endregion: Website initialization on load
@@ -450,7 +544,7 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
 
       // Empty out the master lists
       MasterDataUnsorted = [];
-      TestMasterDataSorted = [];
+      MasterDataSorted = [];
 
 
       /***********   JSON Selected Time Stamp Creation  **************/
@@ -470,16 +564,16 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
         // Add 0 padding so the timestamps can be sorted properly using the .sort function
         // Make sure you add 1 month since month starts at 1
         tempDateString = ('0' + (tempDate.getMonth())).slice(-2) + '/' + ('0' + tempDate.getDate()).slice(-2) + '/' +  tempDate.getFullYear() +" "+ ('0' + tempDate.getHours()).slice(-2) +":"+ ('0' + tempDate.getMinutes()).slice(-2);
-        TestMasterDataSorted.push(tempDateString);
+        MasterDataSorted.push(tempDateString);
 
       }); // End of cycling through each of the timestamps from the JSON file
 
       // Now that we have all of the timestamps, sort them. The 0 padding is necessary for this to work properly
-      TestMasterDataSorted.sort();
+      MasterDataSorted.sort();
 
       // Cycle through the sorted master data and begin filling your selectedJsonTimeStamps array with the dynamic timestamps
       // This loop will break once the correlated maximum value of the slider timeframe is selected.
-      for(var element of TestMasterDataSorted) {
+      for(var element of MasterDataSorted) {
         // By creating a new date using the 0 padded timestamps, tempDate will become unpadded, which is what we want in order to read the json file
         var tempDate = new Date(element);
         var tempDateString = ((tempDate.getMonth()+1) +"/"+ tempDate.getDate() +"/"+  tempDate.getFullYear() +" "+ tempDate.getHours() +":"+ tempDate.getMinutes());
@@ -512,37 +606,60 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
       };
       /***********   JSON Selected Time Stamp Creation End  **************/
 
+      updateWindDirection();
+      updateAQI();
 
       /***********   HEATMAP   **************/
       //Set the center of the map to be used by initMap()
-      centerMap = {lat: 32.777187, lng: -117.069876};
+
+      centerMap = {lat: 32.776896, lng: -117.069054};
 
       for(var i=0; i < 10; i++) {
-        var heatMapMin = data[chosenNodes[i]][selectedJsonMinTimeStamp][0];
-        var heatMapMax = data[chosenNodes[i]][selectedJsonMaxTimeStamp][0];
-        var tempVariable = ((heatMapMin + heatMapMax)/2);
+          var sumHeat = 0;
+          var sumHumidity = 0;
+          var sumUV = 0;
+          var sumAirPressure = 0;
+          var sumWindSpeed = 0;
+          var sumWindGust = 0;
 
-        tempVariable = Math.round(tempVariable);
-        averageHeat[i] = tempVariable;
+          for(var j=0; j < selectedJsonTimeStamps.length; j++) {
+            sumHeat += data[chosenNodes[i]][selectedJsonTimeStamps[j]][0]
+          }
+          var tempVariable = (sumHeat/selectedJsonTimeStamps.length);
+          tempVariable = Math.round(tempVariable);
+          averageHeat[i]=tempVariable;
 
-        var humidMin = data[chosenNodes[i]][selectedJsonMinTimeStamp][1];
-        var humidMax = data[chosenNodes[i]][selectedJsonMaxTimeStamp][1];
+          for(var j=0; j < selectedJsonTimeStamps.length; j++) {
+            sumHumidity += data[chosenNodes[i]][selectedJsonTimeStamps[j]][1]
+          }
+          tempVariable = (sumHumidity/selectedJsonTimeStamps.length);
+          averageHumidity[i] = Math.round(tempVariable);
 
-        tempVariable = ((humidMin + humidMax)/2);
-        averageHumidity[i] = Math.round(tempVariable);
+          for(var j=0; j < selectedJsonTimeStamps.length; j++) {
+            sumUV += data[chosenNodes[i]][selectedJsonTimeStamps[j]][2]
+          }
+          tempVariable = (sumUV/selectedJsonTimeStamps.length);
+          averageUV[i] = Math.round(tempVariable);
 
-        var UVMin = data[chosenNodes[i]][selectedJsonMinTimeStamp][2];
-        var UVMax = data[chosenNodes[i]][selectedJsonMaxTimeStamp][2];
+          if(i == 0 || i == 5){
+            for(var j=0; j < selectedJsonTimeStamps.length; j++) {
+              sumAirPressure += data[chosenNodes[i]][selectedJsonTimeStamps[j]][3]
+            }
+            tempVariable = (sumAirPressure/selectedJsonTimeStamps.length);
+            averageAirPressure[i]= Math.round(tempVariable);
 
-        averageUV[i] = ((UVMin + UVMax)/2);
+            for(var j=0; j < selectedJsonTimeStamps.length; j++) {
+              sumWindSpeed += data[chosenNodes[i]][selectedJsonTimeStamps[j]][4]
+            }
+            tempVariable = (sumWindSpeed/selectedJsonTimeStamps.length);
+            averageWindSpeed[i]= Math.round(tempVariable);
 
-        if(i == 0 || i == 5){
-          var windspeedMin = data[chosenNodes[i]][selectedJsonMinTimeStamp][4];
-          var windspeedMax = data[chosenNodes[i]][selectedJsonMaxTimeStamp][4];
-
-          tempVariable = ((windspeedMin + windspeedMax)/2);
-          averageWindSpeed[i] = Math.round(tempVariable);
-        }
+            for(var j=0; j < selectedJsonTimeStamps.length; j++) {
+              sumWindGust += data[chosenNodes[i]][selectedJsonTimeStamps[j]][6]
+            }
+            tempVariable = (sumWindGust/selectedJsonTimeStamps.length);
+            averageWindGust[i]= Math.round(tempVariable);
+          }
       } // End of for loop
 
       initMap();
@@ -551,6 +668,10 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
       /***********   GRAPH   **************/
       updateGraph();
       /***********   GRAPH END   **************/
+
+      // Update collapsed view averages
+      CollapsedViewAverages();
+
   }); // End of $.getJSON
   /***********   Reading the .JSON file from the server End  **************/
 }); // End of $("#dateSlider").bind("valuesChanged")
@@ -711,7 +832,7 @@ $('#justify-icon').click(function(){
 
       // Empty out the master lists
       MasterDataUnsorted = [];
-      TestMasterDataSorted = [];
+      MasterDataSorted = [];
 
       /***********   Slider Time Stamp Creation   **************/
       // Array used to store all time stamps desired by the user in the form of perfect 10 minute increments
@@ -792,16 +913,16 @@ $('#justify-icon').click(function(){
         // Add 0 padding so the timestamps can be sorted properly using the .sort function
         // Make sure you add 1 month since month starts at 1
         tempDateString = ('0' + (tempDate.getMonth())).slice(-2) + '/' + ('0' + tempDate.getDate()).slice(-2) + '/' +  tempDate.getFullYear() +" "+ ('0' + tempDate.getHours()).slice(-2) +":"+ ('0' + tempDate.getMinutes()).slice(-2);
-        TestMasterDataSorted.push(tempDateString);
+        MasterDataSorted.push(tempDateString);
 
       }); // End of cycling through each of the timestamps from the JSON file
 
       // Now that we have all of the timestamps, sort them. The 0 padding is necessary for this to work properly
-      TestMasterDataSorted.sort();
+      MasterDataSorted.sort();
 
       // Cycle through the sorted master data and begin filling your selectedJsonTimeStamps array with the dynamic timestamps
       // This loop will break once the correlated maximum value of the slider timeframe is selected.
-      for(var element of TestMasterDataSorted) {
+      for(var element of MasterDataSorted) {
         // By creating a new date using the 0 padded timestamps, tempDate will become unpadded, which is what we want in order to read the json file
         var tempDate = new Date(element);
         var tempDateString = ((tempDate.getMonth()+1) +"/"+ tempDate.getDate() +"/"+  tempDate.getFullYear() +" "+ tempDate.getHours() +":"+ tempDate.getMinutes());
@@ -837,35 +958,56 @@ $('#justify-icon').click(function(){
 
       /***********   HEATMAP   **************/
       //Set the center of the map to be used by initMap()
-      centerMap = {lat: 32.777187, lng: -117.069876};
+      centerMap = {lat: 32.776896, lng: -117.069054};
 
       for(var i=0; i < 10; i++) {
-        var heatMapMin = data[chosenNodes[i]][selectedJsonMinTimeStamp][0];
-        var heatMapMax = data[chosenNodes[i]][selectedJsonMaxTimeStamp][0];
-        var tempVariable = ((heatMapMin + heatMapMax)/2);
+          var sumHeat = 0;
+          var sumHumidity = 0;
+          var sumUV = 0;
+          var sumAirPressure = 0;
+          var sumWindSpeed = 0;
+          var sumWindGust = 0;
 
-        tempVariable = Math.round(tempVariable);
-        averageHeat[i] = tempVariable;
+          for(var j=0; j < selectedJsonTimeStamps.length; j++) {
+            sumHeat += data[chosenNodes[i]][selectedJsonTimeStamps[j]][0]
+          }
+          var tempVariable = (sumHeat/selectedJsonTimeStamps.length);
+          tempVariable = Math.round(tempVariable);
+          averageHeat[i]=tempVariable;
 
-        var humidMin = data[chosenNodes[i]][selectedJsonMinTimeStamp][1];
-        var humidMax = data[chosenNodes[i]][selectedJsonMaxTimeStamp][1];
+          for(var j=0; j < selectedJsonTimeStamps.length; j++) {
+            sumHumidity += data[chosenNodes[i]][selectedJsonTimeStamps[j]][1]
+          }
+          tempVariable = (sumHumidity/selectedJsonTimeStamps.length);
+          averageHumidity[i] = Math.round(tempVariable);
 
-        tempVariable = ((humidMin + humidMax)/2);
-        averageHumidity[i] = Math.round(tempVariable);
+          for(var j=0; j < selectedJsonTimeStamps.length; j++) {
+            sumUV += data[chosenNodes[i]][selectedJsonTimeStamps[j]][2]
+          }
+          tempVariable = (sumUV/selectedJsonTimeStamps.length);
+          averageUV[i] = Math.round(tempVariable);
 
-        var UVMin = data[chosenNodes[i]][selectedJsonMinTimeStamp][2];
-        var UVMax = data[chosenNodes[i]][selectedJsonMaxTimeStamp][2];
+          if(i == 0 || i == 5){
+            for(var j=0; j < selectedJsonTimeStamps.length; j++) {
+              sumAirPressure += data[chosenNodes[i]][selectedJsonTimeStamps[j]][3]
+            }
+            tempVariable = (sumAirPressure/selectedJsonTimeStamps.length);
+            averageAirPressure[i]= Math.round(tempVariable);
 
-        averageUV[i] = ((UVMin + UVMax)/2);
+            for(var j=0; j < selectedJsonTimeStamps.length; j++) {
+              sumWindSpeed += data[chosenNodes[i]][selectedJsonTimeStamps[j]][4]
+            }
+            tempVariable = (sumWindSpeed/selectedJsonTimeStamps.length);
+            averageWindSpeed[i]= Math.round(tempVariable);
 
-        if(i == 0 || i == 5){
-          var windspeedMin = data[chosenNodes[i]][selectedJsonMinTimeStamp][4];
-          var windspeedMax = data[chosenNodes[i]][selectedJsonMaxTimeStamp][4];
+            for(var j=0; j < selectedJsonTimeStamps.length; j++) {
+              sumWindGust += data[chosenNodes[i]][selectedJsonTimeStamps[j]][6]
+            }
+            tempVariable = (sumWindGust/selectedJsonTimeStamps.length);
+            averageWindGust[i]= Math.round(tempVariable);
+          }
+      } // End of for loop
 
-          tempVariable = ((windspeedMin + windspeedMax)/2);
-          averageWindSpeed[i] = Math.round(tempVariable);
-        }
-      } // End of for
 
       initMap();
       /***********   HEATMAP END   **************/
@@ -883,12 +1025,16 @@ $('#justify-icon').click(function(){
       updateGraph();
       /***********   GRAPH END   **************/
 
+      // Update collapsed view averages
+      CollapsedViewAverages();
     }); // End of getJSON
   } // End of if. This is the event handler for the first time expand button is pressed
 
   // If this was not the very first time the expand button was pressed
   else {
-
+    // Every time the user presses the expand button, update collapsed view averages
+    // Update collapsed view averages
+    CollapsedViewAverages();
   }
 }); // End of expandButton press
 
@@ -1035,6 +1181,8 @@ $('#windGust').on("change", function(){
 //================================================================================
 $('#windDirection').on("change", function(){
 
+  updateWindDirection();
+
   // Toggle Wind Direction
   if(showWindDirection == 0) {
     showWindDirection = 1;
@@ -1061,6 +1209,8 @@ $('#windDirection').on("change", function(){
 // AQI Check Box event handler
 //================================================================================
 $('#aqi').on("change", function(){
+
+  updateAQI();
 
   // Toggle AQI
   if(showAqi == 0) {
@@ -1279,92 +1429,114 @@ var contains = function(needle) {
 function CollapsedViewAverages() {
 
     // console.log(Object.keys(tmpdata));
-    var avgtmp = 88;
-    var avghumid = 68;
-    var avgUV = 2;
+    var avgtmp = 0;
+    var avghumid = 0;
+    var avgUV = 0;
 
     var Temperture = document.getElementById("TemperturePics");
     var Humidity = document.getElementById("HumidityPics");
     var UVIndex = document.getElementById("UVIndexPics");
 
-    document.getElementById('Node1TempData').innerHTML = 70;
-    document.getElementById('Node2TempData').innerHTML = 73;
-    document.getElementById('Node3TempData').innerHTML = 71;
-    document.getElementById('Node4TempData').innerHTML = 75;
-    document.getElementById('Node5TempData').innerHTML = 78;
-    document.getElementById('Node6TempData').innerHTML = 78;
-    document.getElementById('Node7TempData').innerHTML = 78;
-    document.getElementById('Node8TempData').innerHTML = 78;
-    document.getElementById('Node9TempData').innerHTML = 78;
-    document.getElementById('Node10TempData').innerHTML = 78;
+    $.getJSON('Node_Json_Data/TestMasterData.json', function (data) {
 
-    document.getElementById('Node1HumidData').innerHTML = 70;
-    document.getElementById('Node2HumidData').innerHTML = 73;
-    document.getElementById('Node3HumidData').innerHTML = 71;
-    document.getElementById('Node4HumidData').innerHTML = 75;
-    document.getElementById('Node5HumidData').innerHTML = 78;
-    document.getElementById('Node6HumidData').innerHTML = 78;
-    document.getElementById('Node7HumidData').innerHTML = 78;
-    document.getElementById('Node8HumidData').innerHTML = 78;
-    document.getElementById('Node9HumidData').innerHTML = 78;
-    document.getElementById('Node10HumidData').innerHTML = 78;
+      document.getElementById('Node1TempData').innerHTML = Math.round(data['node 1'][mostRecentTimeStampSuperNode1][0]);
+      document.getElementById('Node2TempData').innerHTML = Math.round(data['node 2'][mostRecentTimeStampSuperNode1][0]);
+      document.getElementById('Node3TempData').innerHTML = Math.round(data['node 3'][mostRecentTimeStampSuperNode1][0]);
+      document.getElementById('Node4TempData').innerHTML = Math.round(data['node 4'][mostRecentTimeStampSuperNode1][0]);
+      document.getElementById('Node5TempData').innerHTML = Math.round(data['node 5'][mostRecentTimeStampSuperNode1][0]);
+      document.getElementById('Node6TempData').innerHTML = Math.round(data['node 6'][mostRecentTimeStampSuperNode2][0]);
+      document.getElementById('Node7TempData').innerHTML = Math.round(data['node 7'][mostRecentTimeStampSuperNode2][0]);
+      document.getElementById('Node8TempData').innerHTML = Math.round(data['node 8'][mostRecentTimeStampSuperNode2][0]);
+      document.getElementById('Node9TempData').innerHTML = Math.round(data['node 9'][mostRecentTimeStampSuperNode2][0]);
+      document.getElementById('Node10TempData').innerHTML = Math.round(data['node 10'][mostRecentTimeStampSuperNode2][0]);
 
-    document.getElementById('Node1UVData').innerHTML = 4;
-    document.getElementById('Node2UVData').innerHTML = 3;
-    document.getElementById('Node3UVData').innerHTML = 7;
-    document.getElementById('Node4UVData').innerHTML = 2;
-    document.getElementById('Node5UVData').innerHTML = 5;
-    document.getElementById('Node6UVData').innerHTML = 3;
-    document.getElementById('Node7UVData').innerHTML = 2;
-    document.getElementById('Node8UVData').innerHTML = 8;
-    document.getElementById('Node9UVData').innerHTML = 6;
-    document.getElementById('Node10UVData').innerHTML = 3;
+      document.getElementById('Node1HumidData').innerHTML = Math.round(data['node 1'][mostRecentTimeStampSuperNode1][1]);
+      document.getElementById('Node2HumidData').innerHTML = Math.round(data['node 2'][mostRecentTimeStampSuperNode1][1]);
+      document.getElementById('Node3HumidData').innerHTML = Math.round(data['node 3'][mostRecentTimeStampSuperNode1][1]);
+      document.getElementById('Node4HumidData').innerHTML = Math.round(data['node 4'][mostRecentTimeStampSuperNode1][1]);
+      document.getElementById('Node5HumidData').innerHTML = Math.round(data['node 5'][mostRecentTimeStampSuperNode1][1]);
+      document.getElementById('Node6HumidData').innerHTML = Math.round(data['node 6'][mostRecentTimeStampSuperNode2][1]);
+      document.getElementById('Node7HumidData').innerHTML = Math.round(data['node 7'][mostRecentTimeStampSuperNode2][1]);
+      document.getElementById('Node8HumidData').innerHTML = Math.round(data['node 8'][mostRecentTimeStampSuperNode2][1]);
+      document.getElementById('Node9HumidData').innerHTML = Math.round(data['node 9'][mostRecentTimeStampSuperNode2][1]);
+      document.getElementById('Node10HumidData').innerHTML = Math.round(data['node 10'][mostRecentTimeStampSuperNode2][1]);
 
-    document.getElementById('AVGTempData').innerHTML = 88;
-    document.getElementById('AVGHumidData').innerHTML = 68;
-    document.getElementById('AVGUVData').innerHTML = 2;
+      document.getElementById('Node1UVData').innerHTML = Math.round(data['node 1'][mostRecentTimeStampSuperNode1][2]);
+      document.getElementById('Node2UVData').innerHTML = Math.round(data['node 2'][mostRecentTimeStampSuperNode1][2]);
+      document.getElementById('Node3UVData').innerHTML = Math.round(data['node 3'][mostRecentTimeStampSuperNode1][2]);
+      document.getElementById('Node4UVData').innerHTML = Math.round(data['node 4'][mostRecentTimeStampSuperNode1][2]);
+      document.getElementById('Node5UVData').innerHTML = Math.round(data['node 5'][mostRecentTimeStampSuperNode1][2]);
+      document.getElementById('Node6UVData').innerHTML = Math.round(data['node 6'][mostRecentTimeStampSuperNode2][2]);
+      document.getElementById('Node7UVData').innerHTML = Math.round(data['node 7'][mostRecentTimeStampSuperNode2][2]);
+      document.getElementById('Node8UVData').innerHTML = Math.round(data['node 8'][mostRecentTimeStampSuperNode2][2]);
+      document.getElementById('Node9UVData').innerHTML = Math.round(data['node 9'][mostRecentTimeStampSuperNode2][2]);
+      document.getElementById('Node10UVData').innerHTML = Math.round(data['node 10'][mostRecentTimeStampSuperNode2][2]);
 
-    if (avgtmp > 85) {
-      Temperture.src="./img/side-panel/Temp3.png";
-    }
-    else if (avgtmp > 70) {
-      Temperture.src="./img/side-panel/Temp2.png";
-    }
-    else if(avgtmp > 50) {
-      Temperture.src="./img/side-panel/Temp1.png";
-    }
-    else {
-      Temperture.src="./img/side-panel/Temp0.png";
-    }
 
-    if (avghumid > 85) {
-      Humidity.src="./img/side-panel/HumidityLevel3.png";
-    }
-    else if (avghumid > 70) {
-      Humidity.src="./img/side-panel/HumidityLevel2.png";
-    }
-    else if (avghumid > 50) {
-      Humidity.src="./img/side-panel/HumidityLevel1.png";
-    }
-    else {
-      Humidity.src="./img/side-panel/HumidityLevel0.png";
-    }
+      for(i = 0; i < 5; i++)
+      {
+        //console.log("data[chosenNodes[i]][mostRecentTimeStampSuperNode1][0]: " + data[chosenNodes[i]][mostRecentTimeStampSuperNode1][0] + "\n");
+        avgtmp = avgtmp + data[chosenNodes[i]][mostRecentTimeStampSuperNode1][0];
 
-    if (avgUV > 7) {
-      UVIndex.src="./img/side-panel/UV3.png";
-    }
-    else if (avgUV > 4) {
-      UVIndex.src="./img/side-panel/UV2.png";
-    }
-    else {
-      UVIndex.src="./img/side-panel/UV1.png";
-    }
+        avghumid = avghumid +  data[chosenNodes[i]][mostRecentTimeStampSuperNode1][1];
+        avgUV = avgUV + data[chosenNodes[i]][mostRecentTimeStampSuperNode1][2];
+      }
+      for(i = 5; i < 10; i++)
+      {
+        avgtmp = avgtmp + data[chosenNodes[i]][mostRecentTimeStampSuperNode2][0];
+        avghumid = avghumid +  data[chosenNodes[i]][mostRecentTimeStampSuperNode2][1];
+        avgUV = avgUV + data[chosenNodes[i]][mostRecentTimeStampSuperNode2][2];
+      }
 
+      avgtmp = avgtmp/10;
+      avghumid = avghumid/10;
+
+      avgUV = avgUV/10;
+      //console.log("avgUV after: " + avgUV + "\n");
+      document.getElementById('AVGTempData').innerHTML = Math.round(avgtmp);
+      document.getElementById('AVGHumidData').innerHTML = Math.round(avghumid);
+      document.getElementById('AVGUVData').innerHTML = Math.round(avgUV);
+
+      if (avgtmp > 85) {
+        Temperture.src="./img/side-panel/Temp3.png";
+      }
+      else if (avgtmp > 70) {
+        Temperture.src="./img/side-panel/Temp2.png";
+      }
+      else if(avgtmp > 50) {
+        Temperture.src="./img/side-panel/Temp1.png";
+      }
+      else {
+        Temperture.src="./img/side-panel/Temp0.png";
+      }
+
+      if (avghumid > 85) {
+        Humidity.src="./img/side-panel/HumidityLevel3.png";
+      }
+      else if (avghumid > 70) {
+        Humidity.src="./img/side-panel/HumidityLevel2.png";
+      }
+      else if (avghumid > 50) {
+        Humidity.src="./img/side-panel/HumidityLevel1.png";
+      }
+      else {
+        Humidity.src="./img/side-panel/HumidityLevel0.png";
+      }
+
+      if (avgUV > 7) {
+        UVIndex.src="./img/side-panel/UV3.png";
+      }
+      else if (avgUV > 4) {
+        UVIndex.src="./img/side-panel/UV2.png";
+      }
+      else {
+        UVIndex.src="./img/side-panel/UV1.png";
+      }
+  }); // End of getJson
 }
 
 //---------------------------------------------------------------------------------------
 //endregion: End of Yusuf's Side Panel
-
 
 
 // region: Kevin's Heatmap
@@ -1383,27 +1555,65 @@ function CollapsedViewAverages() {
   | Inputs: lat,lng, and marker
   | Return: Map and heatmap
   */
-
 function initMap() {
+
+    $.getJSON('Node_Notes/Node_Notes.json', function (data) {
+      latitudeArray[0] = data["node1"][0];
+      latitudeArray[1] = data["node2"][0];
+      latitudeArray[2] = data["node3"][0];
+      latitudeArray[3] = data["node4"][0];
+      latitudeArray[4] = data["node5"][0];
+      latitudeArray[5] = data["node6"][0];
+      latitudeArray[6] = data["node7"][0];
+      latitudeArray[7] = data["node8"][0];
+      latitudeArray[8] = data["node9"][0];
+      latitudeArray[9] = data["node10"][0];
+
+      longitudeArray[0] = data["node1"][1];
+      longitudeArray[1] = data["node2"][1];
+      longitudeArray[2] = data["node3"][1];
+      longitudeArray[3] = data["node4"][1];
+      longitudeArray[4] = data["node5"][1];
+      longitudeArray[5] = data["node6"][1];
+      longitudeArray[6] = data["node7"][1];
+      longitudeArray[7] = data["node8"][1];
+      longitudeArray[8] = data["node9"][1];
+      longitudeArray[9] = data["node10"][1];
+
+      deploymentdets[0] = data["node1"][2];
+      deploymentdets[1] = data["node2"][2];
+      deploymentdets[2] = data["node3"][2];
+      deploymentdets[3] = data["node4"][2];
+      deploymentdets[4] = data["node5"][2];
+      deploymentdets[5] = data["node6"][2];
+      deploymentdets[6] = data["node7"][2];
+      deploymentdets[7] = data["node8"][2];
+      deploymentdets[8] = data["node9"][2];
+      deploymentdets[9] = data["node10"][2];
+    });
+
     var infoFlag = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     map = new google.maps.Map(document.getElementById('map'), {
-      zoom: 19,
+      zoom: 18,
       center: centerMap,
       mapTypeId: 'satellite'
     });
     marker1 = new google.maps.Marker({
-        position: {lat: 32.777756, lng: -117.070581},
+        position: {lat: latitudeArray[0], lng: longitudeArray[0]},
         label: '1',
         map: map
     });
     var content1 = '<div id="content">'+
         '<h2>Super Node 1</h2>'+
-        '<div><b>Temperature: </b>' + averageHeat[0] + '<br>'+
-        '<b>Humidity: </b>' + averageHumidity[0] +'<br>'+
+        '<div><b>Temperature: </b>' + averageHeat[0] + '°F<br>'+
+        '<b>Humidity: </b>' + averageHumidity[0] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[0] +'<br>'+
-        '<b>Wind Speed: </b>'+ averageWindSpeed[0] +' MPH <br>'+
-        '<b>AQI Level: </b>Good<br>'+
-        '<b>Deployment Details: </b>Top of engineering building<br>'+
+        '<b>Air Pressure: </b>'+ averageAirPressure[0] + ' hPa<br>'+
+        '<b>Wind Speed: </b>'+ averageWindSpeed[0] +' MPH<br>'+
+        '<b>Wind Direction: </b> '+ windDir[0] +'<br>'+
+        '<b>Wind Gust: </b>'+ averageWindGust[0] +' MPH<br>'+
+        '<b>AQI Level: </b>'+ aqiLevel[0] +'<br>'+
+        '<b>Deployment Details: </b>'+ deploymentdets[0] +'<br>'+
         '</div>'+
         '</div>';
     var info1 = new google.maps.InfoWindow({
@@ -1435,16 +1645,16 @@ function initMap() {
       }
     });
     marker2 = new google.maps.Marker({
-        position: {lat: 32.777003, lng: -117.070759},
+        position: {lat: latitudeArray[1], lng: longitudeArray[1]},
         label: '2',
         map: map
     });
     var content2 = '<div id="content">'+
         '<h2>Sub Node 1</h2>'+
-        '<div><b>Temperature: </b>'+ averageHeat[1] +'<br>'+
-        '<b>Humidity: </b>'+ averageHumidity[1] +'<br>'+
+        '<div><b>Temperature: </b>'+ averageHeat[1] +'°F<br>'+
+        '<b>Humidity: </b>'+ averageHumidity[1] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[1] +'<br>'+
-        '<b>Deployment Details: </b>Ziptied to light post<br>'+
+        '<b>Deployment Details: </b>'+ deploymentdets[1] +'<br>'+
         '</div>'+
         '</div>';
     var info2 = new google.maps.InfoWindow({
@@ -1476,16 +1686,16 @@ function initMap() {
       }
     });
     marker3 = new google.maps.Marker({
-        position: {lat: 32.777261, lng: -117.070789},
+        position: {lat: latitudeArray[2], lng: longitudeArray[2]},
         label: '3',
         map: map
     });
     var content3 = '<div id="content">'+
         '<h2>Sub Node 2</h2>'+
-        '<div><b>Temperature: </b>'+ averageHeat[2] +'<br>'+
-        '<b>Humidity: </b>'+ averageHumidity[2] +'<br>'+
+        '<div><b>Temperature: </b>'+ averageHeat[2] +'°F<br>'+
+        '<b>Humidity: </b>'+ averageHumidity[2] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[2] +'<br>'+
-        '<b>Deployment Details: </b>Ziptied on tree<br>'+
+        '<b>Deployment Details: </b>'+ deploymentdets[2] +'<br>'+
         '</div>'+
         '</div>';
     var info3 = new google.maps.InfoWindow({
@@ -1517,16 +1727,16 @@ function initMap() {
       }
     });
     marker4 = new google.maps.Marker({
-        position: {lat: 32.776814, lng: -117.070793},
+        position: {lat: latitudeArray[3], lng: longitudeArray[3]},
         label: '4',
         map: map
     });
     var content4 = '<div id="content">'+
         '<h2>Sub Node 3</h2>'+
-        '<div><b>Temperature: </b>'+ averageHeat[3] +'<br>'+
-        '<b>Humidity: </b>'+ averageHumidity[3] +'<br>'+
+        '<div><b>Temperature: </b>'+ averageHeat[3] +'°F<br>'+
+        '<b>Humidity: </b>'+ averageHumidity[3] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[3] +'<br>'+
-        '<b>Deployment Details: </b>Ziptied to light post<br>'+
+        '<b>Deployment Details: </b>'+ deploymentdets[3] +'<br>'+
         '</div>'+
         '</div>';
     var info4 = new google.maps.InfoWindow({
@@ -1558,16 +1768,16 @@ function initMap() {
       }
     });
     marker5 = new google.maps.Marker({
-        position: {lat: 32.777381, lng: -117.070581},
+        position: {lat: latitudeArray[4], lng: longitudeArray[4]},
         label: '5',
         map: map
     });
     var content5 = '<div id="content">'+
         '<h2>Sub Node 4</h2>'+
-        '<div><b>Temperature: </b>'+ averageHeat[4] +'<br>'+
-        '<b>Humidity: </b>'+ averageHumidity[4] +'<br>'+
+        '<div><b>Temperature: </b>'+ averageHeat[4] +'°F<br>'+
+        '<b>Humidity: </b>'+ averageHumidity[4] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[4] +'<br>'+
-        '<b>Deployment Details: </b>Ziptied to light post<br>'+
+        '<b>Deployment Details: </b>'+ deploymentdets[4] +'<br>'+
         '</div>'+
         '</div>';
     var info5 = new google.maps.InfoWindow({
@@ -1599,18 +1809,21 @@ function initMap() {
       }
     });
     marker6 = new google.maps.Marker({
-        position: {lat: 32.776685, lng: -117.070227},
+        position: {lat: latitudeArray[5], lng: longitudeArray[5]},
         label: '6',
         map: map
     });
     var content6 = '<div id="content">'+
         '<h2>Super Node 2</h2>'+
-        '<div><b>Temperature: </b>'+ averageHeat[5] +'<br>'+
-        '<b>Humidity: </b>'+ averageHumidity[5] +'<br>'+
+        '<div><b>Temperature: </b>'+ averageHeat[5] +'°F<br>'+
+        '<b>Humidity: </b>'+ averageHumidity[5] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[5] +'<br>'+
+        '<b>Air Pressure: </b>' + averageAirPressure[5] +' hPa<br>'+
         '<b>Wind Speed: </b>'+ averageWindSpeed[5] +' MPH <br>'+
-        '<b>AQI Level: </b>Moderate<br>'+
-        '<b>Deployment Details: </b>Top of physics building<br>'+
+        '<b>Wind Direction: </b>'+ windDir[1] + '<br>'+
+        '<b>Wind Gust: </b>' + averageWindGust[5] +' MPH<br>'+
+        '<b>AQI Level: </b>'+ aqiLevel[1] +'<br>'+
+        '<b>Deployment Details: </b>'+ deploymentdets[5] +'<br>'+
         '</div>'+
         '</div>';
     var info6 = new google.maps.InfoWindow({
@@ -1642,16 +1855,16 @@ function initMap() {
       }
     });
     marker7 = new google.maps.Marker({
-        position: {lat: 32.776912, lng: -117.071473},
+        position: {lat: latitudeArray[6], lng: longitudeArray[6]},
         label: '7',
         map: map
     });
     var content7 = '<div id="content">'+
         '<h2>Sub Node 5</h2>'+
-        '<div><b>Temperature: </b>'+ averageHeat[6] +'<br>'+
-        '<b>Humidity: </b>'+ averageHumidity[6] +'<br>'+
+        '<div><b>Temperature: </b>'+ averageHeat[6] +'°F<br>'+
+        '<b>Humidity: </b>'+ averageHumidity[6] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[6] +'<br>'+
-        '<b>Deployment Details: </b>Ziptied to light post<br>'+
+        '<b>Deployment Details: </b>'+ deploymentdets[6] +'<br>'+
         '</div>'+
         '</div>';
     var info7 = new google.maps.InfoWindow({
@@ -1683,16 +1896,16 @@ function initMap() {
       }
     });
     marker8 = new google.maps.Marker({
-        position: {lat: 32.777072, lng: -117.070298},
+        position: {lat: latitudeArray[7], lng: longitudeArray[7]},
         label: '8',
         map: map
     });
     var content8 = '<div id="content">'+
         '<h2>Sub Node 6</h2>'+
-        '<div><b>Temperature: </b>'+ averageHeat[7] +'<br>'+
-        '<b>Humidity: </b>'+ averageHumidity[7] +'<br>'+
+        '<div><b>Temperature: </b>'+ averageHeat[7] +'°F<br>'+
+        '<b>Humidity: </b>'+ averageHumidity[7] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[7] +'<br>'+
-        '<b>Deployment Details: </b>Ziptied to light post<br>'+
+        '<b>Deployment Details: </b>'+ deploymentdets[7] +'<br>'+
         '</div>'+
         '</div>';
     var info8 = new google.maps.InfoWindow({
@@ -1724,16 +1937,16 @@ function initMap() {
       }
     });
     marker9 = new google.maps.Marker({
-        position: {lat: 32.776858, lng: -117.071270},
+        position: {lat: latitudeArray[8], lng: longitudeArray[8]},
         label: '9',
         map: map
     });
     var content9 = '<div id="content">'+
         '<h2>Sub Node 7</h2>'+
-        '<div><b>Temperature: </b>'+ averageHeat[8] +'<br>'+
-        '<b>Humidity: </b>'+ averageHumidity[8] +'<br>'+
+        '<div><b>Temperature: </b>'+ averageHeat[8] +'°F<br>'+
+        '<b>Humidity: </b>'+ averageHumidity[8] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[8] +'<br>'+
-        '<b>Deployment Details: </b>Ziptied to light post<br>'+
+        '<b>Deployment Details: </b>'+ deploymentdets[8] +'<br>'+
         '</div>'+
         '</div>';
     var info9 = new google.maps.InfoWindow({
@@ -1765,16 +1978,16 @@ function initMap() {
       }
     });
     marker10 = new google.maps.Marker({
-        position: {lat: 32.777088, lng: -117.071203},
+        position: {lat: latitudeArray[9], lng: longitudeArray[9]},
         label: '10',
         map: map
     });
     var content10 = '<div id="content">'+
         '<h2>Sub Node 8</h2>'+
-        '<div><b>Temperature: </b>'+ averageHeat[9] +'<br>'+
-        '<b>Humidity: </b>'+ averageHumidity[9] +'<br>'+
+        '<div><b>Temperature: </b>'+ averageHeat[9] +'°F<br>'+
+        '<b>Humidity: </b>'+ averageHumidity[9] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[9] +'<br>'+
-        '<b>Deployment Details: </b>Ziptied to light post<br>'+
+        '<b>Deployment Details: </b>'+ deploymentdets[9] +'<br>'+
         '</div>'+
         '</div>';
     var info10 = new google.maps.InfoWindow({
@@ -1813,18 +2026,19 @@ function initMap() {
     });
 }
 
+
 function tempPoints() {
   return [
-    {location: new google.maps.LatLng(32.777756, -117.070581), weight: averageHeat[0]},
-    {location: new google.maps.LatLng(32.777003, -117.070759), weight: averageHeat[1]},
-    {location: new google.maps.LatLng(32.777261, -117.070789), weight: averageHeat[2]},
-    {location: new google.maps.LatLng(32.776814, -117.070793), weight: averageHeat[3]},
-    {location: new google.maps.LatLng(32.777381, -117.070581), weight: averageHeat[4]},
-    {location: new google.maps.LatLng(32.776685, -117.070227), weight: averageHeat[5]},
-    {location: new google.maps.LatLng(32.776912, -117.071473), weight: averageHeat[6]},
-    {location: new google.maps.LatLng(32.777072, -117.070298), weight: averageHeat[7]},
-    {location: new google.maps.LatLng(32.776858, -117.071270), weight: averageHeat[8]},
-    {location: new google.maps.LatLng(32.777088, -117.071203), weight: averageHeat[9]}
+    {location: new google.maps.LatLng(latitudeArray[0], longitudeArray[0]), weight: averageHeat[0]},
+    {location: new google.maps.LatLng(latitudeArray[1], longitudeArray[1]), weight: averageHeat[1]},
+    {location: new google.maps.LatLng(latitudeArray[2], longitudeArray[2]), weight: averageHeat[2]},
+    {location: new google.maps.LatLng(latitudeArray[3], longitudeArray[3]), weight: averageHeat[3]},
+    {location: new google.maps.LatLng(latitudeArray[4], longitudeArray[4]), weight: averageHeat[4]},
+    {location: new google.maps.LatLng(latitudeArray[5], longitudeArray[5]), weight: averageHeat[5]},
+    {location: new google.maps.LatLng(latitudeArray[6], longitudeArray[6]), weight: averageHeat[6]},
+    {location: new google.maps.LatLng(latitudeArray[7], longitudeArray[7]), weight: averageHeat[7]},
+    {location: new google.maps.LatLng(latitudeArray[8], longitudeArray[8]), weight: averageHeat[8]},
+    {location: new google.maps.LatLng(latitudeArray[9], longitudeArray[9]), weight: averageHeat[9]}
   ];}
 
 //---------------------------------------------------------------------------------------
@@ -2133,6 +2347,452 @@ function updateGraph() {
 
   }); // End of getJSON
 }
+
+
+
+//================================================================================
+// Functions
+//================================================================================
+
+/*
+|--------------------------------------------------------------------------
+| updateWindDirection
+|--------------------------------------------------------------------------
+|
+| Description of function
+|
+| Inputs:
+| Return:
+|
+|
+*/
+
+function updateWindDirection() {
+
+  ctrN1 = 0;
+  ctrNE1 = 0;
+  ctrE1 = 0;
+  ctrSE1 = 0;
+  ctrS1 = 0;
+  ctrSW1 = 0;
+  ctrW1 = 0;
+  ctrNW1 = 0;
+  ctrDir1 = [];
+  maxDir1 = 0;
+  ctrMax1 = 0;
+  dispDir1 = "";
+
+  ctrN6 = 0;
+  ctrNE6 = 0;
+  ctrE6 = 0;
+  ctrSE6 = 0;
+  ctrS6 = 0;
+  ctrSW6 = 0;
+  ctrW6 = 0;
+  ctrNW6 = 0;
+  ctrDir6 = [];
+  maxDir6 = 0;
+  ctrMax6 = 0;
+  dispDir6 = "";
+
+  // Reading the .JSON file from the server
+  $.getJSON('Node_Json_Data/TestMasterData.json', function (data) {
+
+    //Scouring for data
+    for(var a = 0; a < selectedJsonTimeStamps.length; a++)
+    {
+      //North
+      if((data["node 1"][selectedJsonTimeStamps[a]][datatype]) == "N")
+      {
+        ctrN1++;
+      }
+
+      if((data["node 6"][selectedJsonTimeStamps[a]][datatype]) == "N")
+      {
+        ctrN6++;
+      }
+
+      //Northeast
+      if((data["node 1"][selectedJsonTimeStamps[a]][datatype]) == "NE")
+      {
+        ctrNE1++;
+      }
+
+      if((data["node 6"][selectedJsonTimeStamps[a]][datatype]) == "NE")
+      {
+        ctrNE6++;
+      }
+
+      //East
+      if((data["node 1"][selectedJsonTimeStamps[a]][datatype]) == "E")
+      {
+        ctrE1++;
+      }
+
+      if((data["node 6"][selectedJsonTimeStamps[a]][datatype]) == "E")
+      {
+        ctrE6++;
+      }
+
+      //Southeast
+      if((data["node 1"][selectedJsonTimeStamps[a]][datatype]) == "SE")
+      {
+        ctrSE1++;
+      }
+
+      if((data["node 6"][selectedJsonTimeStamps[a]][datatype]) == "SE")
+      {
+        ctrSE6++;
+      }
+
+      //South
+      if((data["node 1"][selectedJsonTimeStamps[a]][datatype]) == "S")
+      {
+        ctrS1++;
+      }
+
+      if((data["node 6"][selectedJsonTimeStamps[a]][datatype]) == "S")
+      {
+        ctrS6++;
+      }
+
+      //Southwest
+      if((data["node 1"][selectedJsonTimeStamps[a]][datatype]) == "SW")
+      {
+        ctrSW1++;
+      }
+
+      if((data["node 6"][selectedJsonTimeStamps[a]][datatype]) == "SW")
+      {
+        ctrSW6++;
+      }
+
+      //West
+      if((data["node 1"][selectedJsonTimeStamps[a]][datatype]) == "W")
+      {
+        ctrW1++;
+      }
+
+      if((data["node 6"][selectedJsonTimeStamps[a]][datatype]) == "W")
+      {
+        ctrW6++;
+      }
+
+      //Northwest
+      if((data["node 1"][selectedJsonTimeStamps[a]][datatype]) == "NW")
+      {
+        ctrNW1++;
+      }
+
+      if((data["node 6"][selectedJsonTimeStamps[a]][datatype]) == "NW")
+      {
+        ctrNW6++;
+      }
+    }
+
+    //Pushing scoured data into arrays that hold
+    //the count for each reading
+    ctrDir1.push(ctrN1);
+    ctrDir1.push(ctrNE1);
+    ctrDir1.push(ctrE1);
+    ctrDir1.push(ctrSE1);
+    ctrDir1.push(ctrS1);
+    ctrDir1.push(ctrSW1);
+    ctrDir1.push(ctrW1);
+    ctrDir1.push(ctrNW1);
+
+    ctrDir6.push(ctrN6);
+    ctrDir6.push(ctrNE6);
+    ctrDir6.push(ctrE6);
+    ctrDir6.push(ctrSE6);
+    ctrDir6.push(ctrS6);
+    ctrDir6.push(ctrSW6);
+    ctrDir6.push(ctrW6);
+    ctrDir6.push(ctrNW6);
+
+    //Determining mode value of the data selection
+    for(var b = 0; b < ctrDir1.length; b++)
+    {
+      if(ctrDir1[b] >= ctrMax1)
+      {
+        ctrMax1 = ctrDir1[b];
+        maxDir1 = b;
+      }
+    }
+
+    for(var c = 0; c < ctrDir6.length; c++)
+    {
+      if(ctrDir6[c] >= ctrMax6)
+      {
+        ctrMax6 = ctrDir6[c];
+        maxDir6 = b;
+      }
+    }
+
+    //Using the mode value to determine the file path of the
+    //image to display.
+
+    //WIND DIRECTION
+    if(ctrMax1 != 0)
+    {
+
+      if(maxDir1 == 0)
+      {
+        dispDir1 = "img/data-graphics/direction_North.png";
+        windDir[0] = "N";
+      }
+      if(maxDir1 == 1)
+      {
+        dispDir1 = "img/data-graphics/direction_NorthEast.png";
+        windDir[0] = "NE";
+      }
+      if(maxDir1 == 2)
+      {
+        dispDir1 = "img/data-graphics/direction_East.png";
+        windDir[0] = "E";
+      }
+      if(maxDir1 == 3)
+      {
+        dispDir1 = "img/data-graphics/direction_SouthEast.png";
+        windDir[0] = "SE";
+      }
+      if(maxDir1 == 4)
+      {
+        dispDir1 = "img/data-graphics/direction_South.png";
+        windDir[0] = "S";
+      }
+      if(maxDir1 == 5)
+      {
+        dispDir1 = "img/data-graphics/direction_SouthWest.png";
+        windDir[0] = "SW";
+      }
+      if(maxDir1 == 6)
+      {
+        dispDir1 = "img/data-graphics/direction_West.png";
+        windDir[0] = "W";
+      }
+      if(maxDir1 == 7)
+      {
+        dispDir1 = "img/data-graphics/direction_NorthWest.png";
+        windDir[0] = "NW";
+      }
+
+    }
+    else
+    {
+      dispDir1 = "img/data-graphics/No_Reading.png";
+      windDir[0] = "No Reading"
+    }
+
+    if(ctrMax6 != 0)
+    {
+
+      if(maxDir6 == 0)
+      {
+        dispDir6 = "img/data-graphics/direction_North.png";
+         windDir[1] = "N";
+      }
+      if(maxDir6 == 1)
+      {
+        dispDir6 = "img/data-graphics/direction_NorthEast.png";
+        windDir[1] = "NE";
+      }
+      if(maxDir6 == 2)
+      {
+        dispDir6 = "img/data-graphics/direction_East.png";
+        windDir[1] = "E";
+      }
+      if(maxDir6 == 3)
+      {
+        dispDir6 = "img/data-graphics/direction_SouthEast.png";
+        windDir[1] = "SE";
+      }
+      if(maxDir6 == 4)
+      {
+        dispDir6 = "img/data-graphics/direction_South.png";
+        windDir[1] = "S";
+      }
+      if(maxDir6 == 5)
+      {
+        dispDir6 = "img/data-graphics/direction_SouthWest.png";
+        windDir[1] = "SW";
+      }
+      if(maxDir6 == 6)
+      {
+        dispDir6 = "img/data-graphics/direction_West.png";
+        windDir[1] = "W";
+      }
+      if(maxDir6 == 7)
+      {
+        dispDir6 = "img/data-graphics/direction_NorthWest.png";
+        windDir[1] = "NW";
+      }
+
+    }
+    else
+    {
+      dispDir6 = "img/data-graphics/No_Reading.png";
+      windDir[1] = "No Reading";
+    }
+
+    document.getElementById("windDirection1").src = dispDir1;
+    document.getElementById("windDirection2").src = dispDir6;
+
+  });
+}
+
+/*
+|--------------------------------------------------------------------------
+| updateAQI
+|--------------------------------------------------------------------------
+|
+| Description of function
+|
+| Inputs:
+| Return:
+|
+|
+*/
+
+function updateAQI() {
+
+  ctrGood1 = 0;
+  ctrGood6 = 0;
+  ctrMod1 = 0;
+  ctrMod6 = 0;
+  ctrUsg1 = 0;
+  ctrUsg6 = 0;
+  maxAQI1 = 0;
+  maxAQI6 = 0;
+  ctrAQI1 = new Array();
+  ctrAQI6 = new Array();
+  ctrMaxAQI1 = 0;
+  ctrMaxAQI6 = 0;
+  dispAQI1 = "";
+  dispAQI6 = "";
+
+  // Reading the .JSON file from the server
+  $.getJSON('Node_Json_Data/TestMasterData.json', function (data) {
+
+    //Scouring for data
+    for(var a = 0; a < selectedJsonTimeStamps.length; a++)
+    {
+      //Good
+      if((data["node 1"][selectedJsonTimeStamps[a]][7]) == "Good Air")
+      {
+        ctrGood1++;
+      }
+      if((data["node 6"][selectedJsonTimeStamps[a]][7]) == "Good Air")
+      {
+        ctrGood6++;
+      }
+
+      //Moderate
+      if((data["node 1"][selectedJsonTimeStamps[a]][7]) == "Moderate Air")
+      {
+        ctrMod1++;
+      }
+      if((data["node 6"][selectedJsonTimeStamps[a]][7]) == "Moderate Air")
+      {
+        ctrMod6++;
+      }
+
+      //USG
+      if((data["node 1"][selectedJsonTimeStamps[a]][7]) == "(USG) Unhealthy for Sensetive Groups")
+      {
+        ctrUsg1++;
+      }
+      if((data["node 6"][selectedJsonTimeStamps[a]][7]) == "(USG) Unhealthy for Sensetive Groups")
+      {
+        ctrUsg6++;
+      }
+    }
+
+    //Pushing scoured data into arrays that hold the count for each reading
+    ctrAQI1.push(ctrGood1);
+    ctrAQI1.push(ctrMod1);
+    ctrAQI1.push(ctrUsg1);
+
+    ctrAQI6.push(ctrGood6);
+    ctrAQI6.push(ctrMod6);
+    ctrAQI6.push(ctrUsg6);
+
+    //Determining mode value of the data selection
+    for(var d = 0; d < ctrAQI1.length; d++)
+    {
+      if(ctrAQI1[d] >= ctrMaxAQI1)
+      {
+        ctrMaxAQI1 = ctrAQI1[d];
+        maxAQI1 = d;
+      }
+    }
+
+    for(var e = 0; e < ctrAQI6.length; e++)
+    {
+      if(ctrAQI6[e] >= ctrMaxAQI6)
+      {
+        ctrMaxAQI6 = ctrAQI6[e];
+        maxAQI6 = e;
+      }
+    }
+
+    //Using the mode value to determine the file path of the image to display.
+
+    //AQI
+    if(ctrMaxAQI1 != 0)
+    {
+      if(maxAQI1 == 0)
+      {
+        dispAQI1 = "img/data-graphics/gradient_good.png";
+        aqiLevel[0] = "Good";
+      }
+      if(maxAQI1 == 1)
+      {
+        dispAQI1 = "../img/data-grpahics/gradient_moderate.png";
+        aqiLevel[0] = "Moderate";
+      }
+      if(maxAQI1 == 2)
+      {
+        dispAQI1 = "img/data-graphics/gradient_USG.png";
+        aqiLevel[0] = "Unhealthy for Sensetive Groups";
+      }
+    }
+    else
+    {
+      dispAQI1 = "img/data-graphics/No_Reading.png";
+      aqiLevel[0] = "No Reading";
+    }
+
+    if(ctrMaxAQI6 != 0)
+    {
+      if(maxAQI6 == 0)
+      {
+        dispAQI6 = "img/data-graphics/gradient_good.png";
+        aqiLevel[1] = "Good";
+      }
+      if(maxAQI6 == 1)
+      {
+        dispAQI6 = "../img/data-grpahics/gradient_moderate.png";
+        aqiLevel[1] = "Moderate";
+      }
+      if(maxAQI6 == 2)
+      {
+        dispAQI6 = "img/data-graphics/gradient_USG.png";
+        aqiLevel[1] = "Unhealthy for Sensetive Groups";
+      }
+    }
+    else
+    {
+      dispAQI6 = "img/data-graphics/No_Reading.png";
+      aqiLevel[1] = "No Reading";
+    }
+
+    document.getElementById("aqiImage1").src = dispAQI1;
+    document.getElementById("aqiImage2").src = dispAQI6;
+
+  });
+}
+
 
 //---------------------------------------------------------------------------------------
 //endregion: End of Philippe's Graph
