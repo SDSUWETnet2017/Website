@@ -16,9 +16,14 @@
 
 // Actual timestamps read in dynamically from the JSON file
 // This will contain every single time stamp in the JSON file
-var MasterDataUnsorted = [];
+var masterDataUnsorted1 = [];
 // This will contain only the time stamps correlating to the slider's selected time frame
-var MasterDataSorted = [];
+var masterDataSorted1 = [];
+
+// For nodes 5-10 since supernodes send at different times
+var masterDataUnsorted2 = [];
+var masterDataSorted2 = [];
+
 
 // These will contain the most recent timestamps for each super node
 var mostRecentTimeStampSuperNode1;
@@ -28,12 +33,18 @@ var mostRecentTimeStampSuperNode2;
 // We will determine which timestamps to snap to for min and max based on sliderSelectedTimeStamps.
 // Note that we are pulling these timestamps directly from the JSON file so these timestamps may not be
 // perfect 10 minute incrmenets.
-var selectedJsonTimeStamps = [];
-var selectedJsonMinTimeStamp;
-var selectedJsonMaxTimeStamp;
+// For nodes 1-5
+var selectedJsonTimeStamps1 = [];
+var selectedJsonMinTimeStamp1;
+var selectedJsonMaxTimeStamp1;
 
-// This will tell us when we should begin filling our selectedJsonTimeStamps array with inbetween timestamps.
-// It will be set to 1 once our selectedJsonMinTimeStamp is found and set to 0 once our selectedJsonMaxTimeStamp is found.
+//For nodes 6-10 since the super nodes are sending different timestamps
+var selectedJsonTimeStamps2 = [];
+var selectedJsonMinTimeStamp2;
+var selectedJsonMaxTimeStamp2;
+
+// This will tell us when we should begin filling our selectedJsonTimeStamps1 array with inbetween timestamps.
+// It will be set to 1 once our selectedJsonMinTimeStamp1 is found and set to 0 once our selectedJsonMaxTimeStamp1 is found.
 var startFilling = 0;
 var initialLoad = 0;
 var superNodesChosen = 1;
@@ -45,7 +56,9 @@ var chosenNodes = ["node 1", "node 2", "node 3", "node 4", "node 5", "node 6", "
 
 // Variable used to select the elements in chosenNodes
 var currentNodeIndex = 0;
-var nodeIndex = 0;
+
+// Start at node 6
+var nodeIndex = 5;
 
 
 //================================================================================
@@ -144,7 +157,7 @@ var longitudeArray = new Array();
 var deploymentdets = new Array();
 var aqiLevel = new Array();
 var windDir = new Array();
-var centerMap = {lat: 32.776689, lng: -117.069733};
+var centerMap; // = {lat: 32.777570, lng: -117.070494};
 
 
 //================================================================================
@@ -185,10 +198,11 @@ var sliderTimeStampMid = [];
 var sliderTimeStampMax;
 
 // String variables containing the min and max time stamps
-var initTimeMin = new Date(2017, 3, 9, 0, 0);
-var initTimeMax = new Date(2017, 3, 9, 4, 20);
-var todayBoundsMin = new Date(2017, 3, 9);
-var todayBoundsMax = new Date(2017, 3, 10);
+var todayBoundsMin = new Date(2017, 3, 26);
+var todayBoundsMax = new Date(2017, 3, 27);
+var initTimeMin = new Date(2017, 3, 26);
+var initTimeMax = new Date(2017, 3, 27);
+
 //---------------------------------------------------------------------------------------
 //endregion: Initialize Global Variables
 
@@ -206,12 +220,19 @@ $(document).ready(function() {
   $("#superNode1Images").hide();
   $("#superNode2Images").hide();
 
+  updateWindDirection();
+  updateAQI();
+
   // Reading the .JSON file from the server
-  $.getJSON('Node_Json_Data/TestMasterData.json', function (data) {
+  $.getJSON('Node_Json_Data/MasterData.json', function (data) {
 
     // Empty out the master lists
-    MasterDataUnsorted = [];
-    MasterDataSorted = [];
+    masterDataUnsorted1 = [];
+    masterDataSorted1 = [];
+
+    // Empty out the master list for nodes 5-10
+    masterDataUnsorted2 = [];
+    masterDataSorted2 = [];
 
     // This is necessary on load in order to populate the heat map when the website is first loaded
     /***********   Slider Time Stamp Creation   **************/
@@ -246,12 +267,16 @@ $(document).ready(function() {
 
     /***********   JSON Selected Time Stamp Creation  **************/
     // Array used to store all time stamps desired by the user in the form of actual timestamps in the JSON file
-    selectedJsonTimeStamps = [];
+    selectedJsonTimeStamps1 = [];
+    selectedJsonTimeStamps2 = [];
     startFilling = 0;
-    MasterDataUnsorted = Object.keys(data[chosenNodes[currentNodeIndex]]);
+
+    masterDataUnsorted1 = Object.keys(data[chosenNodes[0]]);
+    masterDataUnsorted2 = Object.keys(data[chosenNodes[5]]);
+
 
     // Cycle through each element of the dynamically read in timestamps and being populating a 0 padded sorted version
-    MasterDataUnsorted.forEach(function(element) {
+    masterDataUnsorted1.forEach(function(element) {
       var tempDate = new Date(element);
 
       // *** Very important to add 1 to account for month offset! ***
@@ -261,16 +286,32 @@ $(document).ready(function() {
       // Add 0 padding so the timestamps can be sorted properly using the .sort function
       // Make sure you add 1 month since month starts at 1
       tempDateString = ('0' + (tempDate.getMonth())).slice(-2) + '/' + ('0' + tempDate.getDate()).slice(-2) + '/' +  tempDate.getFullYear() +" "+ ('0' + tempDate.getHours()).slice(-2) +":"+ ('0' + tempDate.getMinutes()).slice(-2);
-      MasterDataSorted.push(tempDateString);
+      masterDataSorted1.push(tempDateString);
+
+    }); // End of cycling through each of the timestamps from the JSON file
+
+    // For nodes 6-10
+    masterDataUnsorted2.forEach(function(element) {
+      var tempDate = new Date(element);
+
+      // *** Very important to add 1 to account for month offset! ***
+      tempDate.setMonth(tempDate.getMonth() + 1);
+      var tempDateString;
+
+      // Add 0 padding so the timestamps can be sorted properly using the .sort function
+      // Make sure you add 1 month since month starts at 1
+      tempDateString = ('0' + (tempDate.getMonth())).slice(-2) + '/' + ('0' + tempDate.getDate()).slice(-2) + '/' +  tempDate.getFullYear() +" "+ ('0' + tempDate.getHours()).slice(-2) +":"+ ('0' + tempDate.getMinutes()).slice(-2);
+      masterDataSorted2.push(tempDateString);
 
     }); // End of cycling through each of the timestamps from the JSON file
 
     // Now that we have all of the timestamps, sort them. The 0 padding is necessary for this to work properly
-    MasterDataSorted.sort();
+    masterDataSorted1.sort();
+    masterDataSorted2.sort();
 
-    // Cycle through the sorted master data and begin filling your selectedJsonTimeStamps array with the dynamic timestamps
+    // Cycle through the sorted master data and begin filling your selectedJsonTimeStamps1 array with the dynamic timestamps
     // This loop will break once the correlated maximum value of the slider timeframe is selected.
-    for(var element of MasterDataSorted) {
+    for(var element of masterDataSorted1) {
 
       // By creating a new date using the 0 padded timestamps, tempDate will become unpadded, which is what we want in order to read the json file
       var tempDate = new Date(element);
@@ -278,35 +319,68 @@ $(document).ready(function() {
 
       // Find a timestamp that is within 9.99 minutes of the 10 minute increment.
       // We take the actual timestamp received from the JSON file and subtract the exact 10 minute increment and populate
-      // the selectedJsonMinTimeStamp and selectedJsonMaxTimeStamp if the current timestamp is within 0 and 9 minutes difference.
+      // the selectedJsonMinTimeStamp1 and selectedJsonMaxTimeStamp1 if the current timestamp is within 0 and 9 minutes difference.
       if(((tempDate.getTime() - sliderMinDate.getTime()) >= 0) && ((tempDate.getTime() - sliderMinDate.getTime()) < 600000)) {
         startFilling = 1;
-        selectedJsonMinTimeStamp = tempDateString;
+        selectedJsonMinTimeStamp1 = tempDateString;
       }
       // Find a timestamp that is within 9.99 minutes of the 10 minute increment.
       else if(((tempDate.getTime() - sliderMaxDate.getTime()) >= 0) && ((tempDate.getTime() - sliderMaxDate.getTime()) < 600000)) {
         startFilling = 0;
 
         // Push the last element into the array before breaking out of this loop
-        selectedJsonTimeStamps.push(tempDateString);
-        selectedJsonMaxTimeStamp = tempDateString;
+        selectedJsonTimeStamps1.push(tempDateString);
+        selectedJsonMaxTimeStamp1 = tempDateString;
 
         // There's no sense in continuing searching our sorted master data since the maximum time stamp has been found
         break;
       }
 
-      // If the minimum was found, begin populating selectedJsonTimeStamps with the timestamp strings
+      // If the minimum was found, begin populating selectedJsonTimeStamps1 with the timestamp strings
       if(startFilling == 1) {
-        selectedJsonTimeStamps.push(tempDateString);
+        selectedJsonTimeStamps1.push(tempDateString);
       }
     } // End of for loop
+
+    startFilling = 0;
+
+    // For nodes 6-10
+    for(var element of masterDataSorted2) {
+
+      // By creating a new date using the 0 padded timestamps, tempDate will become unpadded, which is what we want in order to read the json file
+      var tempDate = new Date(element);
+      var tempDateString = ((tempDate.getMonth()+1) +"/"+ tempDate.getDate() +"/"+  tempDate.getFullYear() +" "+ tempDate.getHours() +":"+ tempDate.getMinutes());
+
+      // Find a timestamp that is within 9.99 minutes of the 10 minute increment.
+      // We take the actual timestamp received from the JSON file and subtract the exact 10 minute increment and populate
+      // the selectedJsonMinTimeStamp1 and selectedJsonMaxTimeStamp1 if the current timestamp is within 0 and 9 minutes difference.
+      if(((tempDate.getTime() - sliderMinDate.getTime()) >= 0) && ((tempDate.getTime() - sliderMinDate.getTime()) < 600000)) {
+        startFilling = 1;
+        selectedJsonMinTimeStamp2 = tempDateString;
+      }
+      // Find a timestamp that is within 9.99 minutes of the 10 minute increment.
+      else if(((tempDate.getTime() - sliderMaxDate.getTime()) >= 0) && ((tempDate.getTime() - sliderMaxDate.getTime()) < 600000)) {
+        startFilling = 0;
+
+        // Push the last element into the array before breaking out of this loop
+        selectedJsonTimeStamps2.push(tempDateString);
+        selectedJsonMaxTimeStamp2 = tempDateString;
+
+        // There's no sense in continuing searching our sorted master data since the maximum time stamp has been found
+        break;
+      }
+
+      // If the minimum was found, begin populating selectedJsonTimeStamps1 with the timestamp strings
+      if(startFilling == 1) {
+        selectedJsonTimeStamps2.push(tempDateString);
+      }
+    } // End of for loop
+
+
     /***********   JSON Selected Time Stamp Creation End  **************/
 
-    updateWindDirection();
-    updateAQI();
-
     /***********   HEATMAP   **************/
-    for(var i=0; i < 10; i++) {
+    for(var i=0; i < 5; i++) {
         var sumHeat = 0;
         var sumHumidity = 0;
         var sumUV = 0;
@@ -314,55 +388,107 @@ $(document).ready(function() {
         var sumWindSpeed = 0;
         var sumWindGust = 0;
 
-        for(var j=0; j < selectedJsonTimeStamps.length; j++) {
-          sumHeat += data[chosenNodes[i]][selectedJsonTimeStamps[j]][0]
+        for(var j=0; j < selectedJsonTimeStamps1.length; j++) {
+          sumHeat += data[chosenNodes[i]][selectedJsonTimeStamps1[j]][0]
         }
-        var tempVariable = (sumHeat/selectedJsonTimeStamps.length);
+        var tempVariable = (sumHeat/selectedJsonTimeStamps1.length);
         tempVariable = Math.round(tempVariable);
         averageHeat[i]=tempVariable;
 
-        for(var j=0; j < selectedJsonTimeStamps.length; j++) {
-          sumHumidity += data[chosenNodes[i]][selectedJsonTimeStamps[j]][1]
+        for(var j=0; j < selectedJsonTimeStamps1.length; j++) {
+          sumHumidity += data[chosenNodes[i]][selectedJsonTimeStamps1[j]][1]
         }
-        tempVariable = (sumHumidity/selectedJsonTimeStamps.length);
+        tempVariable = (sumHumidity/selectedJsonTimeStamps1.length);
         averageHumidity[i] = Math.round(tempVariable);
 
-        for(var j=0; j < selectedJsonTimeStamps.length; j++) {
-          sumUV += data[chosenNodes[i]][selectedJsonTimeStamps[j]][2]
+        for(var j=0; j < selectedJsonTimeStamps1.length; j++) {
+          sumUV += data[chosenNodes[i]][selectedJsonTimeStamps1[j]][2]
         }
-        tempVariable = (sumUV/selectedJsonTimeStamps.length);
+        tempVariable = (sumUV/selectedJsonTimeStamps1.length);
         averageUV[i] = Math.round(tempVariable);
 
         if(i == 0 || i == 5){
-          for(var j=0; j < selectedJsonTimeStamps.length; j++) {
-            sumAirPressure += data[chosenNodes[i]][selectedJsonTimeStamps[j]][3]
+          for(var j=0; j < selectedJsonTimeStamps1.length; j++) {
+            sumAirPressure += data[chosenNodes[i]][selectedJsonTimeStamps1[j]][3]
           }
-          tempVariable = (sumAirPressure/selectedJsonTimeStamps.length);
+          tempVariable = (sumAirPressure/selectedJsonTimeStamps1.length);
           averageAirPressure[i]= Math.round(tempVariable);
 
-          for(var j=0; j < selectedJsonTimeStamps.length; j++) {
-            sumWindSpeed += data[chosenNodes[i]][selectedJsonTimeStamps[j]][4]
+          for(var j=0; j < selectedJsonTimeStamps1.length; j++) {
+            sumWindSpeed += data[chosenNodes[i]][selectedJsonTimeStamps1[j]][4]
           }
-          tempVariable = (sumWindSpeed/selectedJsonTimeStamps.length);
+          tempVariable = (sumWindSpeed/selectedJsonTimeStamps1.length);
           averageWindSpeed[i]= Math.round(tempVariable);
 
-          for(var j=0; j < selectedJsonTimeStamps.length; j++) {
-            sumWindGust += data[chosenNodes[i]][selectedJsonTimeStamps[j]][6]
+          for(var j=0; j < selectedJsonTimeStamps1.length; j++) {
+            sumWindGust += data[chosenNodes[i]][selectedJsonTimeStamps1[j]][6]
           }
-          tempVariable = (sumWindGust/selectedJsonTimeStamps.length);
+          tempVariable = (sumWindGust/selectedJsonTimeStamps1.length);
+          averageWindGust[i]= Math.round(tempVariable);
+        }
+    } // End of for loop
+
+    for(var i=5; i < 10; i++) {
+        var sumHeat = 0;
+        var sumHumidity = 0;
+        var sumUV = 0;
+        var sumAirPressure = 0;
+        var sumWindSpeed = 0;
+        var sumWindGust = 0;
+
+        for(var j=0; j < selectedJsonTimeStamps2.length; j++) {
+          sumHeat += data[chosenNodes[i]][selectedJsonTimeStamps2[j]][0]
+        }
+        var tempVariable = (sumHeat/selectedJsonTimeStamps2.length);
+        tempVariable = Math.round(tempVariable);
+        averageHeat[i]=tempVariable;
+
+        for(var j=0; j < selectedJsonTimeStamps2.length; j++) {
+          sumHumidity += data[chosenNodes[i]][selectedJsonTimeStamps2[j]][1]
+        }
+        tempVariable = (sumHumidity/selectedJsonTimeStamps2.length);
+        averageHumidity[i] = Math.round(tempVariable);
+
+        for(var j=0; j < selectedJsonTimeStamps2.length; j++) {
+          sumUV += data[chosenNodes[i]][selectedJsonTimeStamps2[j]][2]
+        }
+        tempVariable = (sumUV/selectedJsonTimeStamps2.length);
+        averageUV[i] = Math.round(tempVariable);
+
+        if(i == 0 || i == 5){
+          for(var j=0; j < selectedJsonTimeStamps2.length; j++) {
+            sumAirPressure += data[chosenNodes[i]][selectedJsonTimeStamps2[j]][3]
+          }
+          tempVariable = (sumAirPressure/selectedJsonTimeStamps2.length);
+          averageAirPressure[i]= Math.round(tempVariable);
+
+          for(var j=0; j < selectedJsonTimeStamps2.length; j++) {
+            sumWindSpeed += data[chosenNodes[i]][selectedJsonTimeStamps2[j]][4]
+          }
+          tempVariable = (sumWindSpeed/selectedJsonTimeStamps2.length);
+          averageWindSpeed[i]= Math.round(tempVariable);
+
+          for(var j=0; j < selectedJsonTimeStamps2.length; j++) {
+            sumWindGust += data[chosenNodes[i]][selectedJsonTimeStamps2[j]][6]
+          }
+          tempVariable = (sumWindGust/selectedJsonTimeStamps2.length);
           averageWindGust[i]= Math.round(tempVariable);
         }
     } // End of for loop
 
     // Initialize the center of the heat map
-    centerMap = {lat: 32.776689, lng: -117.069733};
+    centerMap = {lat: 32.777570, lng: -117.070494};
     initMap();
     /***********   HEATMAP END   **************/
 
-    var tempLastDate = new Date(MasterDataSorted[MasterDataSorted.length-1]);
+    // For nodes 1-5
+    var tempLastDate = new Date(masterDataSorted1[masterDataSorted1.length-1]);
     var tempLastDateString = ((tempLastDate.getMonth()+1) +"/"+ tempLastDate.getDate() +"/"+  tempLastDate.getFullYear() +" "+ tempLastDate.getHours() +":"+ tempLastDate.getMinutes());
-
     mostRecentTimeStampSuperNode1 = tempLastDateString;
+
+    // For nodes 6-10
+    var tempLastDate = new Date(masterDataSorted2[masterDataSorted2.length-1]);
+    var tempLastDateString = ((tempLastDate.getMonth()+1) +"/"+ tempLastDate.getDate() +"/"+  tempLastDate.getFullYear() +" "+ tempLastDate.getHours() +":"+ tempLastDate.getMinutes());
     mostRecentTimeStampSuperNode2 = tempLastDateString;
 
     // Initialize collapsed view averages
@@ -386,10 +512,10 @@ $(document).ready(function() {
 //================================================================================
 $("#btn-today").click(function() {
 
-  var todayBoundsMin = new Date(2017, 3, 9);
-  var todayBoundsMax = new Date(2017, 3, 10);
-  var initTodayMin = new Date(2017, 3, 9, 0, 0);
-  var initTodayMax = new Date(2017, 3, 9, 4, 20);
+  var todayBoundsMin = new Date(2017, 3, 26);
+  var todayBoundsMax = new Date(2017, 3, 27);
+  var initTimeMin = new Date(2017, 3, 26);
+  var initTimeMax = new Date(2017, 3, 27);
 
   $("#dateSlider").dateRangeSlider( {
       //Note, month 0 is January. Month 4, is May.
@@ -428,10 +554,10 @@ $("#btn-today").click(function() {
 //================================================================================
 $("#btn-7days").click(function() {
 
-  var dayBoundsMin = new Date(2017, 3, 8);
-  var dayBoundsMax = new Date(2017, 3, 13);
-  var initDayMin = new Date(2017, 3, 9);
-  var initDayMax = new Date(2017, 3, 10);
+  var dayBoundsMin = new Date(2017, 3, 26);
+  var dayBoundsMax = new Date(2017, 3, 30, 19, 20);
+  var initDayMin = new Date(2017, 3, 26);
+  var initDayMax = new Date(2017, 3, 30, 17, 30);
 
   $("#dateSlider").dateRangeSlider( {
 
@@ -483,39 +609,6 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
   sliderMinDate = new Date(data.values.min);
   sliderMaxDate = new Date(data.values.max);
 
-
-  // *** Create file paths for min and max images from raspberry pi camera ***
-  superNode1MinImgFilename =(sliderMinDate.getMonth()+1) +"_"+ sliderMinDate.getDate() +"_"+  sliderMinDate.getFullYear() +"_"+ sliderMinDate.getHours() +":"+ sliderMinDate.getMinutes();
-  superNode2MinImgFilename =(sliderMinDate.getMonth()+1) +"_"+ sliderMinDate.getDate() +"_"+  sliderMinDate.getFullYear() +"_"+ sliderMinDate.getHours() +":"+ sliderMinDate.getMinutes();
-
-  // var minFilePath1 = ("Node_Json_Data/PIPictures/Node_1/" + superNode1MinImgFilename + ".jpg");
-  // var minFilePath2 = ("Node_Json_Data/PIPictures/Node_6/" + superNode2MinImgFilename + ".jpg");
-  var minFilePath1 = ("Node_Json_Data/PIPictures/Node_1/" + "yo" + ".png");
-  var minFilePath2 = ("Node_Json_Data/PIPictures/Node_6/" + "yo" + ".png");
-  document.getElementById("superNode1MinImage").src = minFilePath1;
-  document.getElementById("superNode2MinImage").src = minFilePath2;
-
-  console.log("superNode1MinImgFilename: "+ superNode1MinImgFilename+"\n");
-  console.log("superNode2MinImgFilename: "+ superNode2MinImgFilename+"\n");
-  console.log("minFilePath1: "+ minFilePath1+"\n");
-  console.log("minFilePath2: "+ minFilePath2+"\n");
-
-  superNode1MaxImgFilename = (sliderMaxDate.getMonth()+1) +"_"+ sliderMaxDate.getDate() +"_"+ sliderMaxDate.getFullYear() +"_"+ sliderMaxDate.getHours() +":"+ sliderMaxDate.getMinutes();
-  superNode2MaxImgFilename = (sliderMaxDate.getMonth()+1) +"_"+ sliderMaxDate.getDate() +"_"+ sliderMaxDate.getFullYear() +"_"+ sliderMaxDate.getHours() +":"+ sliderMaxDate.getMinutes();
-  // var maxFilePath1 = ("Node_Json_Data/PIPictures/Node_1/" + superNode1MaxImgFilename + ".jpg");
-  // var maxFilePath2 = ("Node_Json_Data/PIPictures/Node_6/" + superNode2MaxImgFilename + ".jpg");
-  var maxFilePath1 = ("Node_Json_Data/PIPictures/Node_1/" + "yo" + ".png");
-  var maxFilePath2 = ("Node_Json_Data/PIPictures/Node_6/" + "yo" + ".png");
-  document.getElementById("superNode1MaxImage").src = maxFilePath1;
-  document.getElementById("superNode2MaxImage").src = maxFilePath2;
-
-  console.log("superNode1MaxImgFilename: "+ superNode1MaxImgFilename+"\n");
-  console.log("superNode2MaxImgFilename: "+ superNode2MaxImgFilename+"\n");
-  console.log("maxFilePath1: "+ maxFilePath1+"\n");
-  console.log("maxFilePath2: "+ maxFilePath2+"\n");
-  // *** Create file paths for min and max images from raspberry pi camera End ***
-
-
   //* Form the time stamps strings for perfect 10 minute increments *
   // Create a string for the minimum and maximum timestamps
   sliderTimeStampMin = (sliderMinDate.getMonth()+1) +"/"+ sliderMinDate.getDate() +"/"+  sliderMinDate.getFullYear() +" "+ sliderMinDate.getHours() +":"+ sliderMinDate.getMinutes();
@@ -540,137 +633,295 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
 
 
   /***********   Reading the .JSON file from the server  **************/
-  $.getJSON('Node_Json_Data/TestMasterData.json', function (data) {
+  $.getJSON('Node_Json_Data/MasterData.json', function (data) {
 
-      // Empty out the master lists
-      MasterDataUnsorted = [];
-      MasterDataSorted = [];
+    // Empty out the master lists
+    masterDataUnsorted1 = [];
+    masterDataSorted1 = [];
+
+    // Empty out the master list for nodes 5-10
+    masterDataUnsorted2 = [];
+    masterDataSorted2 = [];
 
 
-      /***********   JSON Selected Time Stamp Creation  **************/
-      // Array used to store all time stamps desired by the user in the form of actual timestamps in the JSON file
-      selectedJsonTimeStamps = [];
-      startFilling = 0;
-      MasterDataUnsorted = Object.keys(data[chosenNodes[currentNodeIndex]]);
+    /***********   JSON Selected Time Stamp Creation  **************/
+    // Array used to store all time stamps desired by the user in the form of actual timestamps in the JSON file
+    selectedJsonTimeStamps1 = [];
+    selectedJsonTimeStamps2 = [];
+    startFilling = 0;
 
-      // Cycle through each element of the dynamically read in timestamps and being populating a 0 padded sorted version
-      MasterDataUnsorted.forEach(function(element) {
-        var tempDate = new Date(element);
+    currentNodeIndex = 0;
+    masterDataUnsorted1 = Object.keys(data[chosenNodes[currentNodeIndex]]);
+    currentNodeIndex = 5;
+    masterDataUnsorted2 = Object.keys(data[chosenNodes[currentNodeIndex]]);
 
-        // *** Very important to add 1 to account for month offset! ***
-        tempDate.setMonth(tempDate.getMonth() + 1);
-        var tempDateString;
 
-        // Add 0 padding so the timestamps can be sorted properly using the .sort function
-        // Make sure you add 1 month since month starts at 1
-        tempDateString = ('0' + (tempDate.getMonth())).slice(-2) + '/' + ('0' + tempDate.getDate()).slice(-2) + '/' +  tempDate.getFullYear() +" "+ ('0' + tempDate.getHours()).slice(-2) +":"+ ('0' + tempDate.getMinutes()).slice(-2);
-        MasterDataSorted.push(tempDateString);
+    // Cycle through each element of the dynamically read in timestamps and being populating a 0 padded sorted version
+    masterDataUnsorted1.forEach(function(element) {
+      var tempDate = new Date(element);
 
-      }); // End of cycling through each of the timestamps from the JSON file
+      // *** Very important to add 1 to account for month offset! ***
+      tempDate.setMonth(tempDate.getMonth() + 1);
+      var tempDateString;
 
-      // Now that we have all of the timestamps, sort them. The 0 padding is necessary for this to work properly
-      MasterDataSorted.sort();
+      // Add 0 padding so the timestamps can be sorted properly using the .sort function
+      // Make sure you add 1 month since month starts at 1
+      tempDateString = ('0' + (tempDate.getMonth())).slice(-2) + '/' + ('0' + tempDate.getDate()).slice(-2) + '/' +  tempDate.getFullYear() +" "+ ('0' + tempDate.getHours()).slice(-2) +":"+ ('0' + tempDate.getMinutes()).slice(-2);
+      masterDataSorted1.push(tempDateString);
 
-      // Cycle through the sorted master data and begin filling your selectedJsonTimeStamps array with the dynamic timestamps
-      // This loop will break once the correlated maximum value of the slider timeframe is selected.
-      for(var element of MasterDataSorted) {
-        // By creating a new date using the 0 padded timestamps, tempDate will become unpadded, which is what we want in order to read the json file
-        var tempDate = new Date(element);
-        var tempDateString = ((tempDate.getMonth()+1) +"/"+ tempDate.getDate() +"/"+  tempDate.getFullYear() +" "+ tempDate.getHours() +":"+ tempDate.getMinutes());
+    }); // End of cycling through each of the timestamps from the JSON file
 
-        // Find a timestamp that is within 9.99 minutes of the 10 minute increment.
-        // We take the actual timestamp received from the JSON file and subtract the exact 10 minute increment and populate
-        // the selectedJsonMinTimeStamp and selectedJsonMaxTimeStamp if the current timestamp is within 0 and 9 minutes difference.
-        if(((tempDate.getTime() - sliderMinDate.getTime()) >= 0) && ((tempDate.getTime() - sliderMinDate.getTime()) < 600000)) {
-          startFilling = 1;
-          selectedJsonMinTimeStamp = tempDateString;
+    // For nodes 6-10
+    masterDataUnsorted2.forEach(function(element) {
+      var tempDate = new Date(element);
+
+      // *** Very important to add 1 to account for month offset! ***
+      tempDate.setMonth(tempDate.getMonth() + 1);
+      var tempDateString;
+
+      // Add 0 padding so the timestamps can be sorted properly using the .sort function
+      // Make sure you add 1 month since month starts at 1
+      tempDateString = ('0' + (tempDate.getMonth())).slice(-2) + '/' + ('0' + tempDate.getDate()).slice(-2) + '/' +  tempDate.getFullYear() +" "+ ('0' + tempDate.getHours()).slice(-2) +":"+ ('0' + tempDate.getMinutes()).slice(-2);
+      masterDataSorted2.push(tempDateString);
+
+    }); // End of cycling through each of the timestamps from the JSON file
+
+    // Now that we have all of the timestamps, sort them. The 0 padding is necessary for this to work properly
+    masterDataSorted1.sort();
+    masterDataSorted2.sort();
+
+    // Cycle through the sorted master data and begin filling your selectedJsonTimeStamps1 array with the dynamic timestamps
+    // This loop will break once the correlated maximum value of the slider timeframe is selected.
+    for(var element of masterDataSorted1) {
+
+      // By creating a new date using the 0 padded timestamps, tempDate will become unpadded, which is what we want in order to read the json file
+      var tempDate = new Date(element);
+      var tempDateString = ((tempDate.getMonth()+1) +"/"+ tempDate.getDate() +"/"+  tempDate.getFullYear() +" "+ tempDate.getHours() +":"+ tempDate.getMinutes());
+
+      // Find a timestamp that is within 9.99 minutes of the 10 minute increment.
+      // We take the actual timestamp received from the JSON file and subtract the exact 10 minute increment and populate
+      // the selectedJsonMinTimeStamp1 and selectedJsonMaxTimeStamp1 if the current timestamp is within 0 and 9 minutes difference.
+      if(((tempDate.getTime() - sliderMinDate.getTime()) >= 0) && ((tempDate.getTime() - sliderMinDate.getTime()) < 600000)) {
+        startFilling = 1;
+        var tempDate2 = ((tempDate.getMonth()+1) +"_"+ tempDate.getDate() +"_"+  tempDate.getFullYear() +"_"+ tempDate.getHours() +":"+ tempDate.getMinutes());
+        selectedJsonMinTimeStamp1 = tempDate2;
+      }
+      // Find a timestamp that is within 9.99 minutes of the 10 minute increment.
+      else if(((tempDate.getTime() - sliderMaxDate.getTime()) >= 0) && ((tempDate.getTime() - sliderMaxDate.getTime()) < 600000)) {
+        startFilling = 0;
+
+        // Push the last element into the array before breaking out of this loop
+        selectedJsonTimeStamps1.push(tempDateString);
+        var tempDate2 = ((tempDate.getMonth()+1) +"_"+ tempDate.getDate() +"_"+  tempDate.getFullYear() +"_"+ tempDate.getHours() +":"+ tempDate.getMinutes());
+        selectedJsonMaxTimeStamp1 = tempDate2;
+
+        // There's no sense in continuing searching our sorted master data since the maximum time stamp has been found
+        break;
+      }
+
+      // If the minimum was found, begin populating selectedJsonTimeStamps1 with the timestamp strings
+      if(startFilling == 1) {
+        selectedJsonTimeStamps1.push(tempDateString);
+      }
+    } // End of for loop
+
+    startFilling = 0;
+
+    // For nodes 6-10
+    for(var element of masterDataSorted2) {
+
+      // By creating a new date using the 0 padded timestamps, tempDate will become unpadded, which is what we want in order to read the json file
+      var tempDate = new Date(element);
+      var tempDateString = ((tempDate.getMonth()+1) +"/"+ tempDate.getDate() +"/"+  tempDate.getFullYear() +" "+ tempDate.getHours() +":"+ tempDate.getMinutes());
+
+      // Find a timestamp that is within 9.99 minutes of the 10 minute increment.
+      // We take the actual timestamp received from the JSON file and subtract the exact 10 minute increment and populate
+      // the selectedJsonMinTimeStamp1 and selectedJsonMaxTimeStamp1 if the current timestamp is within 0 and 9 minutes difference.
+      if(((tempDate.getTime() - sliderMinDate.getTime()) >= 0) && ((tempDate.getTime() - sliderMinDate.getTime()) < 600000)) {
+        startFilling = 1;
+        var tempDate2 = ((tempDate.getMonth()+1) +"_"+ tempDate.getDate() +"_"+  tempDate.getFullYear() +"_"+ tempDate.getHours() +":"+ tempDate.getMinutes());
+        selectedJsonMinTimeStamp2 = tempDate2;
+      }
+      // Find a timestamp that is within 9.99 minutes of the 10 minute increment.
+      else if(((tempDate.getTime() - sliderMaxDate.getTime()) >= 0) && ((tempDate.getTime() - sliderMaxDate.getTime()) < 600000)) {
+        startFilling = 0;
+
+        // Push the last element into the array before breaking out of this loop
+        selectedJsonTimeStamps2.push(tempDateString);
+        var tempDate2 = ((tempDate.getMonth()+1) +"_"+ tempDate.getDate() +"_"+  tempDate.getFullYear() +"_"+ tempDate.getHours() +":"+ tempDate.getMinutes());
+        selectedJsonMaxTimeStamp2 = tempDate2;
+
+        // There's no sense in continuing searching our sorted master data since the maximum time stamp has been found
+        break;
+      }
+
+      // If the minimum was found, begin populating selectedJsonTimeStamps1 with the timestamp strings
+      if(startFilling == 1) {
+        selectedJsonTimeStamps2.push(tempDateString);
+      }
+    } // End of for loop
+
+    /***********   JSON Selected Time Stamp Creation End  **************/
+
+
+    // *** Create file paths for min and max images from raspberry pi camera ***
+
+    // var minFilePath1 = ("Node_Json_Data/PIPictures/Node_1/" + selectedJsonMinTimeStamp1 + ".jpg");
+    // var minFilePath2 = ("Node_Json_Data/PIPictures/Node_6/" + selectedJsonMinTimeStamp2 + ".jpg");
+    // document.getElementById("superNode1MinImage").src = minFilePath1;
+    // document.getElementById("superNode2MinImage").src = minFilePath2;
+
+    var minFilePath1 = ("http://wetnet.sdsu.edu/Node_Json_Data/PIPictures/Node_1/" + selectedJsonMinTimeStamp1 + ".jpg");
+    var minFilePath2 = ("http://wetnet.sdsu.edu/Node_Json_Data/PIPictures/Node_6/" + selectedJsonMinTimeStamp2 + ".jpg");
+
+    document.getElementById("superNode1MinImage").src = minFilePath1;
+    document.getElementById("superNode2MinImage").src = minFilePath2;
+
+    // var maxFilePath1 = ("Node_Json_Data/PIPictures/Node_1/" + selectedJsonMinTimeStamp2 + ".jpg");
+    // var maxFilePath2 = ("Node_Json_Data/PIPictures/Node_6/" + selectedJsonMaxTimeStamp2 + ".jpg");
+    // document.getElementById("superNode1MaxImage").src = maxFilePath1;
+    // document.getElementById("superNode2MaxImage").src = maxFilePath2;
+
+    var maxFilePath1 = ("http://wetnet.sdsu.edu/Node_Json_Data/PIPictures/Node_1/" + selectedJsonMaxTimeStamp1 + ".jpg");
+    var maxFilePath2 = ("http://wetnet.sdsu.edu/Node_Json_Data/PIPictures/Node_6/" + selectedJsonMaxTimeStamp2 + ".jpg");
+
+    document.getElementById("superNode1MaxImage").src = maxFilePath1;
+    document.getElementById("superNode2MaxImage").src = maxFilePath2;
+
+    // *** Create file paths for min and max images from raspberry pi camera End ***
+
+
+    updateWindDirection();
+    updateAQI();
+
+    /***********   HEATMAP   **************/
+
+    for(var i=0; i < 5; i++) {
+        var sumHeat = 0;
+        var sumHumidity = 0;
+        var sumUV = 0;
+        var sumAirPressure = 0;
+        var sumWindSpeed = 0;
+        var sumWindGust = 0;
+
+        for(var j=0; j < selectedJsonTimeStamps1.length; j++) {
+
+          // DEBUGGING
+          // console.log("i: " + i + "\n");
+          // console.log("j: " + j + "\n");
+          // console.log("data[chosenNodes[i]]: " + data[chosenNodes[i]] + "\n");
+          // console.log("selectedJsonTimeStamps1[j]: " + selectedJsonTimeStamps1[j] + "\n");
+          // console.log("data[chosenNodes[i]][selectedJsonTimeStamps1[j]]: " + data[chosenNodes[i]][selectedJsonTimeStamps1[j]] + "\n");
+          // console.log("data[chosenNodes[i]][selectedJsonTimeStamps1[j]][0]: " + data[chosenNodes[i]][selectedJsonTimeStamps1[j]][0] + "\n");
+          sumHeat += data[chosenNodes[i]][selectedJsonTimeStamps1[j]][0];
         }
-        // Find a timestamp that is within 9.99 minutes of the 10 minute increment.
-        else if(((tempDate.getTime() - sliderMaxDate.getTime()) >= 0) && ((tempDate.getTime() - sliderMaxDate.getTime()) < 600000)) {
-          startFilling = 0;
+        var tempVariable = (sumHeat/selectedJsonTimeStamps1.length);
+        tempVariable = Math.round(tempVariable);
+        averageHeat[i]=tempVariable;
 
-          // Push the last element into the array before breaking out of this loop
-          selectedJsonTimeStamps.push(tempDateString);
-          selectedJsonMaxTimeStamp = tempDateString;
-
-          // There's no sense in continuing searching our sorted master data since the maximum time stamp has been found
-          break;
+        for(var j=0; j < selectedJsonTimeStamps1.length; j++) {
+          sumHumidity += data[chosenNodes[i]][selectedJsonTimeStamps1[j]][1];
         }
+        tempVariable = (sumHumidity/selectedJsonTimeStamps1.length);
+        averageHumidity[i] = Math.round(tempVariable);
 
-        // If the minimum was found, begin populating selectedJsonTimeStamps with the timestamp strings
-        if(startFilling == 1) {
-          selectedJsonTimeStamps.push(tempDateString);
+        for(var j=0; j < selectedJsonTimeStamps1.length; j++) {
+          sumUV += data[chosenNodes[i]][selectedJsonTimeStamps1[j]][2];
         }
+        tempVariable = (sumUV/selectedJsonTimeStamps1.length);
+        averageUV[i] = Math.round(tempVariable);
 
-        //console.log((tempDate.getMonth()+1) +"/"+ tempDate.getDate() +"/"+  tempDate.getFullYear() +" "+ tempDate.getHours() +":"+ tempDate.getMinutes());
-      };
-      /***********   JSON Selected Time Stamp Creation End  **************/
-
-      updateWindDirection();
-      updateAQI();
-
-      /***********   HEATMAP   **************/
-      //Set the center of the map to be used by initMap()
-
-      centerMap = {lat: 32.776896, lng: -117.069054};
-
-      for(var i=0; i < 10; i++) {
-          var sumHeat = 0;
-          var sumHumidity = 0;
-          var sumUV = 0;
-          var sumAirPressure = 0;
-          var sumWindSpeed = 0;
-          var sumWindGust = 0;
-
-          for(var j=0; j < selectedJsonTimeStamps.length; j++) {
-            sumHeat += data[chosenNodes[i]][selectedJsonTimeStamps[j]][0]
+        if(i == 0 || i == 5){
+          for(var j=0; j < selectedJsonTimeStamps1.length; j++) {
+            sumAirPressure += data[chosenNodes[i]][selectedJsonTimeStamps1[j]][3];
           }
-          var tempVariable = (sumHeat/selectedJsonTimeStamps.length);
-          tempVariable = Math.round(tempVariable);
-          averageHeat[i]=tempVariable;
+          tempVariable = (sumAirPressure/selectedJsonTimeStamps1.length);
+          averageAirPressure[i]= Math.round(tempVariable);
 
-          for(var j=0; j < selectedJsonTimeStamps.length; j++) {
-            sumHumidity += data[chosenNodes[i]][selectedJsonTimeStamps[j]][1]
+          for(var j=0; j < selectedJsonTimeStamps1.length; j++) {
+            sumWindSpeed += data[chosenNodes[i]][selectedJsonTimeStamps1[j]][4];
           }
-          tempVariable = (sumHumidity/selectedJsonTimeStamps.length);
-          averageHumidity[i] = Math.round(tempVariable);
+          tempVariable = (sumWindSpeed/selectedJsonTimeStamps1.length);
+          averageWindSpeed[i]= Math.round(tempVariable);
 
-          for(var j=0; j < selectedJsonTimeStamps.length; j++) {
-            sumUV += data[chosenNodes[i]][selectedJsonTimeStamps[j]][2]
+          for(var j=0; j < selectedJsonTimeStamps1.length; j++) {
+            sumWindGust += data[chosenNodes[i]][selectedJsonTimeStamps1[j]][6];
           }
-          tempVariable = (sumUV/selectedJsonTimeStamps.length);
-          averageUV[i] = Math.round(tempVariable);
+          tempVariable = (sumWindGust/selectedJsonTimeStamps1.length);
+          averageWindGust[i]= Math.round(tempVariable);
+        }
+    } // End of for loop
 
-          if(i == 0 || i == 5){
-            for(var j=0; j < selectedJsonTimeStamps.length; j++) {
-              sumAirPressure += data[chosenNodes[i]][selectedJsonTimeStamps[j]][3]
-            }
-            tempVariable = (sumAirPressure/selectedJsonTimeStamps.length);
-            averageAirPressure[i]= Math.round(tempVariable);
+    for(var i=5; i < 10; i++) {
+        var sumHeat = 0;
+        var sumHumidity = 0;
+        var sumUV = 0;
+        var sumAirPressure = 0;
+        var sumWindSpeed = 0;
+        var sumWindGust = 0;
 
-            for(var j=0; j < selectedJsonTimeStamps.length; j++) {
-              sumWindSpeed += data[chosenNodes[i]][selectedJsonTimeStamps[j]][4]
-            }
-            tempVariable = (sumWindSpeed/selectedJsonTimeStamps.length);
-            averageWindSpeed[i]= Math.round(tempVariable);
+        for(var j=0; j < selectedJsonTimeStamps2.length; j++) {
+          sumHeat += data[chosenNodes[i]][selectedJsonTimeStamps2[j]][0];
+        }
+        var tempVariable = (sumHeat/selectedJsonTimeStamps2.length);
+        tempVariable = Math.round(tempVariable);
+        averageHeat[i]=tempVariable;
 
-            for(var j=0; j < selectedJsonTimeStamps.length; j++) {
-              sumWindGust += data[chosenNodes[i]][selectedJsonTimeStamps[j]][6]
-            }
-            tempVariable = (sumWindGust/selectedJsonTimeStamps.length);
-            averageWindGust[i]= Math.round(tempVariable);
+        for(var j=0; j < selectedJsonTimeStamps2.length; j++) {
+          sumHumidity += data[chosenNodes[i]][selectedJsonTimeStamps2[j]][1];
+        }
+        tempVariable = (sumHumidity/selectedJsonTimeStamps2.length);
+        averageHumidity[i] = Math.round(tempVariable);
+
+        for(var j=0; j < selectedJsonTimeStamps2.length; j++) {
+          sumUV += data[chosenNodes[i]][selectedJsonTimeStamps2[j]][2];
+        }
+        tempVariable = (sumUV/selectedJsonTimeStamps2.length);
+        averageUV[i] = Math.round(tempVariable);
+
+        if(i == 0 || i == 5){
+          for(var j=0; j < selectedJsonTimeStamps2.length; j++) {
+            sumAirPressure += data[chosenNodes[i]][selectedJsonTimeStamps2[j]][3];
           }
-      } // End of for loop
+          tempVariable = (sumAirPressure/selectedJsonTimeStamps2.length);
+          averageAirPressure[i]= Math.round(tempVariable);
 
-      initMap();
-      /***********   HEATMAP END   **************/
+          for(var j=0; j < selectedJsonTimeStamps2.length; j++) {
+            sumWindSpeed += data[chosenNodes[i]][selectedJsonTimeStamps2[j]][4];
+          }
+          tempVariable = (sumWindSpeed/selectedJsonTimeStamps2.length);
+          averageWindSpeed[i]= Math.round(tempVariable);
 
-      /***********   GRAPH   **************/
-      updateGraph();
-      /***********   GRAPH END   **************/
+          for(var j=0; j < selectedJsonTimeStamps2.length; j++) {
+            sumWindGust += data[chosenNodes[i]][selectedJsonTimeStamps2[j]][6];
+          }
+          tempVariable = (sumWindGust/selectedJsonTimeStamps2.length);
+          averageWindGust[i]= Math.round(tempVariable);
+        }
+    } // End of for loop
 
-      // Update collapsed view averages
-      CollapsedViewAverages();
+
+    //Set the center of the map to be used by initMap()
+    centerMap = {lat: 32.778030, lng: -117.069486};
+    initMap();
+    /***********   HEATMAP END   **************/
+
+    /***********   GRAPH   **************/
+    updateGraph();
+    /***********   GRAPH END   **************/
+
+    // For nodes 1-5
+    var tempLastDate = new Date(masterDataSorted1[masterDataSorted1.length-1]);
+    var tempLastDateString = ((tempLastDate.getMonth()+1) +"/"+ tempLastDate.getDate() +"/"+  tempLastDate.getFullYear() +" "+ tempLastDate.getHours() +":"+ tempLastDate.getMinutes());
+    mostRecentTimeStampSuperNode1 = tempLastDateString;
+
+    // For nodes 6-10
+    var tempLastDate = new Date(masterDataSorted2[masterDataSorted2.length-1]);
+    var tempLastDateString = ((tempLastDate.getMonth()+1) +"/"+ tempLastDate.getDate() +"/"+  tempLastDate.getFullYear() +" "+ tempLastDate.getHours() +":"+ tempLastDate.getMinutes());
+    mostRecentTimeStampSuperNode2 = tempLastDateString;
+
+    // Update collapsed view averages
+    CollapsedViewAverages();
 
   }); // End of $.getJSON
   /***********   Reading the .JSON file from the server End  **************/
@@ -828,11 +1079,15 @@ $('#justify-icon').click(function(){
         range:false
     });
 
-    $.getJSON('Node_Json_Data/TestMasterData.json', function (data) {
+    $.getJSON('Node_Json_Data/MasterData.json', function (data) {
 
       // Empty out the master lists
-      MasterDataUnsorted = [];
-      MasterDataSorted = [];
+      masterDataUnsorted1 = [];
+      masterDataSorted1 = [];
+
+      // Empty out the master list for nodes 5-10
+      masterDataUnsorted2 = [];
+      masterDataSorted2 = [];
 
       /***********   Slider Time Stamp Creation   **************/
       // Array used to store all time stamps desired by the user in the form of perfect 10 minute increments
@@ -840,40 +1095,11 @@ $('#justify-icon').click(function(){
       sliderMinDate = new Date(initTimeMin);
       sliderMaxDate = new Date(initTimeMax);
 
-      // *** Create file paths for min and max images from raspberry pi camera ***
-      // Since we start off on node 1, show node 1 and hide node 6
-      $("#superNode1Images").show();
-      $("#superNode2Images").hide();
+      // Since we start off on node 6, show node 6 and hide node 1
+      $("#superNode1Images").hide();
+      $("#superNode2Images").show();
 
-      superNode1MinImgFilename =(sliderMinDate.getMonth()+1) +"_"+ sliderMinDate.getDate() +"_"+  sliderMinDate.getFullYear() +"_"+ sliderMinDate.getHours() +":"+ sliderMinDate.getMinutes();
-      superNode2MinImgFilename =(sliderMinDate.getMonth()+1) +"_"+ sliderMinDate.getDate() +"_"+  sliderMinDate.getFullYear() +"_"+ sliderMinDate.getHours() +":"+ sliderMinDate.getMinutes();
-
-      var minFilePath1 = ("Node_Json_Data/PIPictures/Node_1/" + superNode1MinImgFilename + ".jpg");
-      var minFilePath2 = ("Node_Json_Data/PIPictures/Node_6/" + superNode2MinImgFilename + ".jpg");
-      // document.getElementById("superNode1MinImage").src = minFilePath1;
-      // document.getElementById("superNode2MinImage").src = minFilePath2;
-
-      console.log("superNode1MinImgFilename: "+ superNode1MinImgFilename+"\n");
-      console.log("superNode2MinImgFilename: "+ superNode2MinImgFilename+"\n");
-      console.log("minFilePath1: "+ minFilePath1+"\n");
-      console.log("minFilePath2: "+ minFilePath2+"\n");
-
-      // document.getElementById("superNode1MinImage").src="Node_Json_Data/PIPictures/Node_1/water_drop.png";
-      superNode1MaxImgFilename = (sliderMaxDate.getMonth()+1) +"_"+ sliderMaxDate.getDate() +"_"+ sliderMaxDate.getFullYear() +"_"+ sliderMaxDate.getHours() +":"+ sliderMaxDate.getMinutes();
-      superNode2MaxImgFilename = (sliderMaxDate.getMonth()+1) +"_"+ sliderMaxDate.getDate() +"_"+ sliderMaxDate.getFullYear() +"_"+ sliderMaxDate.getHours() +":"+ sliderMaxDate.getMinutes();
-      var maxFilePath1 = ("Node_Json_Data/PIPictures/Node_1/" + superNode1MaxImgFilename + ".jpg");
-      var maxFilePath2 = ("Node_Json_Data/PIPictures/Node_6/" + superNode2MaxImgFilename + ".jpg");
-      // document.getElementById("superNode1MaxImage").src = maxFilePath1;
-      // document.getElementById("superNode2MaxImage").src = maxFilePath2;
-
-      console.log("superNode1MaxImgFilename: "+ superNode1MaxImgFilename+"\n");
-      console.log("superNode2MaxImgFilename: "+ superNode2MaxImgFilename+"\n");
-      console.log("maxFilePath1: "+ maxFilePath1+"\n");
-      console.log("maxFilePath2: "+ maxFilePath2+"\n");
-      // *** Create file paths for min and max images from raspberry pi camera End ***
-
-
-      // * Form the time stamps strings for perfect 10 minute increments *
+      // ***** Form the time stamps strings for perfect 10 minute increments *****
       // Create a string for the minimum and maximum timestamps
       sliderTimeStampMin = (sliderMinDate.getMonth()+1) +"/"+ sliderMinDate.getDate() +"/"+  sliderMinDate.getFullYear() +" "+ sliderMinDate.getHours() +":"+ sliderMinDate.getMinutes();
       sliderTimeStampMax = (sliderMaxDate.getMonth()+1) +"/"+ sliderMaxDate.getDate() +"/"+ sliderMaxDate.getFullYear() +" "+ sliderMaxDate.getHours() +":"+ sliderMaxDate.getMinutes();
@@ -881,29 +1107,34 @@ $('#justify-icon').click(function(){
       // This will update the sliderTimeStampMid array with all of the inbetween timestamps
       getTimeStamps(sliderMinDate, sliderMaxDate);
 
-      // Fill Graph array with minimum timestamp
+      // Fill slider array with minimum timestamp
       sliderSelectedTimeStamps.push(sliderTimeStampMin);
 
       for (var counter = 0; counter < sliderTimeStampMid.length; counter++) {
         var tempString = sliderTimeStampMid[counter];
 
-        // Fill Graph array with middle timestamps
+        // Fill slider array with middle timestamps
         sliderSelectedTimeStamps.push(tempString);
       }
 
-      // Fill Graph array with maximum timestamp
+      // Fill slider array with maximum timestamp
       sliderSelectedTimeStamps.push(sliderTimeStampMax);
       /***********   Slider Time Stamp Creation End  **************/
 
-
       /***********   JSON Selected Time Stamp Creation  **************/
       // Array used to store all time stamps desired by the user in the form of actual timestamps in the JSON file
-      selectedJsonTimeStamps = [];
+      selectedJsonTimeStamps1 = [];
+      selectedJsonTimeStamps2 = [];
       startFilling = 0;
-      MasterDataUnsorted = Object.keys(data[chosenNodes[currentNodeIndex]]);
+
+      currentNodeIndex = 0;
+      masterDataUnsorted1 = Object.keys(data[chosenNodes[currentNodeIndex]]);
+      currentNodeIndex = 5;
+      masterDataUnsorted2 = Object.keys(data[chosenNodes[currentNodeIndex]]);
+
 
       // Cycle through each element of the dynamically read in timestamps and being populating a 0 padded sorted version
-      MasterDataUnsorted.forEach(function(element) {
+      masterDataUnsorted1.forEach(function(element) {
         var tempDate = new Date(element);
 
         // *** Very important to add 1 to account for month offset! ***
@@ -913,54 +1144,137 @@ $('#justify-icon').click(function(){
         // Add 0 padding so the timestamps can be sorted properly using the .sort function
         // Make sure you add 1 month since month starts at 1
         tempDateString = ('0' + (tempDate.getMonth())).slice(-2) + '/' + ('0' + tempDate.getDate()).slice(-2) + '/' +  tempDate.getFullYear() +" "+ ('0' + tempDate.getHours()).slice(-2) +":"+ ('0' + tempDate.getMinutes()).slice(-2);
-        MasterDataSorted.push(tempDateString);
+        masterDataSorted1.push(tempDateString);
+
+      }); // End of cycling through each of the timestamps from the JSON file
+
+      // For nodes 6-10
+      masterDataUnsorted2.forEach(function(element) {
+        var tempDate = new Date(element);
+
+        // *** Very important to add 1 to account for month offset! ***
+        tempDate.setMonth(tempDate.getMonth() + 1);
+        var tempDateString;
+
+        // Add 0 padding so the timestamps can be sorted properly using the .sort function
+        // Make sure you add 1 month since month starts at 1
+        tempDateString = ('0' + (tempDate.getMonth())).slice(-2) + '/' + ('0' + tempDate.getDate()).slice(-2) + '/' +  tempDate.getFullYear() +" "+ ('0' + tempDate.getHours()).slice(-2) +":"+ ('0' + tempDate.getMinutes()).slice(-2);
+        masterDataSorted2.push(tempDateString);
 
       }); // End of cycling through each of the timestamps from the JSON file
 
       // Now that we have all of the timestamps, sort them. The 0 padding is necessary for this to work properly
-      MasterDataSorted.sort();
+      masterDataSorted1.sort();
+      masterDataSorted2.sort();
 
-      // Cycle through the sorted master data and begin filling your selectedJsonTimeStamps array with the dynamic timestamps
+      // Cycle through the sorted master data and begin filling your selectedJsonTimeStamps1 array with the dynamic timestamps
       // This loop will break once the correlated maximum value of the slider timeframe is selected.
-      for(var element of MasterDataSorted) {
+      for(var element of masterDataSorted1) {
+
         // By creating a new date using the 0 padded timestamps, tempDate will become unpadded, which is what we want in order to read the json file
         var tempDate = new Date(element);
         var tempDateString = ((tempDate.getMonth()+1) +"/"+ tempDate.getDate() +"/"+  tempDate.getFullYear() +" "+ tempDate.getHours() +":"+ tempDate.getMinutes());
 
         // Find a timestamp that is within 9.99 minutes of the 10 minute increment.
         // We take the actual timestamp received from the JSON file and subtract the exact 10 minute increment and populate
-        // the selectedJsonMinTimeStamp and selectedJsonMaxTimeStamp if the current timestamp is within 0 and 9 minutes difference.
+        // the selectedJsonMinTimeStamp1 and selectedJsonMaxTimeStamp1 if the current timestamp is within 0 and 9 minutes difference.
         if(((tempDate.getTime() - sliderMinDate.getTime()) >= 0) && ((tempDate.getTime() - sliderMinDate.getTime()) < 600000)) {
           startFilling = 1;
-          selectedJsonMinTimeStamp = tempDateString;
+          var tempDate2 = ((tempDate.getMonth()+1) +"_"+ tempDate.getDate() +"_"+  tempDate.getFullYear() +"_"+ tempDate.getHours() +":"+ tempDate.getMinutes());
+          selectedJsonMinTimeStamp1 = tempDate2;
         }
         // Find a timestamp that is within 9.99 minutes of the 10 minute increment.
         else if(((tempDate.getTime() - sliderMaxDate.getTime()) >= 0) && ((tempDate.getTime() - sliderMaxDate.getTime()) < 600000)) {
           startFilling = 0;
 
           // Push the last element into the array before breaking out of this loop
-          selectedJsonTimeStamps.push(tempDateString);
-          selectedJsonMaxTimeStamp = tempDateString;
+          selectedJsonTimeStamps1.push(tempDateString);
+          var tempDate2 = ((tempDate.getMonth()+1) +"_"+ tempDate.getDate() +"_"+  tempDate.getFullYear() +"_"+ tempDate.getHours() +":"+ tempDate.getMinutes());
+          selectedJsonMaxTimeStamp1 = tempDate2;
 
           // There's no sense in continuing searching our sorted master data since the maximum time stamp has been found
           break;
         }
 
-        // If the minimum was found, begin populating selectedJsonTimeStamps with the timestamp strings
+        // If the minimum was found, begin populating selectedJsonTimeStamps1 with the timestamp strings
         if(startFilling == 1) {
-          selectedJsonTimeStamps.push(tempDateString);
+          selectedJsonTimeStamps1.push(tempDateString);
+        }
+      } // End of for loop
+
+      startFilling = 0;
+
+      // For nodes 6-10
+      for(var element of masterDataSorted2) {
+
+        // By creating a new date using the 0 padded timestamps, tempDate will become unpadded, which is what we want in order to read the json file
+        var tempDate = new Date(element);
+        var tempDateString = ((tempDate.getMonth()+1) +"/"+ tempDate.getDate() +"/"+  tempDate.getFullYear() +" "+ tempDate.getHours() +":"+ tempDate.getMinutes());
+
+        // Find a timestamp that is within 9.99 minutes of the 10 minute increment.
+        // We take the actual timestamp received from the JSON file and subtract the exact 10 minute increment and populate
+        // the selectedJsonMinTimeStamp1 and selectedJsonMaxTimeStamp1 if the current timestamp is within 0 and 9 minutes difference.
+        if(((tempDate.getTime() - sliderMinDate.getTime()) >= 0) && ((tempDate.getTime() - sliderMinDate.getTime()) < 600000)) {
+          startFilling = 1;
+          var tempDate2 = ((tempDate.getMonth()+1) +"_"+ tempDate.getDate() +"_"+  tempDate.getFullYear() +"_"+ tempDate.getHours() +":"+ tempDate.getMinutes());
+          selectedJsonMinTimeStamp2 = tempDate2;
+        }
+        // Find a timestamp that is within 9.99 minutes of the 10 minute increment.
+        else if(((tempDate.getTime() - sliderMaxDate.getTime()) >= 0) && ((tempDate.getTime() - sliderMaxDate.getTime()) < 600000)) {
+          startFilling = 0;
+
+          // Push the last element into the array before breaking out of this loop
+          selectedJsonTimeStamps2.push(tempDateString);
+          var tempDate2 = ((tempDate.getMonth()+1) +"_"+ tempDate.getDate() +"_"+  tempDate.getFullYear() +"_"+ tempDate.getHours() +":"+ tempDate.getMinutes());
+          selectedJsonMaxTimeStamp2 = tempDate2;
+
+          // There's no sense in continuing searching our sorted master data since the maximum time stamp has been found
+          break;
         }
 
-        //console.log((tempDate.getMonth()+1) +"/"+ tempDate.getDate() +"/"+  tempDate.getFullYear() +" "+ tempDate.getHours() +":"+ tempDate.getMinutes());
-      };
+        // If the minimum was found, begin populating selectedJsonTimeStamps1 with the timestamp strings
+        if(startFilling == 1) {
+          selectedJsonTimeStamps2.push(tempDateString);
+        }
+      } // End of for loop
+
       /***********   JSON Selected Time Stamp Creation End  **************/
 
 
-      /***********   HEATMAP   **************/
-      //Set the center of the map to be used by initMap()
-      centerMap = {lat: 32.776896, lng: -117.069054};
+      // *** Create file paths for min and max images from raspberry pi camera ***
 
-      for(var i=0; i < 10; i++) {
+      // var minFilePath1 = ("Node_Json_Data/PIPictures/Node_1/" + selectedJsonMinTimeStamp1 + ".jpg");
+      // var minFilePath2 = ("Node_Json_Data/PIPictures/Node_6/" + selectedJsonMinTimeStamp2 + ".jpg");
+      // document.getElementById("superNode1MinImage").src = minFilePath1;
+      // document.getElementById("superNode2MinImage").src = minFilePath2;
+
+      var minFilePath1 = ("http://wetnet.sdsu.edu/Node_Json_Data/PIPictures/Node_1/" + selectedJsonMinTimeStamp1 + ".jpg");
+      var minFilePath2 = ("http://wetnet.sdsu.edu/Node_Json_Data/PIPictures/Node_6/" + selectedJsonMinTimeStamp2 + ".jpg");
+
+      document.getElementById("superNode1MinImage").src = minFilePath1;
+      document.getElementById("superNode2MinImage").src = minFilePath2;
+
+      // var maxFilePath1 = ("Node_Json_Data/PIPictures/Node_1/" + selectedJsonMinTimeStamp2 + ".jpg");
+      // var maxFilePath2 = ("Node_Json_Data/PIPictures/Node_6/" + selectedJsonMaxTimeStamp2 + ".jpg");
+      // document.getElementById("superNode1MaxImage").src = maxFilePath1;
+      // document.getElementById("superNode2MaxImage").src = maxFilePath2;
+
+      var maxFilePath1 = ("http://wetnet.sdsu.edu/Node_Json_Data/PIPictures/Node_1/" + selectedJsonMaxTimeStamp1 + ".jpg");
+      var maxFilePath2 = ("http://wetnet.sdsu.edu/Node_Json_Data/PIPictures/Node_6/" + selectedJsonMaxTimeStamp2 + ".jpg");
+
+      document.getElementById("superNode1MaxImage").src = maxFilePath1;
+      document.getElementById("superNode2MaxImage").src = maxFilePath2;
+
+      // *** Create file paths for min and max images from raspberry pi camera End ***
+
+
+
+      updateWindDirection();
+      updateAQI();
+
+      /***********   HEATMAP   **************/
+
+      for(var i=0; i < 5; i++) {
           var sumHeat = 0;
           var sumHumidity = 0;
           var sumUV = 0;
@@ -968,70 +1282,141 @@ $('#justify-icon').click(function(){
           var sumWindSpeed = 0;
           var sumWindGust = 0;
 
-          for(var j=0; j < selectedJsonTimeStamps.length; j++) {
-            sumHeat += data[chosenNodes[i]][selectedJsonTimeStamps[j]][0]
+          for(var j=0; j < selectedJsonTimeStamps1.length; j++) {
+            sumHeat += data[chosenNodes[i]][selectedJsonTimeStamps1[j]][0]
           }
-          var tempVariable = (sumHeat/selectedJsonTimeStamps.length);
+          var tempVariable = (sumHeat/selectedJsonTimeStamps1.length);
           tempVariable = Math.round(tempVariable);
           averageHeat[i]=tempVariable;
 
-          for(var j=0; j < selectedJsonTimeStamps.length; j++) {
-            sumHumidity += data[chosenNodes[i]][selectedJsonTimeStamps[j]][1]
+          for(var j=0; j < selectedJsonTimeStamps1.length; j++) {
+            sumHumidity += data[chosenNodes[i]][selectedJsonTimeStamps1[j]][1]
           }
-          tempVariable = (sumHumidity/selectedJsonTimeStamps.length);
+          tempVariable = (sumHumidity/selectedJsonTimeStamps1.length);
           averageHumidity[i] = Math.round(tempVariable);
 
-          for(var j=0; j < selectedJsonTimeStamps.length; j++) {
-            sumUV += data[chosenNodes[i]][selectedJsonTimeStamps[j]][2]
+          for(var j=0; j < selectedJsonTimeStamps1.length; j++) {
+            sumUV += data[chosenNodes[i]][selectedJsonTimeStamps1[j]][2]
           }
-          tempVariable = (sumUV/selectedJsonTimeStamps.length);
+          tempVariable = (sumUV/selectedJsonTimeStamps1.length);
           averageUV[i] = Math.round(tempVariable);
 
           if(i == 0 || i == 5){
-            for(var j=0; j < selectedJsonTimeStamps.length; j++) {
-              sumAirPressure += data[chosenNodes[i]][selectedJsonTimeStamps[j]][3]
+            for(var j=0; j < selectedJsonTimeStamps1.length; j++) {
+              sumAirPressure += data[chosenNodes[i]][selectedJsonTimeStamps1[j]][3]
             }
-            tempVariable = (sumAirPressure/selectedJsonTimeStamps.length);
+            tempVariable = (sumAirPressure/selectedJsonTimeStamps1.length);
             averageAirPressure[i]= Math.round(tempVariable);
 
-            for(var j=0; j < selectedJsonTimeStamps.length; j++) {
-              sumWindSpeed += data[chosenNodes[i]][selectedJsonTimeStamps[j]][4]
+            for(var j=0; j < selectedJsonTimeStamps1.length; j++) {
+              sumWindSpeed += data[chosenNodes[i]][selectedJsonTimeStamps1[j]][4]
             }
-            tempVariable = (sumWindSpeed/selectedJsonTimeStamps.length);
+            tempVariable = (sumWindSpeed/selectedJsonTimeStamps1.length);
             averageWindSpeed[i]= Math.round(tempVariable);
 
-            for(var j=0; j < selectedJsonTimeStamps.length; j++) {
-              sumWindGust += data[chosenNodes[i]][selectedJsonTimeStamps[j]][6]
+            for(var j=0; j < selectedJsonTimeStamps1.length; j++) {
+              sumWindGust += data[chosenNodes[i]][selectedJsonTimeStamps1[j]][6]
             }
-            tempVariable = (sumWindGust/selectedJsonTimeStamps.length);
+            tempVariable = (sumWindGust/selectedJsonTimeStamps1.length);
             averageWindGust[i]= Math.round(tempVariable);
           }
       } // End of for loop
 
+      for(var i=5; i < 10; i++) {
+          var sumHeat = 0;
+          var sumHumidity = 0;
+          var sumUV = 0;
+          var sumAirPressure = 0;
+          var sumWindSpeed = 0;
+          var sumWindGust = 0;
 
-      initMap();
-      /***********   HEATMAP END   **************/
+          for(var j=0; j < selectedJsonTimeStamps2.length; j++) {
+            sumHeat += data[chosenNodes[i]][selectedJsonTimeStamps2[j]][0]
+          }
+          var tempVariable = (sumHeat/selectedJsonTimeStamps2.length);
+          tempVariable = Math.round(tempVariable);
+          averageHeat[i]=tempVariable;
+
+          for(var j=0; j < selectedJsonTimeStamps2.length; j++) {
+            sumHumidity += data[chosenNodes[i]][selectedJsonTimeStamps2[j]][1]
+          }
+          tempVariable = (sumHumidity/selectedJsonTimeStamps2.length);
+          averageHumidity[i] = Math.round(tempVariable);
+
+          for(var j=0; j < selectedJsonTimeStamps2.length; j++) {
+            sumUV += data[chosenNodes[i]][selectedJsonTimeStamps2[j]][2]
+          }
+          tempVariable = (sumUV/selectedJsonTimeStamps2.length);
+          averageUV[i] = Math.round(tempVariable);
+
+          if(i == 0 || i == 5){
+            for(var j=0; j < selectedJsonTimeStamps2.length; j++) {
+              sumAirPressure += data[chosenNodes[i]][selectedJsonTimeStamps2[j]][3]
+            }
+            tempVariable = (sumAirPressure/selectedJsonTimeStamps2.length);
+            averageAirPressure[i]= Math.round(tempVariable);
+
+            for(var j=0; j < selectedJsonTimeStamps2.length; j++) {
+              sumWindSpeed += data[chosenNodes[i]][selectedJsonTimeStamps2[j]][4]
+            }
+            tempVariable = (sumWindSpeed/selectedJsonTimeStamps2.length);
+            averageWindSpeed[i]= Math.round(tempVariable);
+
+            for(var j=0; j < selectedJsonTimeStamps2.length; j++) {
+              sumWindGust += data[chosenNodes[i]][selectedJsonTimeStamps2[j]][6]
+            }
+            tempVariable = (sumWindGust/selectedJsonTimeStamps2.length);
+            averageWindGust[i]= Math.round(tempVariable);
+          }
+      } // End of for loop
+
+        //Set the center of the map to be used by initMap()
+        centerMap = {lat: 32.778030, lng: -117.069486};
+        initMap();
+        /***********   HEATMAP END   **************/
 
 
-      /***********   GRAPH   **************/
-      // Initialize graph with node 1 selected on start up
-      ComparisonArray[0] = "node 1";
-      ComparisonCount = 1;
-      finalstring = "Nodes compared: node 1";
 
-      // Initialize temperature datatype and make the temperature radio button selected
-      datatype = 0;
-      ticks = 5;
-      updateGraph();
-      /***********   GRAPH END   **************/
+        /***********   GRAPH   **************/
+        // Initialize graph with node 1 selected on start up
+        ComparisonArray[0] = "node 6";
+        ComparisonCount = 1;
+        finalstring = "Nodes compared: node 6";
 
-      // Update collapsed view averages
-      CollapsedViewAverages();
+        // Initialize temperature datatype and make the temperature radio button selected
+        datatype = 0;
+        ticks = 5;
+        updateGraph();
+        /***********   GRAPH END   **************/
+
+        // For nodes 1-5
+        var tempLastDate = new Date(masterDataSorted1[masterDataSorted1.length-1]);
+        var tempLastDateString = ((tempLastDate.getMonth()+1) +"/"+ tempLastDate.getDate() +"/"+  tempLastDate.getFullYear() +" "+ tempLastDate.getHours() +":"+ tempLastDate.getMinutes());
+        mostRecentTimeStampSuperNode1 = tempLastDateString;
+
+        // For nodes 6-10
+        var tempLastDate = new Date(masterDataSorted2[masterDataSorted2.length-1]);
+        var tempLastDateString = ((tempLastDate.getMonth()+1) +"/"+ tempLastDate.getDate() +"/"+  tempLastDate.getFullYear() +" "+ tempLastDate.getHours() +":"+ tempLastDate.getMinutes());
+        mostRecentTimeStampSuperNode2 = tempLastDateString;
+
+        // Update collapsed view averages
+        CollapsedViewAverages();
+
     }); // End of getJSON
   } // End of if. This is the event handler for the first time expand button is pressed
 
   // If this was not the very first time the expand button was pressed
   else {
+
+    var tempLastDate = new Date(masterDataSorted1[masterDataSorted1.length-1]);
+    var tempLastDateString = ((tempLastDate.getMonth()+1) +"/"+ tempLastDate.getDate() +"/"+  tempLastDate.getFullYear() +" "+ tempLastDate.getHours() +":"+ tempLastDate.getMinutes());
+
+    mostRecentTimeStampSuperNode1 = tempLastDateString;
+
+    var tempLastDate = new Date(masterDataSorted2[masterDataSorted2.length-1]);
+    var tempLastDateString = ((tempLastDate.getMonth()+1) +"/"+ tempLastDate.getDate() +"/"+  tempLastDate.getFullYear() +" "+ tempLastDate.getHours() +":"+ tempLastDate.getMinutes());
+    mostRecentTimeStampSuperNode2 = tempLastDateString;
+
     // Every time the user presses the expand button, update collapsed view averages
     // Update collapsed view averages
     CollapsedViewAverages();
@@ -1251,12 +1636,11 @@ $('#aqi').on("change", function(){
 */
 
 function NodeAlteration() {
-    // $.getJSON('Node_Json_Data/TestMasterData.json', function (data)
+    // $.getJSON('Node_Json_Data/MasterData.json', function (data)
     // {
     //   var tmpdata = data;
     // });
     var jsonarray = ["node 1","node 2","node 3","node 4","node 5","node 6","node 7","node 8","node 9","node 10"];
-    nodeIndex = 0;
     ComparisonCount = 0;
     finalstring ='';
 
@@ -1282,12 +1666,10 @@ function NodeAlteration() {
 
       // Show Raspberry Pi Images if node 1 or 6 is selected
       if(nodeIndex == 0) {
-        console.log("Node 1 chosen\n");
         $("#superNode1Images").show();
         $("#superNode2Images").hide();
       }
       else if(nodeIndex == 5) {
-        console.log("Node 6 chosen\n");
         $("#superNode2Images").show();
         $("#superNode1Images").hide();
       }
@@ -1296,7 +1678,36 @@ function NodeAlteration() {
         $("#superNode1Images").hide();
       }
 
-      document.getElementById('Nodename').innerHTML = jsonarray[nodeIndex];
+      if(nodeIndex == 0) {
+        document.getElementById('Nodename').innerHTML = "Node 1";
+      }
+      else if(nodeIndex == 1) {
+        document.getElementById('Nodename').innerHTML = "Node 2";
+      }
+      else if(nodeIndex == 2) {
+        document.getElementById('Nodename').innerHTML = "Node 3";
+      }
+      else if(nodeIndex == 3) {
+        document.getElementById('Nodename').innerHTML = "Node 4";
+      }
+      else if(nodeIndex == 4) {
+        document.getElementById('Nodename').innerHTML = "Node 5";
+      }
+      else if(nodeIndex == 5) {
+        document.getElementById('Nodename').innerHTML = "Node 6";
+      }
+      else if(nodeIndex == 6) {
+        document.getElementById('Nodename').innerHTML = "Node 7";
+      }
+      else if(nodeIndex == 7) {
+        document.getElementById('Nodename').innerHTML = "Node 8";
+      }
+      else if(nodeIndex == 8) {
+        document.getElementById('Nodename').innerHTML = "Node 9";
+      }
+      else if(nodeIndex == 9) {
+        document.getElementById('Nodename').innerHTML = "Node 10";
+      }
     };
     document.getElementById('right').onclick = function() {
 
@@ -1317,12 +1728,10 @@ function NodeAlteration() {
 
       // Show Raspberry Pi Images if node 1 or 6 is selected
       if(nodeIndex == 0) {
-        console.log("Node 1 chosen\n");
         $("#superNode1Images").show();
         $("#superNode2Images").hide();
       }
       else if(nodeIndex == 5) {
-        console.log("Node 6 chosen\n");
         $("#superNode2Images").show();
         $("#superNode1Images").hide();
       }
@@ -1331,7 +1740,36 @@ function NodeAlteration() {
         $("#superNode1Images").hide();
       }
 
-      document.getElementById('Nodename').innerHTML = jsonarray[nodeIndex];
+      if(nodeIndex == 0) {
+        document.getElementById('Nodename').innerHTML = "Node 1";
+      }
+      else if(nodeIndex == 1) {
+        document.getElementById('Nodename').innerHTML = "Node 2";
+      }
+      else if(nodeIndex == 2) {
+        document.getElementById('Nodename').innerHTML = "Node 3";
+      }
+      else if(nodeIndex == 3) {
+        document.getElementById('Nodename').innerHTML = "Node 4";
+      }
+      else if(nodeIndex == 4) {
+        document.getElementById('Nodename').innerHTML = "Node 5";
+      }
+      else if(nodeIndex == 5) {
+        document.getElementById('Nodename').innerHTML = "Node 6";
+      }
+      else if(nodeIndex == 6) {
+        document.getElementById('Nodename').innerHTML = "Node 7";
+      }
+      else if(nodeIndex == 7) {
+        document.getElementById('Nodename').innerHTML = "Node 8";
+      }
+      else if(nodeIndex == 8) {
+        document.getElementById('Nodename').innerHTML = "Node 9";
+      }
+      else if(nodeIndex == 9) {
+        document.getElementById('Nodename').innerHTML = "Node 10";
+      }
     };
 
 
@@ -1380,7 +1818,37 @@ function NodeAlteration() {
         finalstring = '';
         updateGraph();
     };
-    document.getElementById('Nodename').innerHTML = jsonarray[nodeIndex];
+
+    if(nodeIndex == 0) {
+      document.getElementById('Nodename').innerHTML = "Node 1";
+    }
+    else if(nodeIndex == 1) {
+      document.getElementById('Nodename').innerHTML = "Node 2";
+    }
+    else if(nodeIndex == 2) {
+      document.getElementById('Nodename').innerHTML = "Node 3";
+    }
+    else if(nodeIndex == 3) {
+      document.getElementById('Nodename').innerHTML = "Node 4";
+    }
+    else if(nodeIndex == 4) {
+      document.getElementById('Nodename').innerHTML = "Node 5";
+    }
+    else if(nodeIndex == 5) {
+      document.getElementById('Nodename').innerHTML = "Node 6";
+    }
+    else if(nodeIndex == 6) {
+      document.getElementById('Nodename').innerHTML = "Node 7";
+    }
+    else if(nodeIndex == 7) {
+      document.getElementById('Nodename').innerHTML = "Node 8";
+    }
+    else if(nodeIndex == 8) {
+      document.getElementById('Nodename').innerHTML = "Node 9";
+    }
+    else if(nodeIndex == 9) {
+      document.getElementById('Nodename').innerHTML = "Node 10";
+    }
 
     // console.log(Object.keys(tmpdata));
 }
@@ -1437,7 +1905,7 @@ function CollapsedViewAverages() {
     var Humidity = document.getElementById("HumidityPics");
     var UVIndex = document.getElementById("UVIndexPics");
 
-    $.getJSON('Node_Json_Data/TestMasterData.json', function (data) {
+    $.getJSON('Node_Json_Data/MasterData.json', function (data) {
 
       document.getElementById('Node1TempData').innerHTML = Math.round(data['node 1'][mostRecentTimeStampSuperNode1][0]);
       document.getElementById('Node2TempData').innerHTML = Math.round(data['node 2'][mostRecentTimeStampSuperNode1][0]);
@@ -1472,26 +1940,47 @@ function CollapsedViewAverages() {
       document.getElementById('Node9UVData').innerHTML = Math.round(data['node 9'][mostRecentTimeStampSuperNode2][2]);
       document.getElementById('Node10UVData').innerHTML = Math.round(data['node 10'][mostRecentTimeStampSuperNode2][2]);
 
+      var includedNodes1 = 0;
+      var includedNodes2 = 0;
+      var includedNodes3 = 0;
 
       for(i = 0; i < 5; i++)
       {
-        //console.log("data[chosenNodes[i]][mostRecentTimeStampSuperNode1][0]: " + data[chosenNodes[i]][mostRecentTimeStampSuperNode1][0] + "\n");
-        avgtmp = avgtmp + data[chosenNodes[i]][mostRecentTimeStampSuperNode1][0];
+        if(data[chosenNodes[i]][mostRecentTimeStampSuperNode1][0] >= 25) {
+          avgtmp = avgtmp + data[chosenNodes[i]][mostRecentTimeStampSuperNode1][0];
+          includedNodes1++;
+        }
 
-        avghumid = avghumid +  data[chosenNodes[i]][mostRecentTimeStampSuperNode1][1];
+        if(data[chosenNodes[i]][mostRecentTimeStampSuperNode1][1] >= 25) {
+          avghumid = avghumid + data[chosenNodes[i]][mostRecentTimeStampSuperNode1][1];
+          includedNodes2++;
+        }
+
         avgUV = avgUV + data[chosenNodes[i]][mostRecentTimeStampSuperNode1][2];
+        includedNodes3++;
+
       }
       for(i = 5; i < 10; i++)
       {
-        avgtmp = avgtmp + data[chosenNodes[i]][mostRecentTimeStampSuperNode2][0];
-        avghumid = avghumid +  data[chosenNodes[i]][mostRecentTimeStampSuperNode2][1];
+
+        if(data[chosenNodes[i]][mostRecentTimeStampSuperNode2][0] >= 25) {
+          avgtmp = avgtmp + data[chosenNodes[i]][mostRecentTimeStampSuperNode2][0];
+          includedNodes1++;
+        }
+
+        if(data[chosenNodes[i]][mostRecentTimeStampSuperNode2][1] >= 25) {
+          avghumid = avghumid + data[chosenNodes[i]][mostRecentTimeStampSuperNode2][1];
+          includedNodes2++;
+        }
+
         avgUV = avgUV + data[chosenNodes[i]][mostRecentTimeStampSuperNode2][2];
+        includedNodes3++;
       }
 
-      avgtmp = avgtmp/10;
-      avghumid = avghumid/10;
-
+      avgtmp = avgtmp/includedNodes1;
+      avghumid = avghumid/includedNodes2;
       avgUV = avgUV/10;
+
       //console.log("avgUV after: " + avgUV + "\n");
       document.getElementById('AVGTempData').innerHTML = Math.round(avgtmp);
       document.getElementById('AVGHumidData').innerHTML = Math.round(avghumid);
@@ -2069,7 +2558,7 @@ function tempPoints() {
 function updateGraph() {
 
   // Reading the .JSON file from the server
-  $.getJSON('Node_Json_Data/TestMasterData.json', function (data) {
+  $.getJSON('Node_Json_Data/MasterData.json', function (data) {
     // Print temp reading for lower bound timestamp
     //console.log("Node " + (currentNodeIndex+1) + "[0]["+ sliderTimeStampMin +"][0] (Temperature): " + data[chosenNodes[currentNodeIndex]][sliderTimeStampMin][0]);
 
@@ -2105,19 +2594,14 @@ function updateGraph() {
     // Fill Graph array with maximum timestamp
     sliderSelectedTimeStamps.push(sliderTimeStampMax);
 
-    for(var counter2 = 0; counter2 < selectedJsonTimeStamps.length; counter2++) {
+    for(var counter2 = 0; counter2 < selectedJsonTimeStamps1.length; counter2++) {
 
-      var datePoint = new Date(selectedJsonTimeStamps[counter2]).getTime();
-      var dataPoint1 = data[chosenNodes[0]][selectedJsonTimeStamps[counter2]][datatype];
-      var dataPoint2 = data[chosenNodes[1]][selectedJsonTimeStamps[counter2]][datatype];
-      var dataPoint3 = data[chosenNodes[2]][selectedJsonTimeStamps[counter2]][datatype];
-      var dataPoint4 = data[chosenNodes[3]][selectedJsonTimeStamps[counter2]][datatype];
-      var dataPoint5 = data[chosenNodes[4]][selectedJsonTimeStamps[counter2]][datatype];
-      var dataPoint6 = data[chosenNodes[5]][selectedJsonTimeStamps[counter2]][datatype];
-      var dataPoint7 = data[chosenNodes[6]][selectedJsonTimeStamps[counter2]][datatype];
-      var dataPoint8 = data[chosenNodes[7]][selectedJsonTimeStamps[counter2]][datatype];
-      var dataPoint9 = data[chosenNodes[8]][selectedJsonTimeStamps[counter2]][datatype];
-      var dataPoint10 = data[chosenNodes[9]][selectedJsonTimeStamps[counter2]][datatype];
+      var datePoint = new Date(selectedJsonTimeStamps1[counter2]).getTime();
+      var dataPoint1 = data[chosenNodes[0]][selectedJsonTimeStamps1[counter2]][datatype];
+      var dataPoint2 = data[chosenNodes[1]][selectedJsonTimeStamps1[counter2]][datatype];
+      var dataPoint3 = data[chosenNodes[2]][selectedJsonTimeStamps1[counter2]][datatype];
+      var dataPoint4 = data[chosenNodes[3]][selectedJsonTimeStamps1[counter2]][datatype];
+      var dataPoint5 = data[chosenNodes[4]][selectedJsonTimeStamps1[counter2]][datatype];
 
       // plotData.push(date in milliseconds, Temperature reading)
       plotData1.push(new Array(datePoint, dataPoint1));
@@ -2125,6 +2609,18 @@ function updateGraph() {
       plotData3.push(new Array(datePoint, dataPoint3));
       plotData4.push(new Array(datePoint, dataPoint4));
       plotData5.push(new Array(datePoint, dataPoint5));
+    }
+
+    for(var counter2 = 0; counter2 < selectedJsonTimeStamps2.length; counter2++) {
+
+      var datePoint = new Date(selectedJsonTimeStamps2[counter2]).getTime();
+      var dataPoint6 = data[chosenNodes[5]][selectedJsonTimeStamps2[counter2]][datatype];
+      var dataPoint7 = data[chosenNodes[6]][selectedJsonTimeStamps2[counter2]][datatype];
+      var dataPoint8 = data[chosenNodes[7]][selectedJsonTimeStamps2[counter2]][datatype];
+      var dataPoint9 = data[chosenNodes[8]][selectedJsonTimeStamps2[counter2]][datatype];
+      var dataPoint10 = data[chosenNodes[9]][selectedJsonTimeStamps2[counter2]][datatype];
+
+      // plotData.push(date in milliseconds, Temperature reading)
       plotData6.push(new Array(datePoint, dataPoint6));
       plotData7.push(new Array(datePoint, dataPoint7));
       plotData8.push(new Array(datePoint, dataPoint8));
@@ -2147,61 +2643,61 @@ function updateGraph() {
     dataset = [];
 
     var data1 =
-    { label: "node 1",
+    { label: "Node 1",
       data: plotData1,
       color: "#000000"
     };
 
     var data2 =
-    { label: "node 2",
+    { label: "Node 2",
       data: plotData2,
       color: "#FF0000"
     };
 
     var data3 =
-    { label: "node 3",
+    { label: "Node 3",
       data: plotData3,
       color: "#00BB00"
     };
 
     var data4 =
-    { label: "node 4",
+    { label: "Node 4",
       data: plotData4,
       color: "#0000FF"
     };
 
     var data5 =
-    { label: "node 5",
+    { label: "Node 5",
       data: plotData5,
       color: "#FFBBFF"
     };
 
     var data6 =
-    { label: "node 6",
+    { label: "Node 6",
       data: plotData6,
       color: "#00FFFF"
     };
 
     var data7 =
-    { label: "node 7",
+    { label: "Node 7",
       data: plotData7,
       color: "#FFFF00"
     };
 
     var data8 =
-    { label: "node 8",
+    { label: "Node 8",
       data: plotData8,
       color: "#B0B0B0"
     };
 
     var data9 =
-    { label: "node 9",
+    { label: "Node 9",
       data: plotData9,
       color: "#4B0066"
     };
 
     var data10 =
-    { label: "node 10",
+    { label: "Node 10",
       data: plotData10,
       color: "#FF8000"
     };
@@ -2285,7 +2781,7 @@ function updateGraph() {
     ymax = Math.max.apply(null,maxset);
 
     // Setting options variable for plotting graph
-    if(selectedJsonTimeStamps.length < ((8*6)+1)) {
+    if(selectedJsonTimeStamps1.length < ((8*6)+1)) {
       var options = {
           series: {
             lines: { show: true },
@@ -2343,7 +2839,7 @@ function updateGraph() {
     } // End of else
 
     $.plot($("#dataGraph"), dataset, options);
-    /***********   END OF GRAPH   **************/
+    /***********   END of GRAPH   **************/
 
   }); // End of getJSON
 }
@@ -2396,99 +2892,114 @@ function updateWindDirection() {
   dispDir6 = "";
 
   // Reading the .JSON file from the server
-  $.getJSON('Node_Json_Data/TestMasterData.json', function (data) {
+  $.getJSON('Node_Json_Data/MasterData.json', function (data) {
 
     //Scouring for data
-    for(var a = 0; a < selectedJsonTimeStamps.length; a++)
+    for(var a = 0; a < selectedJsonTimeStamps1.length; a++)
     {
       //North
-      if((data["node 1"][selectedJsonTimeStamps[a]][datatype]) == "N")
+      if((data["node 1"][selectedJsonTimeStamps1[a]][5]) == "N")
       {
         ctrN1++;
       }
 
-      if((data["node 6"][selectedJsonTimeStamps[a]][datatype]) == "N")
+      //Northeast
+      if((data["node 1"][selectedJsonTimeStamps1[a]][5]) == "NE")
+      {
+        ctrNE1++;
+      }
+
+      //East
+      if((data["node 1"][selectedJsonTimeStamps1[a]][5]) == "E")
+      {
+        ctrE1++;
+      }
+
+      //Southeast
+      if((data["node 1"][selectedJsonTimeStamps1[a]][5]) == "SE")
+      {
+        ctrSE1++;
+      }
+
+      //South
+      if((data["node 1"][selectedJsonTimeStamps1[a]][5]) == "S")
+      {
+        ctrS1++;
+      }
+
+      //Southwest
+      if((data["node 1"][selectedJsonTimeStamps1[a]][5]) == "SW")
+      {
+        ctrSW1++;
+      }
+
+      //West
+      if((data["node 1"][selectedJsonTimeStamps1[a]][5]) == "W")
+      {
+        ctrW1++;
+      }
+
+      //Northwest
+      if((data["node 1"][selectedJsonTimeStamps1[a]][5]) == "NW")
+      {
+        ctrNW1++;
+      }
+    }
+
+
+    //Scouring for data
+    for(var a = 0; a < selectedJsonTimeStamps2.length; a++)
+    {
+      //North
+      if((data["node 6"][selectedJsonTimeStamps2[a]][5]) == "N")
       {
         ctrN6++;
       }
 
       //Northeast
-      if((data["node 1"][selectedJsonTimeStamps[a]][datatype]) == "NE")
-      {
-        ctrNE1++;
-      }
-
-      if((data["node 6"][selectedJsonTimeStamps[a]][datatype]) == "NE")
+      if((data["node 6"][selectedJsonTimeStamps2[a]][5]) == "NE")
       {
         ctrNE6++;
       }
 
       //East
-      if((data["node 1"][selectedJsonTimeStamps[a]][datatype]) == "E")
-      {
-        ctrE1++;
-      }
-
-      if((data["node 6"][selectedJsonTimeStamps[a]][datatype]) == "E")
+      if((data["node 6"][selectedJsonTimeStamps2[a]][5]) == "E")
       {
         ctrE6++;
       }
 
       //Southeast
-      if((data["node 1"][selectedJsonTimeStamps[a]][datatype]) == "SE")
-      {
-        ctrSE1++;
-      }
-
-      if((data["node 6"][selectedJsonTimeStamps[a]][datatype]) == "SE")
+      if((data["node 6"][selectedJsonTimeStamps2[a]][5]) == "SE")
       {
         ctrSE6++;
       }
 
       //South
-      if((data["node 1"][selectedJsonTimeStamps[a]][datatype]) == "S")
-      {
-        ctrS1++;
-      }
-
-      if((data["node 6"][selectedJsonTimeStamps[a]][datatype]) == "S")
+      if((data["node 6"][selectedJsonTimeStamps2[a]][5]) == "S")
       {
         ctrS6++;
       }
 
       //Southwest
-      if((data["node 1"][selectedJsonTimeStamps[a]][datatype]) == "SW")
-      {
-        ctrSW1++;
-      }
-
-      if((data["node 6"][selectedJsonTimeStamps[a]][datatype]) == "SW")
+      if((data["node 6"][selectedJsonTimeStamps2[a]][5]) == "SW")
       {
         ctrSW6++;
       }
 
       //West
-      if((data["node 1"][selectedJsonTimeStamps[a]][datatype]) == "W")
-      {
-        ctrW1++;
-      }
-
-      if((data["node 6"][selectedJsonTimeStamps[a]][datatype]) == "W")
+      if((data["node 6"][selectedJsonTimeStamps2[a]][5]) == "W")
       {
         ctrW6++;
       }
 
       //Northwest
-      if((data["node 1"][selectedJsonTimeStamps[a]][datatype]) == "NW")
-      {
-        ctrNW1++;
-      }
-
-      if((data["node 6"][selectedJsonTimeStamps[a]][datatype]) == "NW")
+      if((data["node 6"][selectedJsonTimeStamps2[a]][5]) == "NW")
       {
         ctrNW6++;
       }
     }
+
+
 
     //Pushing scoured data into arrays that hold
     //the count for each reading
@@ -2672,37 +3183,47 @@ function updateAQI() {
   dispAQI6 = "";
 
   // Reading the .JSON file from the server
-  $.getJSON('Node_Json_Data/TestMasterData.json', function (data) {
+  $.getJSON('Node_Json_Data/MasterData.json', function (data) {
 
     //Scouring for data
-    for(var a = 0; a < selectedJsonTimeStamps.length; a++)
+    for(var a = 0; a < selectedJsonTimeStamps1.length; a++)
     {
       //Good
-      if((data["node 1"][selectedJsonTimeStamps[a]][7]) == "Good Air")
+      if((data["node 1"][selectedJsonTimeStamps1[a]][7]) == "Good Air")
       {
         ctrGood1++;
       }
-      if((data["node 6"][selectedJsonTimeStamps[a]][7]) == "Good Air")
+
+      //Moderate
+      if((data["node 1"][selectedJsonTimeStamps1[a]][7]) == "Moderate Air")
+      {
+        ctrMod1++;
+      }
+
+      //USG
+      if((data["node 1"][selectedJsonTimeStamps1[a]][7]) == "(USG) Unhealthy for Sensetive Groups")
+      {
+        ctrUsg1++;
+      }
+    }
+
+    //Scouring for data
+    for(var a = 0; a < selectedJsonTimeStamps2.length; a++)
+    {
+      //Good
+      if((data["node 6"][selectedJsonTimeStamps2[a]][7]) == "Good Air")
       {
         ctrGood6++;
       }
 
       //Moderate
-      if((data["node 1"][selectedJsonTimeStamps[a]][7]) == "Moderate Air")
-      {
-        ctrMod1++;
-      }
-      if((data["node 6"][selectedJsonTimeStamps[a]][7]) == "Moderate Air")
+      if((data["node 6"][selectedJsonTimeStamps2[a]][7]) == "Moderate Air")
       {
         ctrMod6++;
       }
 
       //USG
-      if((data["node 1"][selectedJsonTimeStamps[a]][7]) == "(USG) Unhealthy for Sensetive Groups")
-      {
-        ctrUsg1++;
-      }
-      if((data["node 6"][selectedJsonTimeStamps[a]][7]) == "(USG) Unhealthy for Sensetive Groups")
+      if((data["node 6"][selectedJsonTimeStamps2[a]][7]) == "(USG) Unhealthy for Sensetive Groups")
       {
         ctrUsg6++;
       }
@@ -2748,7 +3269,7 @@ function updateAQI() {
       }
       if(maxAQI1 == 1)
       {
-        dispAQI1 = "../img/data-grpahics/gradient_moderate.png";
+        dispAQI1 = "img/data-graphics/gradient_moderate.png";
         aqiLevel[0] = "Moderate";
       }
       if(maxAQI1 == 2)
@@ -2772,7 +3293,7 @@ function updateAQI() {
       }
       if(maxAQI6 == 1)
       {
-        dispAQI6 = "../img/data-grpahics/gradient_moderate.png";
+        dispAQI6 = "img/data-graphics/gradient_moderate.png";
         aqiLevel[1] = "Moderate";
       }
       if(maxAQI6 == 2)
