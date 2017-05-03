@@ -198,8 +198,8 @@ var sliderTimeStampMid = [];
 var sliderTimeStampMax;
 
 // String variables containing the min and max time stamps
-var todayBoundsMin = new Date(2017, 3, 30);
-var todayBoundsMax = new Date(2017, 4, 1);
+var todayBoundsMin = new Date(2017, 4, 2);
+var todayBoundsMax = new Date(2017, 4, 2, 2, 20);
 var initTimeMin = new Date(2017, 3, 30);
 var initTimeMax = new Date(2017, 4, 1);
 
@@ -536,9 +536,9 @@ $(document).ready(function() {
 //================================================================================
 $("#btn-today").click(function() {
 
-  var todayBoundsMin = new Date(2017, 3, 30);
+  var todayBoundsMin = new Date(2017, 4, 2);
   var todayBoundsMax = new Date(mostRecentTimeStampSuperNode1);
-  var initTimeMin = new Date(2017, 3, 30);
+  var initTimeMin = new Date(2017, 4, 2);
   var initTimeMax = new Date(mostRecentTimeStampSuperNode1);
 
   $("#dateSlider").dateRangeSlider( {
@@ -1068,9 +1068,9 @@ $('#justify-icon').click(function(){
 
     NodeAlteration();
 
-    todayBoundsMin = new Date(2017, 3, 30);
+    todayBoundsMin = new Date(2017, 4, 2);
     todayBoundsMax = new Date(mostRecentTimeStampSuperNode1);
-    initTimeMin = new Date(2017, 3, 30);
+    initTimeMin = new Date(2017, 4, 2);
     initTimeMax = new Date(mostRecentTimeStampSuperNode1);
 
     //================================================================================
