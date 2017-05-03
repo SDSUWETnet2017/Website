@@ -2194,7 +2194,7 @@ function initMap() {
         map: map
     });
     var content2 = '<div id="content">'+
-        '<h2>Sub Node 1</h2>'+
+        '<h2>Sub Node 2</h2>'+
         '<div><b>Temperature: </b>'+ averageHeat[1] +'F<br>'+
         '<b>Humidity: </b>'+ averageHumidity[1] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[1] +'<br>'+
@@ -2235,7 +2235,7 @@ function initMap() {
         map: map
     });
     var content3 = '<div id="content">'+
-        '<h2>Sub Node 2</h2>'+
+        '<h2>Sub Node 3</h2>'+
         '<div><b>Temperature: </b>'+ averageHeat[2] +'F<br>'+
         '<b>Humidity: </b>'+ averageHumidity[2] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[2] +'<br>'+
@@ -2276,7 +2276,7 @@ function initMap() {
         map: map
     });
     var content4 = '<div id="content">'+
-        '<h2>Sub Node 3</h2>'+
+        '<h2>Sub Node 4</h2>'+
         '<div><b>Temperature: </b>'+ averageHeat[3] +'F<br>'+
         '<b>Humidity: </b>'+ averageHumidity[3] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[3] +'<br>'+
@@ -2317,7 +2317,7 @@ function initMap() {
         map: map
     });
     var content5 = '<div id="content">'+
-        '<h2>Sub Node 4</h2>'+
+        '<h2>Sub Node 5</h2>'+
         '<div><b>Temperature: </b>'+ averageHeat[4] +'F<br>'+
         '<b>Humidity: </b>'+ averageHumidity[4] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[4] +'<br>'+
@@ -2358,7 +2358,7 @@ function initMap() {
         map: map
     });
     var content6 = '<div id="content">'+
-        '<h2>Super Node 2</h2>'+
+        '<h2>Super Node 6</h2>'+
         '<div><b>Temperature: </b>'+ averageHeat[5] +'F<br>'+
         '<b>Humidity: </b>'+ averageHumidity[5] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[5] +'<br>'+
@@ -2404,7 +2404,7 @@ function initMap() {
         map: map
     });
     var content7 = '<div id="content">'+
-        '<h2>Sub Node 5</h2>'+
+        '<h2>Sub Node 7</h2>'+
         '<div><b>Temperature: </b>'+ averageHeat[6] +'F<br>'+
         '<b>Humidity: </b>'+ averageHumidity[6] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[6] +'<br>'+
@@ -2445,7 +2445,7 @@ function initMap() {
         map: map
     });
     var content8 = '<div id="content">'+
-        '<h2>Sub Node 6</h2>'+
+        '<h2>Sub Node 8</h2>'+
         '<div><b>Temperature: </b>'+ averageHeat[7] +'F<br>'+
         '<b>Humidity: </b>'+ averageHumidity[7] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[7] +'<br>'+
@@ -2486,7 +2486,7 @@ function initMap() {
         map: map
     });
     var content9 = '<div id="content">'+
-        '<h2>Sub Node 7</h2>'+
+        '<h2>Sub Node 9</h2>'+
         '<div><b>Temperature: </b>'+ averageHeat[8] +'F<br>'+
         '<b>Humidity: </b>'+ averageHumidity[8] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[8] +'<br>'+
@@ -2527,7 +2527,7 @@ function initMap() {
         map: map
     });
     var content10 = '<div id="content">'+
-        '<h2>Sub Node 8</h2>'+
+        '<h2>Sub Node 10</h2>'+
         '<div><b>Temperature: </b>'+ averageHeat[9] +'F<br>'+
         '<b>Humidity: </b>'+ averageHumidity[9] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[9] +'<br>'+
