@@ -198,10 +198,10 @@ var sliderTimeStampMid = [];
 var sliderTimeStampMax;
 
 // String variables containing the min and max time stamps
-var todayBoundsMin = new Date(2017, 3, 26);
-var todayBoundsMax = new Date(2017, 3, 27);
-var initTimeMin = new Date(2017, 3, 26);
-var initTimeMax = new Date(2017, 3, 27);
+var todayBoundsMin = new Date(2017, 3, 30);
+var todayBoundsMax = new Date(2017, 4, 1);
+var initTimeMin = new Date(2017, 3, 30);
+var initTimeMax = new Date(2017, 4, 1);
 
 //---------------------------------------------------------------------------------------
 //endregion: Initialize Global Variables
@@ -223,6 +223,38 @@ $(document).ready(function() {
   updateWindDirection();
   updateAQI();
 
+
+    // This is necessary on load in order to populate the heat map when the website is first loaded
+  /***********   Slider Time Stamp Creation   **************/
+  // Array used to store all time stamps desired by the user in the form of perfect 10 minute increments
+  sliderSelectedTimeStamps = [];
+
+  // Initialize the slider's min and max to the initTime variables. These will be used by the heatmap
+  sliderMinDate = new Date(initTimeMin);
+  sliderMaxDate = new Date(initTimeMax);
+
+  // ***** Form the time stamps strings for perfect 10 minute increments *****
+  // Create a string for the minimum and maximum timestamps
+  sliderTimeStampMin = (sliderMinDate.getMonth()+1) +"/"+ sliderMinDate.getDate() +"/"+  sliderMinDate.getFullYear() +" "+ sliderMinDate.getHours() +":"+ sliderMinDate.getMinutes();
+  sliderTimeStampMax = (sliderMaxDate.getMonth()+1) +"/"+ sliderMaxDate.getDate() +"/"+ sliderMaxDate.getFullYear() +" "+ sliderMaxDate.getHours() +":"+ sliderMaxDate.getMinutes();
+
+  // This will update the sliderTimeStampMid array with all of the inbetween timestamps
+  getTimeStamps(sliderMinDate, sliderMaxDate);
+
+  // Fill slider array with minimum timestamp
+  sliderSelectedTimeStamps.push(sliderTimeStampMin);
+
+  for (var counter = 0; counter < sliderTimeStampMid.length; counter++) {
+    var tempString = sliderTimeStampMid[counter];
+
+    // Fill slider array with middle timestamps
+    sliderSelectedTimeStamps.push(tempString);
+  }
+
+  // Fill slider array with maximum timestamp
+  sliderSelectedTimeStamps.push(sliderTimeStampMax);
+  /***********   Slider Time Stamp Creation End  **************/
+
   // Reading the .JSON file from the server
   $.getJSON('Node_Json_Data/MasterData.json', function (data) {
 
@@ -234,36 +266,7 @@ $(document).ready(function() {
     masterDataUnsorted2 = [];
     masterDataSorted2 = [];
 
-    // This is necessary on load in order to populate the heat map when the website is first loaded
-    /***********   Slider Time Stamp Creation   **************/
-    // Array used to store all time stamps desired by the user in the form of perfect 10 minute increments
-    sliderSelectedTimeStamps = [];
 
-    // Initialize the slider's min and max to the initTime variables. These will be used by the heatmap
-    sliderMinDate = new Date(initTimeMin);
-    sliderMaxDate = new Date(initTimeMax);
-
-    // ***** Form the time stamps strings for perfect 10 minute increments *****
-    // Create a string for the minimum and maximum timestamps
-    sliderTimeStampMin = (sliderMinDate.getMonth()+1) +"/"+ sliderMinDate.getDate() +"/"+  sliderMinDate.getFullYear() +" "+ sliderMinDate.getHours() +":"+ sliderMinDate.getMinutes();
-    sliderTimeStampMax = (sliderMaxDate.getMonth()+1) +"/"+ sliderMaxDate.getDate() +"/"+ sliderMaxDate.getFullYear() +" "+ sliderMaxDate.getHours() +":"+ sliderMaxDate.getMinutes();
-
-    // This will update the sliderTimeStampMid array with all of the inbetween timestamps
-    getTimeStamps(sliderMinDate, sliderMaxDate);
-
-    // Fill slider array with minimum timestamp
-    sliderSelectedTimeStamps.push(sliderTimeStampMin);
-
-    for (var counter = 0; counter < sliderTimeStampMid.length; counter++) {
-      var tempString = sliderTimeStampMid[counter];
-
-      // Fill slider array with middle timestamps
-      sliderSelectedTimeStamps.push(tempString);
-    }
-
-    // Fill slider array with maximum timestamp
-    sliderSelectedTimeStamps.push(sliderTimeStampMax);
-    /***********   Slider Time Stamp Creation End  **************/
 
     /***********   JSON Selected Time Stamp Creation  **************/
     // Array used to store all time stamps desired by the user in the form of actual timestamps in the JSON file
@@ -309,6 +312,16 @@ $(document).ready(function() {
     masterDataSorted1.sort();
     masterDataSorted2.sort();
 
+    // These will be used to initialize the averages on first load for nodes 1-5
+    var superNode1Upper = masterDataSorted1.length - 1;
+    var superNode1Lower = superNode1Upper - 144;
+    var initDateLower1 = masterDataSorted1[superNode1Lower];
+    var initDateUpper1 = masterDataSorted1[superNode1Upper];
+
+    var initMin1 = new Date(initDateLower1);
+    var initMax1 = new Date(initDateUpper1);
+
+
     // Cycle through the sorted master data and begin filling your selectedJsonTimeStamps1 array with the dynamic timestamps
     // This loop will break once the correlated maximum value of the slider timeframe is selected.
     for(var element of masterDataSorted1) {
@@ -320,12 +333,12 @@ $(document).ready(function() {
       // Find a timestamp that is within 9.99 minutes of the 10 minute increment.
       // We take the actual timestamp received from the JSON file and subtract the exact 10 minute increment and populate
       // the selectedJsonMinTimeStamp1 and selectedJsonMaxTimeStamp1 if the current timestamp is within 0 and 9 minutes difference.
-      if(((tempDate.getTime() - sliderMinDate.getTime()) >= 0) && ((tempDate.getTime() - sliderMinDate.getTime()) < 600000)) {
+      if(((tempDate.getTime() - initMin1.getTime()) >= 0) && ((tempDate.getTime() - initMin1.getTime()) < 600000)) {
         startFilling = 1;
         selectedJsonMinTimeStamp1 = tempDateString;
       }
       // Find a timestamp that is within 9.99 minutes of the 10 minute increment.
-      else if(((tempDate.getTime() - sliderMaxDate.getTime()) >= 0) && ((tempDate.getTime() - sliderMaxDate.getTime()) < 600000)) {
+      else if(((tempDate.getTime() - initMax1.getTime()) >= 0) && ((tempDate.getTime() - initMax1.getTime()) < 600000)) {
         startFilling = 0;
 
         // Push the last element into the array before breaking out of this loop
@@ -344,6 +357,17 @@ $(document).ready(function() {
 
     startFilling = 0;
 
+
+    // These will be used to initialize the averages on first load for nodes 5-10
+    var superNode2Upper = masterDataSorted1.length - 1;
+    var superNode2Lower = superNode1Upper - 144;
+    var initDateLower2 = masterDataSorted2[superNode2Lower];
+    var initDateUpper2 = masterDataSorted2[superNode2Upper];
+
+    var initMin2 = new Date(initDateLower2);
+    var initMax2 = new Date(initDateUpper2);
+
+
     // For nodes 6-10
     for(var element of masterDataSorted2) {
 
@@ -354,12 +378,12 @@ $(document).ready(function() {
       // Find a timestamp that is within 9.99 minutes of the 10 minute increment.
       // We take the actual timestamp received from the JSON file and subtract the exact 10 minute increment and populate
       // the selectedJsonMinTimeStamp1 and selectedJsonMaxTimeStamp1 if the current timestamp is within 0 and 9 minutes difference.
-      if(((tempDate.getTime() - sliderMinDate.getTime()) >= 0) && ((tempDate.getTime() - sliderMinDate.getTime()) < 600000)) {
+      if(((tempDate.getTime() - initMin2.getTime()) >= 0) && ((tempDate.getTime() - initMin2.getTime()) < 600000)) {
         startFilling = 1;
         selectedJsonMinTimeStamp2 = tempDateString;
       }
       // Find a timestamp that is within 9.99 minutes of the 10 minute increment.
-      else if(((tempDate.getTime() - sliderMaxDate.getTime()) >= 0) && ((tempDate.getTime() - sliderMaxDate.getTime()) < 600000)) {
+      else if(((tempDate.getTime() - initMax2.getTime()) >= 0) && ((tempDate.getTime() - initMax2.getTime()) < 600000)) {
         startFilling = 0;
 
         // Push the last element into the array before breaking out of this loop
@@ -512,10 +536,10 @@ $(document).ready(function() {
 //================================================================================
 $("#btn-today").click(function() {
 
-  var todayBoundsMin = new Date(2017, 3, 26);
-  var todayBoundsMax = new Date(2017, 3, 27);
-  var initTimeMin = new Date(2017, 3, 26);
-  var initTimeMax = new Date(2017, 3, 27);
+  var todayBoundsMin = new Date(2017, 3, 30);
+  var todayBoundsMax = new Date(mostRecentTimeStampSuperNode1);
+  var initTimeMin = new Date(2017, 3, 30);
+  var initTimeMax = new Date(mostRecentTimeStampSuperNode1);
 
   $("#dateSlider").dateRangeSlider( {
       //Note, month 0 is January. Month 4, is May.
@@ -545,7 +569,7 @@ $("#btn-today").click(function() {
     // Deactivate ranges in case if the user switches between weeks, months, etc
     range:false
 
-  }).dateRangeSlider("values", initTodayMin, initTodayMax);
+  }).dateRangeSlider("values", initTimeMin, initTimeMax);
 });
 
 
@@ -555,9 +579,9 @@ $("#btn-today").click(function() {
 $("#btn-7days").click(function() {
 
   var dayBoundsMin = new Date(2017, 3, 26);
-  var dayBoundsMax = new Date(2017, 3, 30, 19, 20);
+  var dayBoundsMax = new Date(mostRecentTimeStampSuperNode1);
   var initDayMin = new Date(2017, 3, 26);
-  var initDayMax = new Date(2017, 3, 30, 17, 30);
+  var initDayMax = new Date(mostRecentTimeStampSuperNode1);
 
   $("#dateSlider").dateRangeSlider( {
 
@@ -771,22 +795,27 @@ $("#dateSlider").bind("valuesChanged", function(e, data){;
     // document.getElementById("superNode1MinImage").src = minFilePath1;
     // document.getElementById("superNode2MinImage").src = minFilePath2;
 
-    var minFilePath1 = ("http://wetnet.sdsu.edu/Node_Json_Data/PIPictures/Node_1/" + selectedJsonMinTimeStamp1 + ".jpg");
-    var minFilePath2 = ("http://wetnet.sdsu.edu/Node_Json_Data/PIPictures/Node_6/" + selectedJsonMinTimeStamp2 + ".jpg");
+    if(nodeIndex == 0) {
+      var minFilePath1 = ("http://wetnet.sdsu.edu/Node_Json_Data/PIPictures/Node_1/" + selectedJsonMinTimeStamp1 + ".jpg");
+      var maxFilePath1 = ("http://wetnet.sdsu.edu/Node_Json_Data/PIPictures/Node_1/" + selectedJsonMaxTimeStamp1 + ".jpg");
+      document.getElementById("superNode1MinImage").src = minFilePath1;
+      document.getElementById("superNode1MaxImage").src = maxFilePath1;
+    }
+    else if(nodeIndex == 5) {
+      var minFilePath2 = ("http://wetnet.sdsu.edu/Node_Json_Data/PIPictures/Node_6/" + selectedJsonMinTimeStamp2 + ".jpg");
+      var maxFilePath2 = ("http://wetnet.sdsu.edu/Node_Json_Data/PIPictures/Node_6/" + selectedJsonMaxTimeStamp2 + ".jpg");
+      document.getElementById("superNode2MinImage").src = minFilePath2;
+      document.getElementById("superNode2MaxImage").src = maxFilePath2;
+    }
+    else {
 
-    document.getElementById("superNode1MinImage").src = minFilePath1;
-    document.getElementById("superNode2MinImage").src = minFilePath2;
+    }
+
 
     // var maxFilePath1 = ("Node_Json_Data/PIPictures/Node_1/" + selectedJsonMinTimeStamp2 + ".jpg");
     // var maxFilePath2 = ("Node_Json_Data/PIPictures/Node_6/" + selectedJsonMaxTimeStamp2 + ".jpg");
     // document.getElementById("superNode1MaxImage").src = maxFilePath1;
     // document.getElementById("superNode2MaxImage").src = maxFilePath2;
-
-    var maxFilePath1 = ("http://wetnet.sdsu.edu/Node_Json_Data/PIPictures/Node_1/" + selectedJsonMaxTimeStamp1 + ".jpg");
-    var maxFilePath2 = ("http://wetnet.sdsu.edu/Node_Json_Data/PIPictures/Node_6/" + selectedJsonMaxTimeStamp2 + ".jpg");
-
-    document.getElementById("superNode1MaxImage").src = maxFilePath1;
-    document.getElementById("superNode2MaxImage").src = maxFilePath2;
 
     // *** Create file paths for min and max images from raspberry pi camera End ***
 
@@ -1039,6 +1068,11 @@ $('#justify-icon').click(function(){
 
     NodeAlteration();
 
+    todayBoundsMin = new Date(2017, 3, 30);
+    todayBoundsMax = new Date(mostRecentTimeStampSuperNode1);
+    initTimeMin = new Date(2017, 3, 30);
+    initTimeMax = new Date(mostRecentTimeStampSuperNode1);
+
     //================================================================================
     // Default Constructor for the Slider. Created when the expand button is first pressed
     //================================================================================
@@ -1248,25 +1282,27 @@ $('#justify-icon').click(function(){
       // document.getElementById("superNode1MinImage").src = minFilePath1;
       // document.getElementById("superNode2MinImage").src = minFilePath2;
 
+    if(nodeIndex == 0) {
       var minFilePath1 = ("http://wetnet.sdsu.edu/Node_Json_Data/PIPictures/Node_1/" + selectedJsonMinTimeStamp1 + ".jpg");
-      var minFilePath2 = ("http://wetnet.sdsu.edu/Node_Json_Data/PIPictures/Node_6/" + selectedJsonMinTimeStamp2 + ".jpg");
-
+      var maxFilePath1 = ("http://wetnet.sdsu.edu/Node_Json_Data/PIPictures/Node_1/" + selectedJsonMaxTimeStamp1 + ".jpg");
       document.getElementById("superNode1MinImage").src = minFilePath1;
+      document.getElementById("superNode1MaxImage").src = maxFilePath1;
+    }
+    else if(nodeIndex == 5) {
+      var minFilePath2 = ("http://wetnet.sdsu.edu/Node_Json_Data/PIPictures/Node_6/" + selectedJsonMinTimeStamp2 + ".jpg");
+      var maxFilePath2 = ("http://wetnet.sdsu.edu/Node_Json_Data/PIPictures/Node_6/" + selectedJsonMaxTimeStamp2 + ".jpg");
       document.getElementById("superNode2MinImage").src = minFilePath2;
+      document.getElementById("superNode2MaxImage").src = maxFilePath2;
+    }
+    else {
 
+    }
       // var maxFilePath1 = ("Node_Json_Data/PIPictures/Node_1/" + selectedJsonMinTimeStamp2 + ".jpg");
       // var maxFilePath2 = ("Node_Json_Data/PIPictures/Node_6/" + selectedJsonMaxTimeStamp2 + ".jpg");
       // document.getElementById("superNode1MaxImage").src = maxFilePath1;
       // document.getElementById("superNode2MaxImage").src = maxFilePath2;
 
-      var maxFilePath1 = ("http://wetnet.sdsu.edu/Node_Json_Data/PIPictures/Node_1/" + selectedJsonMaxTimeStamp1 + ".jpg");
-      var maxFilePath2 = ("http://wetnet.sdsu.edu/Node_Json_Data/PIPictures/Node_6/" + selectedJsonMaxTimeStamp2 + ".jpg");
-
-      document.getElementById("superNode1MaxImage").src = maxFilePath1;
-      document.getElementById("superNode2MaxImage").src = maxFilePath2;
-
       // *** Create file paths for min and max images from raspberry pi camera End ***
-
 
 
       updateWindDirection();
@@ -2085,7 +2121,26 @@ function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
       zoom: 18,
       center: centerMap,
-      mapTypeId: 'satellite'
+      mapTypeId: 'satellite',
+      mapTypeControl: true,
+      tilt: 0,
+      fullscreenControl: true,
+      rotateControl: false,
+      rotateControlOptions: {
+          position: google.maps.ControlPosition.LEFT_BOTTOM
+      },
+      zoomControl: true,
+      zoomControlOptions: {
+          position: google.maps.ControlPosition.LEFT_BOTTOM
+      },
+      scaleControl: true,
+      streetViewControl: true,
+      streetViewControlOptions: {
+          position: google.maps.ControlPosition.LEFT_BOTTOM
+      },
+      mapTypeControlOptions: {
+          position: google.maps.ControlPosition.LEFT_BOTTOM
+      }
     });
     marker1 = new google.maps.Marker({
         position: {lat: latitudeArray[0], lng: longitudeArray[0]},
@@ -2094,7 +2149,7 @@ function initMap() {
     });
     var content1 = '<div id="content">'+
         '<h2>Super Node 1</h2>'+
-        '<div><b>Temperature: </b>' + averageHeat[0] + '°F<br>'+
+        '<div><b>Temperature: </b>' + averageHeat[0] + 'F<br>'+
         '<b>Humidity: </b>' + averageHumidity[0] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[0] +'<br>'+
         '<b>Air Pressure: </b>'+ averageAirPressure[0] + ' hPa<br>'+
@@ -2140,7 +2195,7 @@ function initMap() {
     });
     var content2 = '<div id="content">'+
         '<h2>Sub Node 1</h2>'+
-        '<div><b>Temperature: </b>'+ averageHeat[1] +'°F<br>'+
+        '<div><b>Temperature: </b>'+ averageHeat[1] +'F<br>'+
         '<b>Humidity: </b>'+ averageHumidity[1] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[1] +'<br>'+
         '<b>Deployment Details: </b>'+ deploymentdets[1] +'<br>'+
@@ -2181,7 +2236,7 @@ function initMap() {
     });
     var content3 = '<div id="content">'+
         '<h2>Sub Node 2</h2>'+
-        '<div><b>Temperature: </b>'+ averageHeat[2] +'°F<br>'+
+        '<div><b>Temperature: </b>'+ averageHeat[2] +'F<br>'+
         '<b>Humidity: </b>'+ averageHumidity[2] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[2] +'<br>'+
         '<b>Deployment Details: </b>'+ deploymentdets[2] +'<br>'+
@@ -2222,7 +2277,7 @@ function initMap() {
     });
     var content4 = '<div id="content">'+
         '<h2>Sub Node 3</h2>'+
-        '<div><b>Temperature: </b>'+ averageHeat[3] +'°F<br>'+
+        '<div><b>Temperature: </b>'+ averageHeat[3] +'F<br>'+
         '<b>Humidity: </b>'+ averageHumidity[3] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[3] +'<br>'+
         '<b>Deployment Details: </b>'+ deploymentdets[3] +'<br>'+
@@ -2263,7 +2318,7 @@ function initMap() {
     });
     var content5 = '<div id="content">'+
         '<h2>Sub Node 4</h2>'+
-        '<div><b>Temperature: </b>'+ averageHeat[4] +'°F<br>'+
+        '<div><b>Temperature: </b>'+ averageHeat[4] +'F<br>'+
         '<b>Humidity: </b>'+ averageHumidity[4] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[4] +'<br>'+
         '<b>Deployment Details: </b>'+ deploymentdets[4] +'<br>'+
@@ -2304,7 +2359,7 @@ function initMap() {
     });
     var content6 = '<div id="content">'+
         '<h2>Super Node 2</h2>'+
-        '<div><b>Temperature: </b>'+ averageHeat[5] +'°F<br>'+
+        '<div><b>Temperature: </b>'+ averageHeat[5] +'F<br>'+
         '<b>Humidity: </b>'+ averageHumidity[5] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[5] +'<br>'+
         '<b>Air Pressure: </b>' + averageAirPressure[5] +' hPa<br>'+
@@ -2350,7 +2405,7 @@ function initMap() {
     });
     var content7 = '<div id="content">'+
         '<h2>Sub Node 5</h2>'+
-        '<div><b>Temperature: </b>'+ averageHeat[6] +'°F<br>'+
+        '<div><b>Temperature: </b>'+ averageHeat[6] +'F<br>'+
         '<b>Humidity: </b>'+ averageHumidity[6] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[6] +'<br>'+
         '<b>Deployment Details: </b>'+ deploymentdets[6] +'<br>'+
@@ -2391,7 +2446,7 @@ function initMap() {
     });
     var content8 = '<div id="content">'+
         '<h2>Sub Node 6</h2>'+
-        '<div><b>Temperature: </b>'+ averageHeat[7] +'°F<br>'+
+        '<div><b>Temperature: </b>'+ averageHeat[7] +'F<br>'+
         '<b>Humidity: </b>'+ averageHumidity[7] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[7] +'<br>'+
         '<b>Deployment Details: </b>'+ deploymentdets[7] +'<br>'+
@@ -2432,7 +2487,7 @@ function initMap() {
     });
     var content9 = '<div id="content">'+
         '<h2>Sub Node 7</h2>'+
-        '<div><b>Temperature: </b>'+ averageHeat[8] +'°F<br>'+
+        '<div><b>Temperature: </b>'+ averageHeat[8] +'F<br>'+
         '<b>Humidity: </b>'+ averageHumidity[8] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[8] +'<br>'+
         '<b>Deployment Details: </b>'+ deploymentdets[8] +'<br>'+
@@ -2473,7 +2528,7 @@ function initMap() {
     });
     var content10 = '<div id="content">'+
         '<h2>Sub Node 8</h2>'+
-        '<div><b>Temperature: </b>'+ averageHeat[9] +'°F<br>'+
+        '<div><b>Temperature: </b>'+ averageHeat[9] +'F<br>'+
         '<b>Humidity: </b>'+ averageHumidity[9] +'%<br>'+
         '<b>UV Index: </b>'+ averageUV[9] +'<br>'+
         '<b>Deployment Details: </b>'+ deploymentdets[9] +'<br>'+
@@ -3036,7 +3091,7 @@ function updateWindDirection() {
       if(ctrDir6[c] >= ctrMax6)
       {
         ctrMax6 = ctrDir6[c];
-        maxDir6 = b;
+        maxDir6 = c;
       }
     }
 
