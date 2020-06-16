@@ -1,312 +1,633 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
+    <head>
 
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="">
+        <meta name="author" content="Brandon Ma">
 
-    <title>WETNet</title>
+        <!-- Icons and code made using http://realfavicongenerator.net/ -->
+        <link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png">
+        <link rel="icon" type="image/png" href="img/favicon-32x32.png" sizes="32x32">
+        <link rel="icon" type="image/png" href="img/favicon-16x16.png" sizes="16x16">
+        <link rel="manifest" href="img/manifest.json">
+        <link rel="mask-icon" href="img/safari-pinned-tab.svg" color="#5bbad5">
+        <link rel="shortcut icon" href="img/favicon.ico">
+        <meta name="apple-mobile-web-app-title" content="WETnet">
+        <meta name="application-name" content="WETnet">
+        <meta name="msapplication-config" content="img/browserconfig.xml">
+        <meta name="theme-color" content="#ffffff">
 
-    <!-- Bootstrap Core CSS -->
-    <link href="css/bootstrap.min.css" rel="stylesheet">
+        <!-- <link rel="icon" style="" href="img/wetnet-logo.png"> -->
 
-    <!-- Custom CSS -->
-    <link href="css/modern-business.css" rel="stylesheet">
+        <title>WETnet</title>
 
-    <!-- Custom Fonts -->
-    <link href="font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+        <!-- Bootstrap Core CSS -->
+        <link href="css/bootstrap.min.css" rel="stylesheet" rel="stylesheet" type="text/css">
+
+        <!-- Custom CSS for theme -->
+        <link href="css/modern-business.css" rel="stylesheet" rel="stylesheet" type="text/css">
+
+        <!-- Custom CSS for dropdown menu -->
+        <link href="css/drop-down-list.css" rel="stylesheet" rel="stylesheet" type="text/css">
+
+        <!-- Custom CSS for Header Alignment -->
+        <link href="css/custom-css.css" rel="stylesheet" type="text/css">
+
+        <!-- Custom Fonts -->
+        <link href="font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+        <!-- Slider texture -->
+        <link href="css/iThing.css" rel="stylesheet" type="text/css"/>
+
+        <!-- Yusuf's Popout -->
+        <link href="css/side-panel.css" rel="stylesheet" type="text/css"/>
+        <link href="css/arrow-buttons.css" rel="stylesheet" type="text/css"/>
+        <link href="css/collapsed-view.css" rel="stylesheet" type="text/css"/>
+
+        <!-- Philippe's Graph-->
+        <link href="lib/jquery-ui/css/jquery-ui.min.css" rel="stylesheet" type="text/css">
+        <link href="css/flot-graph.css" rel="stylesheet" type="text/css">
+
+        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+        <!-- Kevin's Hetmap -->
+        <style>
+          /* Always set the map height explicitly to define the size of the div element that contains the map. */
+          #map {
+            height: 100%;
+            width: 100%;
+          }
+          #floating-panel {
+            position: absolute;
+            top: 10px;
+            left: 25%;
+            z-index: 5;
+            background-color: #fff;
+            padding: 5px;
+            border: 1px solid #999;
+            text-align: center;
+            font-family: 'Roboto','sans-serif';
+            line-height: 30px;
+            padding-left: 10px;
+          }
+        </style>
+        <!-- End of Kevin's Heatmap -->
+
+    </head>
+
+    <body>
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation" style="font-size: 20px">
+            <div class="myContainer">
+
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <img id="logo" src="img/wetnet-logo.png" alt="WETnet Logo" style="width:67px; height:50px; float:left">
+                    <a id="home-btn"class="navbar-brand" href="index.html" style="font-size: 20px">Home</a>
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+
+                </div>
+
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav my-navbar-right">
+                        <li>
+                            <a href="Node_Json_Data/MasterData.csv" download="MasterData.csv">Download CSV</a>
+                        </li>
+                        <li>
+                            <a href="about.html">The Team</a>
+                        </li>
+                    </ul>
+                </div>
+                <!-- /.navbar-collapse -->
+
+            </div>
+            <!-- /.container -->
+
+        </nav>
+
+
+        <div id="map" style="overflow:hidden"></div>
+
+        <!-- Side Bar (Pop Out) -->
+
+        <nav class='sidebar sidebar-menu-collapsed' style = "top:50px; position:fixed; overflow-y:auto;">
+          <a href='#' id='justify-icon'>
+            <i class="glyphicon glyphicon-align-right"></i>
+          </a>
+
+          <ul class='level1'>
+            <li class='active'>
+              <ul class='level2'>
+
+
+                <!-- Page Content -->
+                <div class="container" style = "width: 100%">
+
+
+    <!--                 <div class="row">
+                        <div class="col-md-12 text-center"> -->
+                            <!-- <span id="ComparisonNode" style="line-height:20px"></span> -->
+    <!--                         <h1>
+                                <button class="arrow-left" id="left"></button>
+                                <span id="Nodename"></span>
+                                <button class="arrow-right" id="right"></button>
+                            </h1>
+                            <button class="RegularButton" id="compare">
+                                Compare
+                            </button>
+                            <button class="RegularButton" id="clear">
+                                Clear
+                            </button>
+                            <button id="btn-today" class="RegularButton">Today</button>
+                            <button id="btn-7days" class="RegularButton">Last 7 Days</button>
+                        </div>
+                    </div>
+     -->
+                <div style="margin-top: -80px;">
+
+                    <div class="row">
+                        <div class="col-md-12 text-center">
+    <!--                         <span id="ComparisonNode" style="line-height:20px"></span> -->
+                            <h1>
+                                <button class="arrow-left" id="left"></button>
+                                <span id="Nodename"></span>
+                                <!-- <div id="Nodename"></div> -->
+                                <button class="arrow-right" id="right"></button>
+                            </h1>
+                        </div>
+                        <div class="col-md-12 text-center" style="margin:auto padding-top:10px; text-align:center">
+                            <button id="btn-today" class="RegularButton2">Today</button>
+                            <button id="btn-7days" class="RegularButton2">Last 7 Days</button>
+                            <button class="RegularButton" id="compare">Compare</button>
+                            <button class="RegularButton" id="clear">Clear</button>
+                        </div>
+
+                        <div id="refreshImage"></div>
+                        <div id="refreshImage2"></div>
+                    </div>
+
+
+                    <!-- Slider Code -->
+                    <div id="slider-container" class="row">
+                        <div class="col-md-12 text-center" style="padding-left:40px; padding-right:40px;">
+                            <div id="dateSlider" class =""></div>
+                        </div>
+                    </div>
+
+                    <!-- Super Node Images -->
+                    <div class="row">
+                        <div class="col-md-12" id="superNode1Images">
+                            <div class="row">
+                                <div class="col-md-6" style="padding-top:15px">
+                                    <img id="superNode1MinImage" style="position:relative; left:25%" src="img/data-graphics/Image_Not_Available.png" width="50%" height="50%" onerror="this.src='img/data-graphics/Image_Not_Available.png'"/>
+                                </div>
+                                <div class="col-md-6" style="padding-top:15px">
+                                    <img id="superNode1MaxImage" style="position:relative; left:25%" src="img/data-graphics/Image_Not_Available.png" width="50%" height="50%" onerror="this.src='img/data-graphics/Image_Not_Available.png'"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12" id="superNode2Images">
+                            <div class="row">
+                                <div class="col-md-6" style="padding-top:15px">
+                                    <img id="superNode2MinImage" style="position:relative; left:25%" src="img/data-graphics/Image_Not_Available.png" width="50%" height="50%" onerror="this.src='img/data-graphics/Image_Not_Available.png'"/>
+                                </div>
+                                <div class="col-md-6" style="padding-top:15px">
+                                    <img id="superNode2MaxImage" style="position:relative; left:25%" src="img/data-graphics/Image_Not_Available.png" width="50%" height="50%" onerror="this.src='img/data-graphics/Image_Not_Available.png'"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- End of Super Node Images -->
+
+
+                    <!-- Radio Buttons and Check Boxes -->
+                    <div class="col-md-12 text-center" style="padding-top:15px">
+                        <div class="row">
+                            <input id ="temperature" checked="checked" name="graph-name" type="radio"  class="data"/>
+                            <font size=3>
+                                <label for="temperature">
+                                    Temperature (ºF)
+                                </label>
+                            </font>
+
+                            <input id ="humidity" name="graph-name" type="radio"  class="data"/>
+                            <font size=3>
+                                <label for="humidity">
+                                    Humidity (%)
+                                </label>
+                            </font>
+
+                            <input id ="uvIndex" name="graph-name" type="radio"  class="data"/>
+                            <font size=3>
+                                <label for="uvIndex">
+                                    UV Index
+                                </label>
+                            </font>
+
+                            <input id ="pressure" name="graph-name" type="radio"  class="data super-node-readings"/>
+                            <font size=3>
+                                <label for="pressure" class="super-node-readings">
+                                    Air Pressure (hPa)
+                                </label>
+                            </font>
+
+                            <input id ="windSpeed" name="graph-name" type="radio"  class="data super-node-readings"/>
+                            <font size=3>
+                                <label for="windSpeed" class="super-node-readings">
+                                    Wind Speed (MPH)
+                                </label>
+                            </font>
+                        </div>
+                        <div class="row">
+                            <input id ="windGust" name="graph-name" type="radio"  class="data super-node-readings"/>
+                            <font size=3>
+                                <label for="windGust" class="super-node-readings">
+                                    Wind Gust (MPH)
+                                </label>
+                            </font>
+
+                            <input id ="windDirection" type="checkbox"  class="data"/>
+                            <font size=3>
+                                <label for="windDirection">
+                                    Wind Direction
+                                </label>
+                            </font>
+
+                            <input id ="aqi" type="checkbox"  class="data"/>
+                            <font size=3>
+                                <label for="aqi">
+                                    Air Quality Index
+                                </label>
+                            </font>
+                        </div>
+                    </div>
+                    <!-- End ofRadio Buttons and Check Boxes -->
+
+
+                    <!-- Graph and Check Box Code -->
+                    <div class="row">
+
+                        <!-- Graph Column -->
+                        <div class="col-md-12">
+                            <div class="flot-graph-container">
+                                <div id="dataGraph" class="flot-graph-inner"></div>
+                            </div>
+                        </div>
+                        <!-- Graph Column -->
+
+                    </div>
+                    <!-- End of Graph and Check Box Code -->
+
+                    <!-- AQI and Wind Direction Display -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="row">
+                                <h1 class="node1SuperReadings" style="display: block; text-align: center; font-size: 28px;">Node 1</h1>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <img id="windDirection1" class="windDirectionReadings" src="img/data-graphics/No_Reading.png" width="80%" height="80%" onerror="this.src='img/data-graphics/No_Reading.png'"/>
+                                </div>
+                                <div class="col-md-8">
+                                    <img id="aqiImage1"  class="aqiReadings" src="img/data-graphics/No_Reading.png" width="80%" height="80%"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="row">
+                                <h1 class="node2SuperReadings" style="display: block; text-align: center; font-size: 28px;">Node 6</h1>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <img id="windDirection2" class="windDirectionReadings" src="img/data-graphics/No_Reading.png" width="80%" height="80%" onerror="this.src='img/data-graphics/No_Reading.png'"/>
+                                </div>
+                                <div class="col-md-8">
+                                    <img id="aqiImage2" class="aqiReadings" src="img/data-graphics/No_Reading.png" width="80%" height="80%"/>
+                                </div>
+                            </div>
+                    </div>
+                    <!-- End of AQI and Wind Direction -->
+
+                        <!-- Demo to print heat readings on the website-->
+    <!--                      <div class="row">
+                            <div id = "temp-demo" class="col-md-11 text-center" style="word-wrap:break-word;white-space:pre;white-space:-moz-pre-wrap;white-space:pre-wrap;">
+                            </div>
+                        </div> -->
+
+
+
+                    </div>
+                </div>
+                  <!-- End of Page Content /.container -->
+
+                </ul>
+            </li>
+          </ul>
+
+          <div class="container" id="inside" style="text-align: center; width:100% ">
+                <div class="row">
+                    <div class="col-md-12" style="text-align: center; width:100%">
+                        <h1 class="headermain" style="margin-top:-50px;">
+                            Latest Stats
+                        </h1>
+                    </div>
+                </div>
+            <!--  /////////////////////////////////////// -->
+                <div class="row typeheader">
+                    <div class="col-md-12" align="left">
+                        Temperature
+                    </div>
+                </div>
+                <div class="row">
+                        <div class="col-md-6" style="padding-left:0px; padding-right:0px">
+                            <li>
+                                Node1:
+                                <span id="Node1TempData"></span>
+                                °F
+                            </li>
+                            <li>
+                                Node2:
+                                <span id="Node2TempData"></span>
+                                °F
+                            </li>
+                            <li>
+                                Node3:
+                                <span id="Node3TempData"></span>
+                                °F
+                            </li>
+                            <li>
+                                Node4:
+                                <span id="Node4TempData"></span>
+                                °F
+                            </li>
+                            <li>
+                                Node5:
+                                <span id="Node5TempData"></span>
+                                °F
+                            </li>
+                        </div>
+                        <div class="col-md-6" style="padding-left:0px; padding-right:0px">
+                            <li>
+                                Node6:
+                                <span id="Node6TempData"></span>
+                                °F
+                            </li>
+                            <li>
+                                Node7:
+                                <span id="Node7TempData"></span>
+                                °F
+                            </li>
+                            <li>
+                                Node8:
+                                <span id="Node8TempData"></span>
+                                °F
+                            </li>
+                            <li>
+                                Node9:
+                                <span id="Node9TempData"></span>
+                                °F
+                            </li>
+                            <li>Node10:<span id="Node10TempData"></span>
+                                °F
+                            </li>
+                        </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-2">
+                        <img id="TemperturePics" style="width:37px;height:75px;">
+                    </div>
+                    <div class="col-md-10">
+                        <br>
+                        <div class="avgheader">
+                            Average:
+                            <span id="AVGTempData"></span>
+                            °F
+                        </div>
+                    </div>
+                </div>
+               <!--  /////////////////////////////////////// -->
+                <div class="row typeheader">
+                    <div class="col-md-12" align="left">
+                        Humidity
+                    </div>
+                </div>
+                <div class="row">
+                        <div class="col-md-6" style="padding-left:0px; padding-right:0px">
+                            <li>
+                                Node1:
+                                <span id="Node1HumidData"></span>
+                                %
+                            </li>
+                            <li>
+                                Node2:
+                                <span id="Node2HumidData"></span>
+                                %
+                            </li>
+                            <li>
+                                Node3:
+                                <span id="Node3HumidData"></span>
+                                %
+                            </li>
+                            <li>
+                                Node4:
+                                <span id="Node4HumidData"></span>
+                                %
+                            </li>
+                            <li>
+                                Node5:
+                                <span id="Node5HumidData"></span>
+                                %
+                            </li>
+                        </div>
+                        <div class="col-md-6" style="padding-left:0px; padding-right:0px">
+                            <li>
+                                Node6:
+                                <span id="Node6HumidData"></span>
+                                %
+                            </li>
+                            <li>
+                                Node7:
+                                <span id="Node7HumidData"></span>
+                                %
+                            </li>
+                            <li>
+                                Node8:
+                                <span id="Node8HumidData"></span>
+                                %
+                            </li>
+                            <li>
+                                Node9:
+                                <span id="Node9HumidData"></span>
+                                %
+                            </li>
+                            <li>
+                                Node10:
+                                <span id="Node10HumidData"></span>
+                                %
+                            </li>
+                        </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-2">
+                        <img id="HumidityPics" style="width:64px;height:70px;">
+                    </div>
+                    <div class="col-md-10">
+                        <br>
+                        <div class="avgheader">
+                            Average:
+                            <span id="AVGHumidData"></span>
+                            %
+                        </div>
+                    </div>
+                </div>
+                 <!--  /////////////////////////////////////// -->
+                <div class="row typeheader">
+
+                    <div class="col-md-12" align="left">
+                        UV Index
+                    </div>
+                </div>
+                <div class="row">
+                         <div class="col-md-6" style="padding-left:0px; padding-right:0px">
+                            <li>
+                                Node1:
+                                <span id="Node1UVData"></span>
+                            </li>
+                            <li>
+                                Node2:
+                                <span id="Node2UVData"></span>
+                            </li>
+                            <li>
+                                Node3:
+                                <span id="Node3UVData"></span>
+                            </li>
+                            <li>
+                                Node4:
+                                <span id="Node4UVData"></span>
+                            </li>
+                            <li>
+                                Node5:
+                                <span id="Node5UVData"></span>
+                            </li>
+                        </div>
+                         <div class="col-md-6" style="padding-left:0px; padding-right:0px">
+                            <li>
+                                Node6:
+                                <span id="Node6UVData"></span>
+                            </li>
+                            <li>
+                                Node7:
+                                <span id="Node7UVData"></span>
+                            </li>
+                            <li>
+                                Node8:
+                                <span id="Node8UVData"></span>
+                            </li>
+                            <li>
+                                Node9:
+                                <span id="Node9UVData"></span>
+                            </li>
+                            <li>
+                                Node10:
+                                <span id="Node10UVData"></span>
+                            </li>
+                        </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-2">
+                        <img id="UVIndexPics" style="width:60px;height:60px;">
+                    </div>
+                    <div class="col-md-10">
+                        <br>
+                        <div class="avgheader">
+                            Average:
+                            <span id="AVGUVData"></span>
+                        </div>
+                    </div>
+                </div>
+                 <!--  /////////////////////////////////////// -->
+            </div>
+
+
+
+
+            <hr>
+
+            <!-- Footer -->
+            <footer>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <p>Copyright &copy; WETnet 2017</p>
+                    </div>
+                </div>
+            </footer>
+
+        </nav>
+
+    </body>
+
+    <!-- ***** ORDER OF THESE MATTER! *****
+        For example, bootstrap-slider relies on bootstrap being defined first.
+        Keep this in mind when reordering these statements -->
 
     <!-- jQuery -->
-    <script src="js/jquery-3.1.1.min.js"></script>
+    <script src="js/jquery-3.1.1.min.js" language="javascript" type="text/javascript"></script>
+
+    <!-- Moment.js with locales. Our use case for Moment.js:
+         http://stackoverflow.com/questions/1197928/how-to-add-30-minutes-to-a-javascript-date-object -->
+    <script src="lib/js/moment-with-locales.js" language="javascript" type="text/javascript"></script>
+
+     <!-- Philippe's Flot Graph uses this -->
+    <script src="lib/jquery-ui/js/jquery-ui.min.js" language="javascript" type="text/javascript"></script>
+    <script src="lib/flot/jquery.flot.js" language="javascript" type="text/javascript"></script>
+    <script  src="lib/flot/jquery.flot.time.js" language="javascript" type="text/javascript"></script>
+
+    <!-- Brandon's JQRangeSlider -->
+    <script src="lib/jquery-ui/js/jquery-ui-1.12.1.custom.min.js" language="javascript" type="text/javascript"></script>
+    <script src="lib/js/jquery.mousewheel.min.js" language="javascript" type="text/javascript"></script>
+    <script src="lib/js/jQAllRangeSliders-withRuler-min.js" language="javascript" type="text/javascript"></script>
+    <script src="lib/js/jQAllRangeSliders-min.js" language="javascript" type="text/javascript"></script>
+
 
     <!-- Bootstrap Core JavaScript -->
-    <script src="js/bootstrap.min.js"></script>
+    <script src="js/bootstrap.min.js" language="javascript" type="text/javascript"></script>
 
-    <!-- Script to Activate the Carousel -->
-    <script>
-    $('.carousel').carousel({
-        interval: 5000 //changes the speed
-    })
+    <!-- Brandon's Slider, heatmap, and graph code -->
+    <script src="js/slider-heatmap-graph.js" language="javascript" type="text/javascript"></script>
+
+    <!-- Brandon's Drop down menu for changing the slider -->
+    <script src="js/drop-down-list.js" language="javascript" type="text/javascript"></script>
+
+    <!-- Javascript example for how to get a JSON file using JQuery -->
+    <script src="js/get-json-example.js" language="javascript" type="text/javascript"></script>
+
+    <!-- Receive JSON file from server using JQuery -->
+    <script src="js/get-json.js" language="javascript" type="text/javascript"></script>
+
+    <!-- Yusuf's Slider -->
+    <script src="js/side-panel.js" language="javascript" type="text/javascript"></script>
+    <!-- <script src="js/node-number-alter.js" language="javascript" type="text/javascript"></script> -->
+
+    <!-- Kevin's Heatmap -->
+    <!-- <script src="js/show-map-new.js" language="javascript" type="text/javascript"></script> -->
+
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDa97LR9tnBDKucmUn_gj0C7nJwq7fR_is&libraries=visualization&callback=initMap">
     </script>
-
-
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
-
-</head>
-
-<body>
-
-    <!-- Navigation -->
-    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-        <div class="container">
-            <!-- Brand and toggle get grouped for better mobile display -->
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="index.html">Home</a>
-            </div>
-            <!-- Collect the nav links, forms, and other content for toggling -->
-            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                <ul class="nav navbar-nav navbar-right">
-                    <li>
-                        <a href="about.html">About</a>
-                    </li>
-                    <li>
-                        <a href="services.html">Services</a>
-                    </li>
-                    <li>
-                        <a href="contact.html">Contact</a>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Portfolio <b class="caret"></b></a>
-                        <ul class="dropdown-menu">
-                            <li>
-                                <a href="portfolio-1-col.html">1 Column Portfolio</a>
-                            </li>
-                            <li>
-                                <a href="portfolio-2-col.html">2 Column Portfolio</a>
-                            </li>
-                            <li>
-                                <a href="portfolio-3-col.html">3 Column Portfolio</a>
-                            </li>
-                            <li>
-                                <a href="portfolio-4-col.html">4 Column Portfolio</a>
-                            </li>
-                            <li>
-                                <a href="portfolio-item.html">Single Portfolio Item</a>
-                            </li>
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Blog <b class="caret"></b></a>
-                        <ul class="dropdown-menu">
-                            <li>
-                                <a href="blog-home-1.html">Blog Home 1</a>
-                            </li>
-                            <li>
-                                <a href="blog-home-2.html">Blog Home 2</a>
-                            </li>
-                            <li>
-                                <a href="blog-post.html">Blog Post</a>
-                            </li>
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Other Pages <b class="caret"></b></a>
-                        <ul class="dropdown-menu">
-                            <li>
-                                <a href="full-width.html">Full Width Page</a>
-                            </li>
-                            <li>
-                                <a href="sidebar.html">Sidebar Page</a>
-                            </li>
-                            <li>
-                                <a href="faq.html">FAQ</a>
-                            </li>
-                            <li>
-                                <a href="404.html">404</a>
-                            </li>
-                            <li>
-                                <a href="pricing.html">Pricing Table</a>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-            <!-- /.navbar-collapse -->
-        </div>
-        <!-- /.container -->
-    </nav>
-
-    <!-- Header Carousel -->
-    <header id="myCarousel" class="carousel slide">
-        <!-- Indicators -->
-        <ol class="carousel-indicators">
-            <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
-            <li data-target="#myCarousel" data-slide-to="1"></li>
-            <li data-target="#myCarousel" data-slide-to="2"></li>
-        </ol>
-
-        <!-- Wrapper for slides -->
-        <div class="carousel-inner">
-            <div class="item active">
-                <div class="fill" style="background-image:url('http://placehold.it/1900x1080&text=Slide One');"></div>
-                <div class="carousel-caption">
-                    <h2>Caption 1</h2>
-                </div>
-            </div>
-            <div class="item">
-                <div class="fill" style="background-image:url('http://placehold.it/1900x1080&text=Slide Two');"></div>
-                <div class="carousel-caption">
-                    <h2>Caption 2</h2>
-                </div>
-            </div>
-            <div class="item">
-                <div class="fill" style="background-image:url('http://placehold.it/1900x1080&text=Slide Three');"></div>
-                <div class="carousel-caption">
-                    <h2>Caption 3</h2>
-                </div>
-            </div>
-        </div>
-
-        <!-- Controls -->
-        <a class="left carousel-control" href="#myCarousel" data-slide="prev">
-            <span class="icon-prev"></span>
-        </a>
-        <a class="right carousel-control" href="#myCarousel" data-slide="next">
-            <span class="icon-next"></span>
-        </a>
-    </header>
-
-    <!-- Page Content -->
-    <div class="container">
-
-        <!-- Marketing Icons Section -->
-        <div class="row">
-            <div class="col-lg-12">
-                <h1 class="page-header">
-                    Welcome to Modern Business
-                </h1>
-            </div>
-            <div class="col-md-4">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h4><i class="fa fa-fw fa-check"></i> Bootstrap v3.3.7</h4>
-                    </div>
-                    <div class="panel-body">
-                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Itaque, optio corporis quae nulla aspernatur in alias at numquam rerum ea excepturi expedita tenetur assumenda voluptatibus eveniet incidunt dicta nostrum quod?</p>
-                        <a href="#" class="btn btn-default">Learn More</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h4><i class="fa fa-fw fa-gift"></i> Free &amp; Open Source</h4>
-                    </div>
-                    <div class="panel-body">
-                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Itaque, optio corporis quae nulla aspernatur in alias at numquam rerum ea excepturi expedita tenetur assumenda voluptatibus eveniet incidunt dicta nostrum quod?</p>
-                        <a href="#" class="btn btn-default">Learn More</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h4><i class="fa fa-fw fa-compass"></i> Easy to Use</h4>
-                    </div>
-                    <div class="panel-body">
-                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Itaque, optio corporis quae nulla aspernatur in alias at numquam rerum ea excepturi expedita tenetur assumenda voluptatibus eveniet incidunt dicta nostrum quod?</p>
-                        <a href="#" class="btn btn-default">Learn More</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- /.row -->
-
-        <!-- Portfolio Section -->
-        <div class="row">
-            <div class="col-lg-12">
-                <h2 class="page-header">Portfolio Heading</h2>
-            </div>
-            <div class="col-md-4 col-sm-6">
-                <a href="portfolio-item.html">
-                    <img class="img-responsive img-portfolio img-hover" src="http://placehold.it/700x450" alt="">
-                </a>
-            </div>
-            <div class="col-md-4 col-sm-6">
-                <a href="portfolio-item.html">
-                    <img class="img-responsive img-portfolio img-hover" src="http://placehold.it/700x450" alt="">
-                </a>
-            </div>
-            <div class="col-md-4 col-sm-6">
-                <a href="portfolio-item.html">
-                    <img class="img-responsive img-portfolio img-hover" src="http://placehold.it/700x450" alt="">
-                </a>
-            </div>
-            <div class="col-md-4 col-sm-6">
-                <a href="portfolio-item.html">
-                    <img class="img-responsive img-portfolio img-hover" src="http://placehold.it/700x450" alt="">
-                </a>
-            </div>
-            <div class="col-md-4 col-sm-6">
-                <a href="portfolio-item.html">
-                    <img class="img-responsive img-portfolio img-hover" src="http://placehold.it/700x450" alt="">
-                </a>
-            </div>
-            <div class="col-md-4 col-sm-6">
-                <a href="portfolio-item.html">
-                    <img class="img-responsive img-portfolio img-hover" src="http://placehold.it/700x450" alt="">
-                </a>
-            </div>
-        </div>
-        <!-- /.row -->
-
-        <!-- Features Section -->
-        <div class="row">
-            <div class="col-lg-12">
-                <h2 class="page-header">Modern Business Features</h2>
-            </div>
-            <div class="col-md-6">
-                <p>The Modern Business template by Start Bootstrap includes:</p>
-                <ul>
-                    <li><strong>Bootstrap v3.3.7</strong>
-                    </li>
-                    <li>jQuery v1.11.1</li>
-                    <li>Font Awesome v4.2.0</li>
-                    <li>Working PHP contact form with validation</li>
-                    <li>Unstyled page elements for easy customization</li>
-                    <li>17 HTML pages</li>
-                </ul>
-                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Corporis, omnis doloremque non cum id reprehenderit, quisquam totam aspernatur tempora minima unde aliquid ea culpa sunt. Reiciendis quia dolorum ducimus unde.</p>
-            </div>
-            <div class="col-md-6">
-                <img class="img-responsive" src="http://placehold.it/700x450" alt="">
-            </div>
-        </div>
-        <!-- /.row -->
-
-        <hr>
-
-        <!-- Call to Action Section -->
-        <div class="well">
-            <div class="row">
-                <div class="col-md-8">
-                    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Molestias, expedita, saepe, vero rerum deleniti beatae veniam harum neque nemo praesentium cum alias asperiores commodi.</p>
-                </div>
-                <div class="col-md-4">
-                    <a class="btn btn-lg btn-default btn-block" href="#">Call to Action</a>
-                </div>
-            </div>
-        </div>
-
-        <hr>
-
-        <!-- Footer -->
-        <footer>
-            <div class="row">
-                <div class="col-lg-12">
-                    <p>Copyright &copy; WETNet 2017</p>
-                </div>
-            </div>
-        </footer>
-
-    </div>
-    <!-- /.container -->
-
-</body>
-
 </html>

@@ -1,0 +1,68 @@
+.arrow-left {
+  width: 0;
+  height: 0;
+  background-color: rgba(17,17,17,0);  /*#111;*/
+  opacity: 0.85;
+  border-top: 13px solid transparent;
+  border-bottom: 13px solid transparent;
+  border-left: 13px solid transparent;
+  border-right:13px solid #00BFFF;
+}
+
+.arrow-right {
+  width: 0;
+  height: 0;
+  background-color: rgba(17,17,17,0); /*#111;*/
+  opacity: 0.85;
+  border-top: 13px solid transparent;
+  border-bottom: 13px solid transparent;
+  border-right: 13px solid transparent;
+  border-left:13px solid #00BFFF;
+}
+
+.RegularButton {
+    background-color: #33a6cc;
+    border: none;
+    color: white;
+    padding: 6px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+}
+.RegularButton2 {
+    background-color: #034f84;
+    border: none;
+    color: white;
+    padding: 6px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+}
+.arrow-right:hover
+{
+  border-top: 13px solid transparent;
+  border-bottom: 13px solid transparent;
+  border-right: 13px solid transparent;
+  border-left:13px solid #1E90FF;
+}
+.arrow-left:hover
+{
+  border-top: 13px solid transparent;
+  border-bottom: 13px solid transparent;
+  border-left: 13px solid transparent;
+  border-right:13px solid #1E90FF;
+}
+.RegularButton:hover
+{
+  background: #007299;
+}
+.RegularButton2:hover
+{
+  background: #007299;
+}

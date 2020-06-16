@@ -1,0 +1,11 @@
+{ node1: {lat, long, "deployment description"},
+node2: {lat, long, "deployment description"},
+node3: {lat, long, "deployment description"},
+node4: {lat, long, "deployment description"},
+node5: {lat, long, "deployment description"},
+node6: {lat, long, "deployment description"},
+node7: {lat, long, "deployment description"},
+node8: {lat, long, "deployment description"},
+node9: {lat, long, "deployment description"},
+node10: {lat, long, "deployment description"}
+}
